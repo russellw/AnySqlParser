@@ -1,6 +1,6 @@
 ﻿namespace AnySqlParser
 {
-    public class Class1
+    public class Parser
     {
 
     }
