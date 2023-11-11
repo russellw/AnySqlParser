@@ -2,13 +2,32 @@
 {
     public sealed class Parser
     {
-        readonly string text;
-        int textIndex;
-        int token;
+        enum Token
+        {
+            EOF,
+            Word,
+            Minus,
+            Quote,
+            Plus,
+            Star,
+            Slash,
+            Comma,
+            LParen,
+            RParen,
+        }
 
-        public Parser(string text)
+        readonly string text;
+        readonly string file;
+        int line;
+        int textIndex;
+        Token token;
+        string tokenString = "";
+
+        public Parser(string text, string file = "SQL", int line = 1)
         {
             this.text = text;
+            this.file = file;
+            this.line = line;
             Lex();
         }
 
@@ -26,7 +45,9 @@
                             if (textIndex < 0) textIndex = text.Length;
                             continue;
                         }
-                        break;
+                        textIndex++;
+                        token = Token.Minus;
+                        return;
                     case '\n':
                     case '\r':
                     case '\t':
@@ -35,23 +56,27 @@
                     case ' ':
                         textIndex++;
                         continue;
-                    default:
-                        //Common whitespace characters are handled in the switch for speed
-                        //but there are other whitespace characters in Unicode
-                        if (char.IsWhiteSpace(c))
-                        {
-                            textIndex++;
-                            continue;
-                        }
-                        break;
                 }
 
-                //Punctuation
-                textIndex++;
-                token = c;
-                return;
+                //Common whitespace characters are handled in the switch for speed
+                //but there are other whitespace characters in Unicode
+                if (char.IsWhiteSpace(c))
+                {
+                    textIndex++;
+                    continue;
+                }
+
+                throw Err($"stray '{c}'");
             }
-            token = -1;
+            token = Token.EOF;
+        }
+
+        Exception Err(string message)
+        {
+            for (int i = 0; i < textIndex; i++)
+                if (text[i] == '\n')
+                    line++;
+            return new FormatException($"{file}:{line}: {message}");
         }
     }
 }
