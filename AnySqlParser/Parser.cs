@@ -5,12 +5,14 @@
         enum Token
         {
             EOF,
+            Semicolon,
             Word,
             Minus,
             Quote,
             Plus,
             Star,
             Slash,
+            Dot,
             Comma,
             LParen,
             RParen,
@@ -78,11 +80,35 @@
                         textIndex++;
                         token = Token.Less;
                         return;
+                    case ',':
+                        textIndex++;
+                        token = Token.Plus;
+                        return;
+                    case ';':
+                        textIndex++;
+                        token = Token.Comma;
+                        return;
+                    case '.':
+                        textIndex++;
+                        token = Token.Dot;
+                        return;
                     case '+':
                         textIndex++;
                         token = Token.Plus;
                         return;
                     case '/':
+                        if (text[textIndex + 1] == '*')
+                        {
+                            var i = textIndex + 2;
+                            for (; ; )
+                            {
+                                if (text.Length <= i + 1) throw Err("unclosed '/*'");
+                                if (text[i] == '*' && text[i + 1] == '/') break;
+                                i++;
+                            }
+                            textIndex = i + 2;
+                            continue;
+                        }
                         textIndex++;
                         token = Token.Slash;
                         return;
