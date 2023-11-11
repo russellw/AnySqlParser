@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AnySqlParser
+﻿namespace AnySqlParser
 {
+    public readonly record struct Location(string File, int Line);
+
     public class AST
     {
         public readonly Location location;
@@ -15,6 +11,4 @@ namespace AnySqlParser
             this.location = location;
         }
     }
-
-    public readonly record struct Location(string File, int Line);
 }
