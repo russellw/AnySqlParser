@@ -187,7 +187,7 @@ namespace AnySqlParser
                             throw Err("unclosed [");
                         }
                     case '!':
-                        if (text[textIndex + 1] == '=')
+                        if (textIndex + 1 < text.Length && text[textIndex + 1] == '=')
                         {
                             textIndex += 2;
                             token = Token.NotEqual;
@@ -195,7 +195,7 @@ namespace AnySqlParser
                         }
                         break;
                     case '|':
-                        if (text[textIndex + 1] == '|')
+                        if (textIndex + 1 < text.Length && text[textIndex + 1] == '|')
                         {
                             textIndex += 2;
                             token = Token.DoublePipe;
@@ -203,7 +203,7 @@ namespace AnySqlParser
                         }
                         break;
                     case '>':
-                        if (text[textIndex + 1] == '=')
+                        if (textIndex + 1 < text.Length && text[textIndex + 1] == '=')
                         {
                             textIndex += 2;
                             token = Token.GreaterEqual;
@@ -213,17 +213,18 @@ namespace AnySqlParser
                         token = Token.Greater;
                         return;
                     case '<':
-                        switch (text[textIndex + 1])
-                        {
-                            case '=':
-                                textIndex += 2;
-                                token = Token.LessEqual;
-                                return;
-                            case '>':
-                                textIndex += 2;
-                                token = Token.NotEqual;
-                                return;
-                        }
+                        if (textIndex + 1 < text.Length)
+                            switch (text[textIndex + 1])
+                            {
+                                case '=':
+                                    textIndex += 2;
+                                    token = Token.LessEqual;
+                                    return;
+                                case '>':
+                                    textIndex += 2;
+                                    token = Token.NotEqual;
+                                    return;
+                            }
                         textIndex++;
                         token = Token.Less;
                         return;
@@ -244,7 +245,7 @@ namespace AnySqlParser
                         token = Token.Plus;
                         return;
                     case '/':
-                        if (text[textIndex + 1] == '*')
+                        if (textIndex + 1 < text.Length && text[textIndex + 1] == '*')
                         {
                             var i = textIndex + 2;
                             for (; ; )
@@ -268,7 +269,7 @@ namespace AnySqlParser
                         token = Token.Star;
                         return;
                     case '-':
-                        if (text[textIndex + 1] == '-')
+                        if (textIndex + 1 < text.Length && text[textIndex + 1] == '-')
                         {
                             textIndex = text.IndexOf('\n', textIndex + 2);
                             if (textIndex < 0) textIndex = text.Length;
