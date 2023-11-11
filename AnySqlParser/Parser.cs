@@ -50,6 +50,33 @@ namespace AnySqlParser
             this.file = file;
             this.line = line;
             Lex();
+            while (token != Token.EOF)
+            {
+                switch (Keyword())
+                {
+                    case "create":
+                        Lex();
+                        switch (Keyword())
+                        {
+                            case "table":
+                                Lex();
+                                break;
+                            default:
+                                throw Err("unknown noun");
+                        }
+                        break;
+                    default:
+                        throw Err("expected statement");
+                }
+                Eat(Token.Semicolon);
+            }
+        }
+
+        string Keyword()
+        {
+            if (token == Token.Word)
+                return tokenString.ToLowerInvariant();
+            throw Err("expected keyword");
         }
 
         bool Eat(Token k)

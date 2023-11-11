@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace AnySqlParser
 {
-    public class Statement
+    public class Statement : AST
     {
+        public Statement(Location location) : base(location)
+        {
+        }
     }
 }
