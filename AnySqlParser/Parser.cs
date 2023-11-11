@@ -8,6 +8,7 @@ namespace AnySqlParser
         {
             EOF,
             Semicolon,
+            DoublePipe,
             Word,
             Minus,
             Quote,
@@ -16,6 +17,7 @@ namespace AnySqlParser
             Slash,
             Dot,
             StringLiteral,
+            QuotedId,
             Comma,
             LParen,
             RParen,
@@ -89,11 +91,107 @@ namespace AnySqlParser
                             }
                             throw Err("unclosed '");
                         }
+                    case '"':
+                        {
+                            var sb = new StringBuilder();
+                            for (var i = textIndex + 1; i < text.Length;)
+                            {
+                                switch (text[i])
+                                {
+                                    case '\\':
+                                        switch (text[i + 1])
+                                        {
+                                            case '"':
+                                            case '\\':
+                                                sb.Append(text[i + 1]);
+                                                i += 2;
+                                                continue;
+                                        }
+                                        break;
+                                    case '"':
+                                        if (text[i + 1] == '"')
+                                        {
+                                            i += 2;
+                                            sb.Append('"');
+                                            continue;
+                                        }
+                                        textIndex = i + 1;
+                                        token = Token.QuotedId;
+                                        tokenString = sb.ToString();
+                                        return;
+                                }
+                                sb.Append(text[i++]);
+                            }
+                            throw Err("unclosed \"");
+                        }
+                    case '`':
+                        {
+                            var sb = new StringBuilder();
+                            for (var i = textIndex + 1; i < text.Length;)
+                            {
+                                switch (text[i])
+                                {
+                                    case '\\':
+                                        switch (text[i + 1])
+                                        {
+                                            case '`':
+                                            case '\\':
+                                                sb.Append(text[i + 1]);
+                                                i += 2;
+                                                continue;
+                                        }
+                                        break;
+                                    case '`':
+                                        if (text[i + 1] == '`')
+                                        {
+                                            i += 2;
+                                            sb.Append('`');
+                                            continue;
+                                        }
+                                        textIndex = i + 1;
+                                        token = Token.QuotedId;
+                                        tokenString = sb.ToString();
+                                        return;
+                                }
+                                sb.Append(text[i++]);
+                            }
+                            throw Err("unclosed `");
+                        }
+                    case '[':
+                        {
+                            var sb = new StringBuilder();
+                            for (var i = textIndex + 1; i < text.Length;)
+                            {
+                                if (text[i] == ']')
+                                {
+                                    if (text[i + 1] == ']')
+                                    {
+                                        i += 2;
+                                        sb.Append(']');
+                                        continue;
+                                    }
+                                    textIndex = i + 1;
+                                    token = Token.QuotedId;
+                                    tokenString = sb.ToString();
+                                    return;
+                                }
+                                sb.Append(text[i++]);
+                            }
+                            throw Err("unclosed [");
+                        }
                     case '!':
                         if (text[textIndex + 1] == '=')
                         {
                             textIndex += 2;
                             token = Token.NotEqual;
+                            return;
+                        }
+                        break;
+                    case '|':
+                        if (text[textIndex + 1] == '|')
+                        {
+                            textIndex += 2;
+                            token = Token.DoublePipe;
                             return;
                         }
                         break;
@@ -144,7 +242,7 @@ namespace AnySqlParser
                             var i = textIndex + 2;
                             for (; ; )
                             {
-                                if (text.Length <= i + 1) throw Err("unclosed '/*'");
+                                if (text.Length <= i + 1) throw Err("unclosed /*");
                                 if (text[i] == '*' && text[i + 1] == '/') break;
                                 i++;
                             }
@@ -263,7 +361,7 @@ namespace AnySqlParser
             var i = textIndex;
             do
                 i++;
-            while (IsIdPart(text[textIndex]));
+            while (i < text.Length && IsIdPart(text[textIndex]));
             token = Token.Word;
             tokenString = text[textIndex..i];
             textIndex = i;
