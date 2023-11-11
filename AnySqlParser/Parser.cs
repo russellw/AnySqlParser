@@ -16,7 +16,8 @@
         {
             while (textIndex < text.Length)
             {
-                switch (text[textIndex])
+                var c = text[textIndex];
+                switch (c)
                 {
                     case '-':
                         if (text[textIndex + 1] == '-')
@@ -34,8 +35,20 @@
                     case ' ':
                         textIndex++;
                         continue;
+                    default:
+                        //Common whitespace characters are handled in the switch for speed
+                        //but there are other whitespace characters in Unicode
+                        if (char.IsWhiteSpace(c))
+                        {
+                            textIndex++;
+                            continue;
+                        }
+                        break;
                 }
-                token = text[textIndex++];
+
+                //Punctuation
+                textIndex++;
+                token = c;
                 return;
             }
             token = -1;
