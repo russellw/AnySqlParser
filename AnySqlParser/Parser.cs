@@ -4,6 +4,12 @@ namespace AnySqlParser
 {
     public sealed class Parser
     {
+        public static List<Statement> Parse(string text, string file = "SQL", int line = 1)
+        {
+            var parser = new Parser(text, file, line);
+            return parser.statements;
+        }
+
         enum Token
         {
             EOF,
@@ -36,8 +42,9 @@ namespace AnySqlParser
         int textIndex;
         Token token;
         string tokenString = "";
+        readonly List<Statement> statements = new();
 
-        public Parser(string text, string file = "SQL", int line = 1)
+        Parser(string text, string file, int line)
         {
             this.text = text;
             this.file = file;
