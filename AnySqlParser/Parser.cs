@@ -18,7 +18,7 @@
 
         readonly string text;
         readonly string file;
-        int line;
+        readonly int line;
         int textIndex;
         Token token;
         string tokenString = "";
@@ -73,6 +73,7 @@
 
         Exception Err(string message)
         {
+            var line=this.line;
             for (int i = 0; i < textIndex; i++)
                 if (text[i] == '\n')
                     line++;
