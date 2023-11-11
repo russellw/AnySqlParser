@@ -22,4 +22,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AnySqlParser\AnySqlParser.csproj" />
+  </ItemGroup>
+
 </Project>
