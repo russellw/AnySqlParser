@@ -1,4 +1,6 @@
-﻿namespace AnySqlParser
+﻿using System.Text;
+
+namespace AnySqlParser
 {
     public sealed class Parser
     {
@@ -13,6 +15,7 @@
             Star,
             Slash,
             Dot,
+            StringLiteral,
             Comma,
             LParen,
             RParen,
@@ -40,6 +43,12 @@
             Lex();
         }
 
+        bool Eat(Token k)
+        {
+            if (token == k) { Lex(); return true; }
+            return false;
+        }
+
         void Lex()
         {
             while (textIndex < text.Length)
@@ -47,6 +56,39 @@
                 var c = text[textIndex];
                 switch (c)
                 {
+                    case '\'':
+                        {
+                            var sb = new StringBuilder();
+                            for (var i = textIndex + 1; i < text.Length;)
+                            {
+                                switch (text[i])
+                                {
+                                    case '\\':
+                                        switch (text[i + 1])
+                                        {
+                                            case '\'':
+                                            case '\\':
+                                                sb.Append(text[i + 1]);
+                                                i += 2;
+                                                continue;
+                                        }
+                                        break;
+                                    case '\'':
+                                        if (text[i + 1] == '\'')
+                                        {
+                                            i += 2;
+                                            sb.Append('\'');
+                                            continue;
+                                        }
+                                        textIndex = i + 1;
+                                        token = Token.StringLiteral;
+                                        tokenString = sb.ToString();
+                                        return;
+                                }
+                                sb.Append(text[i++]);
+                            }
+                            throw Err("unclosed '");
+                        }
                     case '!':
                         if (text[textIndex + 1] == '=')
                         {
@@ -191,16 +233,8 @@
                     case 'x':
                     case 'y':
                     case 'z':
-                        {
-                            var i = textIndex;
-                            do
-                                i++;
-                            while (IsIdPart(text[textIndex]));
-                            token = Token.Word;
-                            tokenString = text[textIndex..i];
-                            textIndex = i;
-                            return;
-                        }
+                        Word();
+                        return;
                     default:
                         //Common whitespace characters are handled in the switch for speed
                         //but there are other whitespace characters in Unicode
@@ -214,13 +248,7 @@
                         //but there are other letters in Unicode
                         if (char.IsLetter(c))
                         {
-                            var i = textIndex;
-                            do
-                                i++;
-                            while (IsIdPart(text[textIndex]));
-                            token = Token.Word;
-                            tokenString = text[textIndex..i];
-                            textIndex = i;
+                            Word();
                             return;
                         }
                         break;
@@ -228,6 +256,17 @@
                 throw Err($"stray '{c}'");
             }
             token = Token.EOF;
+        }
+
+        void Word()
+        {
+            var i = textIndex;
+            do
+                i++;
+            while (IsIdPart(text[textIndex]));
+            token = Token.Word;
+            tokenString = text[textIndex..i];
+            textIndex = i;
         }
 
         static bool IsIdPart(char c)
