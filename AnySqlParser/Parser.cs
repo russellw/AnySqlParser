@@ -43,9 +43,11 @@ namespace AnySqlParser
         readonly string text;
         readonly string file;
         int line;
+        int prevLine;
         int textIndex;
         Token token;
-        string tokenString = "";
+        string tokenString = null!;
+        string prevTokenString = null!;
         readonly List<Statement> statements = new();
 
         Parser(string text, string file, int line)
@@ -86,11 +88,11 @@ namespace AnySqlParser
                                     break;
                                 }
                             default:
-                                throw Err("unknown noun", location.Line);
+                                throw Err(prevTokenString + ": unknown noun", prevLine);
                         }
                         break;
                     default:
-                        throw Err("unknown statement", location.Line);
+                        throw Err(prevTokenString + ": unknown statement", prevLine);
                 }
                 statements.Add(statement);
                 Eat(Token.Semicolon);
@@ -118,8 +120,6 @@ namespace AnySqlParser
             }
 
             while (token == Token.Word)
-            {
-                var line1 = line;
                 switch (Keyword())
                 {
                     case "filestream":
@@ -137,9 +137,8 @@ namespace AnySqlParser
                         a.notForReplication = true;
                         break;
                     default:
-                        throw Err(tokenString + ": unknown keyword", line1);
+                        throw Err(prevTokenString + ": unknown keyword", prevLine);
                 }
-            }
             return a;
         }
 
@@ -147,9 +146,10 @@ namespace AnySqlParser
         {
             if (token == Token.Word)
             {
-                var s = tokenString.ToLowerInvariant();
+                prevLine = line;
+                prevTokenString = tokenString;
                 Lex();
-                return s;
+                return prevTokenString.ToLowerInvariant();
             }
             throw Err("expected keyword");
         }
