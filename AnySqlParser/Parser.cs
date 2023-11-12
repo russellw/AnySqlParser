@@ -100,6 +100,7 @@ namespace AnySqlParser
             var location = new Location(file, line);
             var a = new ColumnDefinition(location, Name());
 
+            //data type
             var k = token;
             var s = Name();
             if (Eat(Token.Dot))
@@ -112,6 +113,25 @@ namespace AnySqlParser
                 if (k == Token.Word) s = s.ToLowerInvariant();
                 a.typeName = s;
             }
+
+            while (token == Token.Word)
+                switch (Keyword())
+                {
+                    case "filestream":
+                        Lex();
+                        a.filestream = true;
+                        break;
+                    case "sparse":
+                        Lex();
+                        a.sparse = true;
+                        break;
+                    case "rowguidcol":
+                        Lex();
+                        a.rowguidcol = true;
+                        break;
+                    default:
+                        throw Err(tokenString + ": unknown keyword");
+                }
             return a;
         }
 

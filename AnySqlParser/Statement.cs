@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AnySqlParser
+﻿namespace AnySqlParser
 {
     public class ColumnDefinition : AST
     {
@@ -14,6 +8,10 @@ namespace AnySqlParser
         public string typeName = "";
         public int precision = -1;
         public int scale = -1;
+
+        public bool filestream;
+        public bool sparse;
+        public bool rowguidcol;
 
         public ColumnDefinition(Location location, string name) : base(location)
         {
