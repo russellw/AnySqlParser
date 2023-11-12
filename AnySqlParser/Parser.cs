@@ -75,6 +75,10 @@ namespace AnySqlParser
                                         }
                                     }
                                     Expect(Token.LParen, '(');
+                                    do
+                                        a.columnDefinitions.Add(ColumnDefinition());
+                                    while (Eat(Token.Comma));
+                                    Expect(Token.RParen, ')');
                                     statement = a;
                                     break;
                                 }
