@@ -62,7 +62,21 @@ namespace AnySqlParser
                             case "table":
                                 {
                                     Lex();
-                                    var a = new CreateTable(location);
+                                    var a = new CreateTable(location)
+                                    {
+                                        tableName = Name()
+                                    };
+                                    if (Eat(Token.Dot))
+                                    {
+                                        a.schemaName = a.tableName;
+                                        a.tableName = Name();
+                                        if (Eat(Token.Dot))
+                                        {
+                                            a.databaseName = a.schemaName;
+                                            a.schemaName = a.tableName;
+                                            a.tableName = Name();
+                                        }
+                                    }
                                     statement = a;
                                     break;
                                 }

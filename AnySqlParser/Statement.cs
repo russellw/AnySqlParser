@@ -15,6 +15,10 @@ namespace AnySqlParser
 
     public class CreateTable : Statement
     {
+        public string databaseName="";
+        public string schemaName="";
+        public string tableName="";
+
         public CreateTable(Location location) : base(location)
         {
         }
