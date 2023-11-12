@@ -12,4 +12,11 @@ namespace AnySqlParser
         {
         }
     }
+
+    public class CreateTable : Statement
+    {
+        public CreateTable(Location location) : base(location)
+        {
+        }
+    }
 }

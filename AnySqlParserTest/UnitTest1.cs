@@ -50,7 +50,7 @@ namespace AnySqlParserTest
         }
 
         [Fact]
-        public void QuotedId()
+        public void QuotedName()
         {
             Assert.Throws<FormatException>(() => Parser.Parse("\"..."));
             Assert.Throws<FormatException>(() => Parser.Parse("`"));

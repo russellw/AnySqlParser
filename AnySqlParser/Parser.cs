@@ -17,13 +17,12 @@ namespace AnySqlParser
             DoublePipe,
             Word,
             Minus,
-            Quote,
             Plus,
             Star,
             Slash,
             Dot,
             StringLiteral,
-            QuotedId,
+            QuotedName,
             Comma,
             LParen,
             RParen,
@@ -52,6 +51,8 @@ namespace AnySqlParser
             Lex();
             while (token != Token.EOF)
             {
+                var location = new Location(file, line);
+                Statement statement;
                 switch (Keyword())
                 {
                     case "create":
@@ -59,8 +60,12 @@ namespace AnySqlParser
                         switch (Keyword())
                         {
                             case "table":
-                                Lex();
-                                break;
+                                {
+                                    Lex();
+                                    var a = new CreateTable(location);
+                                    statement = a;
+                                    break;
+                                }
                             default:
                                 throw Err("unknown noun");
                         }
@@ -68,6 +73,7 @@ namespace AnySqlParser
                     default:
                         throw Err("expected statement");
                 }
+                statements.Add(statement);
                 Eat(Token.Semicolon);
                 Eat("go");
             }
@@ -78,6 +84,16 @@ namespace AnySqlParser
             if (token == Token.Word)
                 return tokenString.ToLowerInvariant();
             throw Err("expected keyword");
+        }
+
+        string Name()
+        {
+            switch (token)
+            {
+                case Token.Word:
+                case Token.QuotedName: return tokenString;
+            }
+            throw Err("expected name");
         }
 
         bool Eat(Token k)
@@ -164,7 +180,7 @@ namespace AnySqlParser
                                             continue;
                                         }
                                         textIndex = i + 1;
-                                        token = Token.QuotedId;
+                                        token = Token.QuotedName;
                                         tokenString = sb.ToString();
                                         return;
                                 }
@@ -201,7 +217,7 @@ namespace AnySqlParser
                                             continue;
                                         }
                                         textIndex = i + 1;
-                                        token = Token.QuotedId;
+                                        token = Token.QuotedName;
                                         tokenString = sb.ToString();
                                         return;
                                 }
@@ -228,7 +244,7 @@ namespace AnySqlParser
                                             continue;
                                         }
                                         textIndex = i + 1;
-                                        token = Token.QuotedId;
+                                        token = Token.QuotedName;
                                         tokenString = sb.ToString();
                                         return;
                                 }
@@ -425,13 +441,13 @@ namespace AnySqlParser
             var i = textIndex;
             do
                 i++;
-            while (i < text.Length && IsIdPart(text[textIndex]));
+            while (i < text.Length && IsWordPart(text[textIndex]));
             token = Token.Word;
             tokenString = text[textIndex..i];
             textIndex = i;
         }
 
-        static bool IsIdPart(char c)
+        static bool IsWordPart(char c)
         {
             if (char.IsLetterOrDigit(c)) return true;
             return c == '_';
