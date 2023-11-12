@@ -38,7 +38,7 @@ namespace AnySqlParser
 
         readonly string text;
         readonly string file;
-        readonly int line;
+        int line;
         int textIndex;
         Token token;
         string tokenString = "";
@@ -100,11 +100,15 @@ namespace AnySqlParser
                 {
                     case '\'':
                         {
+                            var line1 = line;
                             var sb = new StringBuilder();
                             for (var i = textIndex + 1; i < text.Length;)
                             {
                                 switch (text[i])
                                 {
+                                    case '\n':
+                                        line++;
+                                        break;
                                     case '\\':
                                         switch (text[i + 1])
                                         {
@@ -129,15 +133,19 @@ namespace AnySqlParser
                                 }
                                 sb.Append(text[i++]);
                             }
-                            throw Err("unclosed '");
+                            throw Err("unclosed '", line1);
                         }
                     case '"':
                         {
+                            var line1 = line;
                             var sb = new StringBuilder();
                             for (var i = textIndex + 1; i < text.Length;)
                             {
                                 switch (text[i])
                                 {
+                                    case '\n':
+                                        line++;
+                                        break;
                                     case '\\':
                                         switch (text[i + 1])
                                         {
@@ -162,15 +170,19 @@ namespace AnySqlParser
                                 }
                                 sb.Append(text[i++]);
                             }
-                            throw Err("unclosed \"");
+                            throw Err("unclosed \"", line1);
                         }
                     case '`':
                         {
+                            var line1 = line;
                             var sb = new StringBuilder();
                             for (var i = textIndex + 1; i < text.Length;)
                             {
                                 switch (text[i])
                                 {
+                                    case '\n':
+                                        line++;
+                                        break;
                                     case '\\':
                                         switch (text[i + 1])
                                         {
@@ -195,29 +207,34 @@ namespace AnySqlParser
                                 }
                                 sb.Append(text[i++]);
                             }
-                            throw Err("unclosed `");
+                            throw Err("unclosed `", line1);
                         }
                     case '[':
                         {
+                            var line1 = line;
                             var sb = new StringBuilder();
                             for (var i = textIndex + 1; i < text.Length;)
                             {
-                                if (text[i] == ']')
+                                switch (text[i])
                                 {
-                                    if (text[i + 1] == ']')
-                                    {
-                                        i += 2;
-                                        sb.Append(']');
-                                        continue;
-                                    }
-                                    textIndex = i + 1;
-                                    token = Token.QuotedId;
-                                    tokenString = sb.ToString();
-                                    return;
+                                    case '\n':
+                                        line++;
+                                        break;
+                                    case ']':
+                                        if (text[i + 1] == ']')
+                                        {
+                                            i += 2;
+                                            sb.Append(']');
+                                            continue;
+                                        }
+                                        textIndex = i + 1;
+                                        token = Token.QuotedId;
+                                        tokenString = sb.ToString();
+                                        return;
                                 }
                                 sb.Append(text[i++]);
                             }
-                            throw Err("unclosed [");
+                            throw Err("unclosed [", line1);
                         }
                     case '!':
                         if (textIndex + 1 < text.Length && text[textIndex + 1] == '=')
@@ -280,11 +297,14 @@ namespace AnySqlParser
                     case '/':
                         if (textIndex + 1 < text.Length && text[textIndex + 1] == '*')
                         {
+                            var line1 = line;
                             var i = textIndex + 2;
                             for (; ; )
                             {
-                                if (text.Length <= i + 1) throw Err("unclosed /*");
-                                if (text[i] == '*' && text[i + 1] == '/') break;
+                                if (text.Length <= i + 1) throw Err("unclosed /*", line1);
+                                if (text[i] == '\n') line++;
+                                else
+                                    if (text[i] == '*' && text[i + 1] == '/') break;
                                 i++;
                             }
                             textIndex = i + 2;
@@ -312,6 +332,9 @@ namespace AnySqlParser
                         token = Token.Minus;
                         return;
                     case '\n':
+                        textIndex++;
+                        line++;
+                        continue;
                     case '\r':
                     case '\t':
                     case '\f':
@@ -416,10 +439,11 @@ namespace AnySqlParser
 
         Exception Err(string message)
         {
-            var line = this.line;
-            for (int i = 0; i < textIndex; i++)
-                if (text[i] == '\n')
-                    line++;
+            return Err(message, line);
+        }
+
+        Exception Err(string message, int line)
+        {
             return new FormatException($"{file}:{line}: {message}");
         }
     }
