@@ -62,10 +62,7 @@ namespace AnySqlParser
                             case "table":
                                 {
                                     Lex();
-                                    var a = new CreateTable(location)
-                                    {
-                                        tableName = Name()
-                                    };
+                                    var a = new CreateTable(location, Name());
                                     if (Eat(Token.Dot))
                                     {
                                         a.schemaName = a.tableName;
@@ -77,6 +74,7 @@ namespace AnySqlParser
                                             a.tableName = Name();
                                         }
                                     }
+                                    Expect(Token.LParen, '(');
                                     statement = a;
                                     break;
                                 }
@@ -91,6 +89,26 @@ namespace AnySqlParser
                 Eat(Token.Semicolon);
                 Eat("go");
             }
+        }
+
+        ColumnDefinition ColumnDefinition()
+        {
+            var location = new Location(file, line);
+            var a = new ColumnDefinition(location, Name());
+
+            var k = token;
+            var s = Name();
+            if (Eat(Token.Dot))
+            {
+                a.typeSchemaName = s;
+                a.typeName = Keyword();
+            }
+            else
+            {
+                if(k==Token.Word)s=s.ToLowerInvariant();
+                a.typeName = s;
+            }
+            return a;
         }
 
         string Keyword()
@@ -110,15 +128,30 @@ namespace AnySqlParser
             throw Err("expected name");
         }
 
+        void Expect(Token k,char c)
+        {
+            if (!Eat(k)) throw Err($"expected '{c}'");
+        }
+
+        void Expect(string s)
+        {
+            if (!Eat(s)) throw Err($"expected '{s}'");
+        }
+
         bool Eat(Token k)
         {
             if (token == k) { Lex(); return true; }
             return false;
         }
 
-        void Eat(string s)
+        bool Eat(string s)
         {
-            if (token == Token.Word && string.Equals(tokenString, s, StringComparison.OrdinalIgnoreCase)) Lex();
+            if (token == Token.Word && string.Equals(tokenString, s, StringComparison.OrdinalIgnoreCase))
+            {
+                Lex();
+                return true;
+            }
+            return false;
         }
 
         void Lex()
