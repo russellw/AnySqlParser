@@ -129,6 +129,12 @@ namespace AnySqlParser
                         Lex();
                         a.rowguidcol = true;
                         break;
+                    case "not":
+                        Lex();
+                        Expect("for");
+                        Expect("replication");
+                        a.notForReplication = true;
+                        break;
                     default:
                         throw Err(tokenString + ": unknown keyword");
                 }
