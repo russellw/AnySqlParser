@@ -4,7 +4,12 @@ namespace AnySqlParser
 {
     public sealed class Parser
     {
-        public static List<Statement> Parse(string text, string file = "SQL", int line = 1)
+        public static List<Statement> ParseFile(string file)
+        {
+            return ParseText(File.ReadAllText(file), file);
+        }
+
+        public static List<Statement> ParseText(string text, string file = "SQL", int line = 1)
         {
             var parser = new Parser(text, file, line);
             return parser.statements;
