@@ -61,12 +61,10 @@ namespace AnySqlParser
                 switch (Keyword())
                 {
                     case "create":
-                        Lex();
                         switch (Keyword())
                         {
                             case "table":
                                 {
-                                    Lex();
                                     var a = new CreateTable(location, Name());
                                     if (Eat(Token.Dot))
                                     {
@@ -88,11 +86,11 @@ namespace AnySqlParser
                                     break;
                                 }
                             default:
-                                throw Err("unknown noun");
+                                throw Err("unknown noun", location.Line);
                         }
                         break;
                     default:
-                        throw Err("expected statement");
+                        throw Err("unknown statement", location.Line);
                 }
                 statements.Add(statement);
                 Eat(Token.Semicolon);
@@ -120,36 +118,39 @@ namespace AnySqlParser
             }
 
             while (token == Token.Word)
+            {
+                var line1 = line;
                 switch (Keyword())
                 {
                     case "filestream":
-                        Lex();
                         a.filestream = true;
                         break;
                     case "sparse":
-                        Lex();
                         a.sparse = true;
                         break;
                     case "rowguidcol":
-                        Lex();
                         a.rowguidcol = true;
                         break;
                     case "not":
-                        Lex();
                         Expect("for");
                         Expect("replication");
                         a.notForReplication = true;
                         break;
                     default:
-                        throw Err(tokenString + ": unknown keyword");
+                        throw Err(tokenString + ": unknown keyword", line1);
                 }
+            }
             return a;
         }
 
         string Keyword()
         {
             if (token == Token.Word)
-                return tokenString.ToLowerInvariant();
+            {
+                var s = tokenString.ToLowerInvariant();
+                Lex();
+                return s;
+            }
             throw Err("expected keyword");
         }
 
@@ -158,7 +159,12 @@ namespace AnySqlParser
             switch (token)
             {
                 case Token.Word:
-                case Token.QuotedName: return tokenString;
+                case Token.QuotedName:
+                    {
+                        var s = tokenString;
+                        Lex();
+                        return s;
+                    }
             }
             throw Err("expected name");
         }
@@ -414,6 +420,14 @@ namespace AnySqlParser
                     case '%':
                         textIndex++;
                         token = Token.Percent;
+                        return;
+                    case '(':
+                        textIndex++;
+                        token = Token.LParen;
+                        return;
+                    case ')':
+                        textIndex++;
+                        token = Token.RParen;
                         return;
                     case '*':
                         textIndex++;
