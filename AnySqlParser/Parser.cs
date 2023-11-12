@@ -69,6 +69,7 @@ namespace AnySqlParser
                         throw Err("expected statement");
                 }
                 Eat(Token.Semicolon);
+                Eat("go");
             }
         }
 
@@ -83,6 +84,11 @@ namespace AnySqlParser
         {
             if (token == k) { Lex(); return true; }
             return false;
+        }
+
+        void Eat(string s)
+        {
+            if (token == Token.Word && string.Equals(tokenString, s, StringComparison.OrdinalIgnoreCase)) Lex();
         }
 
         void Lex()
