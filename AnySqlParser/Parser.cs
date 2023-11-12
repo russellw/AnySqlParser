@@ -523,7 +523,7 @@ namespace AnySqlParser
             var i = textIndex;
             do
                 i++;
-            while (i < text.Length && IsWordPart(text[textIndex]));
+            while (i < text.Length && IsWordPart(text[i]));
             token = Token.Word;
             tokenString = text[textIndex..i];
             textIndex = i;
