@@ -105,7 +105,7 @@ namespace AnySqlParser
             }
             else
             {
-                if(k==Token.Word)s=s.ToLowerInvariant();
+                if (k == Token.Word) s = s.ToLowerInvariant();
                 a.typeName = s;
             }
             return a;
@@ -128,7 +128,7 @@ namespace AnySqlParser
             throw Err("expected name");
         }
 
-        void Expect(Token k,char c)
+        void Expect(Token k, char c)
         {
             if (!Eat(k)) throw Err($"expected '{c}'");
         }

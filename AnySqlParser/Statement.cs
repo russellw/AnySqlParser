@@ -11,11 +11,11 @@ namespace AnySqlParser
         public readonly string name;
 
         public string? typeSchemaName;
-        public string typeName="";
+        public string typeName = "";
         public int precision = -1;
         public int scale = -1;
 
-        public ColumnDefinition(Location location,string name) : base(location)
+        public ColumnDefinition(Location location, string name) : base(location)
         {
             this.name = name;
         }
@@ -31,11 +31,11 @@ namespace AnySqlParser
     public class CreateTable : Statement
     {
         public string? databaseName;
-        public string? schemaName ;
+        public string? schemaName;
         public string tableName;
-        public List<ColumnDefinition>columnDefinitions = new();
+        public List<ColumnDefinition> columnDefinitions = new();
 
-        public CreateTable(Location location,string tableName) : base(location)
+        public CreateTable(Location location, string tableName) : base(location)
         {
             this.tableName = tableName;
         }
