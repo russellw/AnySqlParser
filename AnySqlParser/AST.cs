@@ -2,7 +2,7 @@
 {
     public readonly record struct Location(string File, int Line);
 
-    public class AST
+    public abstract class AST
     {
         public readonly Location location;
 

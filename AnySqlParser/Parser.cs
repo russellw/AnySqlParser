@@ -76,6 +76,10 @@ namespace AnySqlParser
                             //values
                             Expect("values");
                             Expect('(');
+                            do
+                                a.values.Add(Expression());
+                            while (Eat(','));
+                            Expect(')');
 
                             statement = a;
                             break;
@@ -184,6 +188,36 @@ namespace AnySqlParser
             return a;
         }
 
+        //expressions
+        Expression Expression()
+        {
+            return Primary();
+        }
+
+        Expression Primary()
+        {
+            StashLex();
+            var location = new Location(file, prevLine);
+            switch (token)
+            {
+                case kStringLiteral:
+                    return new StringLiteral(location, tokenString);
+                case kNumber:
+                    return new Number(location, tokenString);
+                case kWord:
+                    if (string.Equals(prevTokenString, "null", StringComparison.OrdinalIgnoreCase))
+                        return new Null(location);
+                    throw Err("variables not yet implemented", prevLine);
+                case '(':
+                    {
+                        var a = Expression();
+                        Expect(')');
+                        return a;
+                    }
+            }
+            throw Err("expected expression", prevLine);
+        }
+
         //etc
         int Int()
         {
@@ -198,9 +232,7 @@ namespace AnySqlParser
         {
             if (token != kWord)
                 throw Err("expected keyword");
-            prevLine = line;
-            prevTokenString = tokenString;
-            Lex();
+            StashLex();
             return prevTokenString.ToLowerInvariant();
         }
 
@@ -253,6 +285,13 @@ namespace AnySqlParser
         }
 
         //tokenizer
+        void StashLex()
+        {
+            prevLine = line;
+            prevTokenString = tokenString;
+            Lex();
+        }
+
         void Lex()
         {
             while (textIndex < text.Length)

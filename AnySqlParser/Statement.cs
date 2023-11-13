@@ -1,8 +1,8 @@
 ﻿namespace AnySqlParser
 {
-    public class ColumnDefinition : AST
+    public sealed class ColumnDefinition : AST
     {
-        public readonly string name;
+        public string name;
 
         //data type
         public string? typeSchemaName;
@@ -26,17 +26,18 @@
         }
     }
 
-    public class Statement : AST
+    public abstract class Statement : AST
     {
         public Statement(Location location) : base(location)
         {
         }
     }
 
-    public class Insert : Statement
+    public sealed class Insert : Statement
     {
         public string tableName;
         public List<string> columns = new();
+        public List<Expression> values = new();
 
         public Insert(Location location, string tableName) : base(location)
         {
@@ -44,14 +45,14 @@
         }
     }
 
-    public class StartTransaction : Statement
+    public sealed class StartTransaction : Statement
     {
         public StartTransaction(Location location) : base(location)
         {
         }
     }
 
-    public class CreateTable : Statement
+    public sealed class CreateTable : Statement
     {
         public string? databaseName;
         public string? schemaName;
