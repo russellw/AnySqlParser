@@ -115,10 +115,21 @@ namespace AnySqlParser
                             break;
                     }
                     return new Rollback(location);
+                case "select":
+                    {
+                        var a = new Select(location);
+                        do
+                            a.selectList.Add(Expression());
+                        while (Eat(','));
+                        return a;
+                    }
                 case "insert":
                     {
                         Eat("into");
-                        var a = new Insert(location, Name());
+                        var a = new Insert(location);
+
+                        //table
+                        a.tableName = Name();
 
                         //columns
                         if (Eat('('))

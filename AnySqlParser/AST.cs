@@ -37,15 +37,23 @@
         }
     }
 
+    public sealed class Select : AST
+    {
+        public List<AST> selectList = new();
+
+        public Select(Location location) : base(location)
+        {
+        }
+    }
+
     public sealed class Insert : AST
     {
-        public string tableName;
+        public string tableName = null!;
         public List<string> columns = new();
         public List<AST> values = new();
 
-        public Insert(Location location, string tableName) : base(location)
+        public Insert(Location location) : base(location)
         {
-            this.tableName = tableName;
         }
     }
 
