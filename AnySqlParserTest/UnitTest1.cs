@@ -63,5 +63,12 @@ namespace AnySqlParserTest
             var statements = Parser.ParseFile("sql-server-samples/sampleDB1.sql");
             Assert.True(statements[0] is Table);
         }
+
+        [Fact]
+        public void Northwind()
+        {
+            var statements = Parser.ParseFile("sql-server-samples/instnwnd.sql");
+            Assert.True(statements.Count > 0);
+        }
     }
 }
