@@ -42,91 +42,124 @@ namespace AnySqlParser
             Lex();
             while (token != -1)
             {
-                var location = new Location(file, line);
-                Statement statement;
-                switch (Keyword())
-                {
-                    case "begin":
-                    case "start":
-                        {
-                            switch (KeywordMaybe())
-                            {
-                                case "transaction":
-                                case "tran":
-                                    Lex();
-                                    break;
-                            }
-                            statement = new StartTransaction(location);
-                            break;
-                        }
-                    case "insert":
-                        {
-                            Eat("into");
-                            var a = new Insert(location, Name());
-
-                            //columns
-                            if (Eat('('))
-                            {
-                                do
-                                    a.columns.Add(Name());
-                                while (Eat(','));
-                                Expect(')');
-                            }
-
-                            //values
-                            Expect("values");
-                            Expect('(');
-                            do
-                                a.values.Add(Expression());
-                            while (Eat(','));
-                            Expect(')');
-
-                            statement = a;
-                            break;
-                        }
-                    case "create":
-                        switch (Keyword())
-                        {
-                            case "table":
-                                {
-                                    var a = new CreateTable(location, Name());
-                                    if (Eat('.'))
-                                    {
-                                        a.schemaName = a.tableName;
-                                        a.tableName = Name();
-                                        if (Eat('.'))
-                                        {
-                                            a.databaseName = a.schemaName;
-                                            a.schemaName = a.tableName;
-                                            a.tableName = Name();
-                                        }
-                                    }
-                                    Expect('(');
-                                    do
-                                        a.columnDefinitions.Add(ColumnDefinition());
-                                    while (Eat(','));
-                                    Expect(')');
-                                    statement = a;
-                                    break;
-                                }
-                            default:
-                                throw Err(prevTokenString + ": unknown noun", prevLine);
-                        }
-                        break;
-                    default:
-                        throw Err(prevTokenString + ": unknown statement", prevLine);
-                }
-                statements.Add(statement);
-                Eat(';');
+                statements.Add(Statement());
                 Eat("go");
             }
         }
 
         //statements
-        ColumnDefinition ColumnDefinition()
+        Statement Statement()
+        {
+            var a = Statement1();
+            Eat(';');
+            return a;
+        }
+
+        Statement Statement1()
         {
             var location = new Location(file, line);
-            var a = new ColumnDefinition(location, Name());
+            switch (Keyword())
+            {
+                case "begin":
+                    switch (KeywordMaybe())
+                    {
+                        case "transaction":
+                        case "tran":
+                            Lex();
+                            return new Start(location);
+                        default:
+                            {
+                                var a = new Block(location);
+                                while (!Eat("end"))
+                                    a.statements.Add(Statement());
+                                return a;
+                            }
+                    }
+                case "start":
+                    switch (KeywordMaybe())
+                    {
+                        case "transaction":
+                        case "tran":
+                            Lex();
+                            break;
+                    }
+                    return new Start(location);
+                case "commit":
+                    switch (KeywordMaybe())
+                    {
+                        case "transaction":
+                        case "tran":
+                            Lex();
+                            break;
+                    }
+                    return new Commit(location);
+                case "rollback":
+                    switch (KeywordMaybe())
+                    {
+                        case "transaction":
+                        case "tran":
+                            Lex();
+                            break;
+                    }
+                    return new Rollback(location);
+                case "insert":
+                    {
+                        Eat("into");
+                        var a = new Insert(location, Name());
+
+                        //columns
+                        if (Eat('('))
+                        {
+                            do
+                                a.columns.Add(Name());
+                            while (Eat(','));
+                            Expect(')');
+                        }
+
+                        //values
+                        Expect("values");
+                        Expect('(');
+                        do
+                            a.values.Add(Expression());
+                        while (Eat(','));
+                        Expect(')');
+
+                        return a;
+                    }
+                case "create":
+                    switch (Keyword())
+                    {
+                        case "table":
+                            {
+                                var a = new Table(location, Name());
+                                if (Eat('.'))
+                                {
+                                    a.schemaName = a.tableName;
+                                    a.tableName = Name();
+                                    if (Eat('.'))
+                                    {
+                                        a.databaseName = a.schemaName;
+                                        a.schemaName = a.tableName;
+                                        a.tableName = Name();
+                                    }
+                                }
+                                Expect('(');
+                                do
+                                    a.columnDefinitions.Add(ColumnDefinition());
+                                while (Eat(','));
+                                Expect(')');
+                                return a;
+                            }
+                    }
+                    throw Err(prevTokenString + ": unknown noun", prevLine);
+            }
+            throw Err(prevTokenString + ": unknown statement", prevLine);
+        }
+
+        Column ColumnDefinition()
+        {
+            var location = new Location(file, line);
+            var a = new Column(location, Name());
 
             //data type
             var k = token;

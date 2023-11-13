@@ -1,6 +1,6 @@
 ﻿namespace AnySqlParser
 {
-    public sealed class ColumnDefinition : AST
+    public sealed class Column : AST
     {
         public string name;
 
@@ -20,7 +20,7 @@
         public bool forReplication = true;
         public bool rowguidcol;
 
-        public ColumnDefinition(Location location, string name) : base(location)
+        public Column(Location location, string name) : base(location)
         {
             this.name = name;
         }
@@ -45,21 +45,44 @@
         }
     }
 
-    public sealed class StartTransaction : Statement
+    public sealed class Start : Statement
     {
-        public StartTransaction(Location location) : base(location)
+        public Start(Location location) : base(location)
         {
         }
     }
 
-    public sealed class CreateTable : Statement
+    public sealed class Commit : Statement
+    {
+        public Commit(Location location) : base(location)
+        {
+        }
+    }
+
+    public sealed class Rollback : Statement
+    {
+        public Rollback(Location location) : base(location)
+        {
+        }
+    }
+
+    public sealed class Block : Statement
+    {
+        public List<Statement> statements = new();
+
+        public Block(Location location) : base(location)
+        {
+        }
+    }
+
+    public sealed class Table : Statement
     {
         public string? databaseName;
         public string? schemaName;
         public string tableName;
-        public List<ColumnDefinition> columnDefinitions = new();
+        public List<Column> columnDefinitions = new();
 
-        public CreateTable(Location location, string tableName) : base(location)
+        public Table(Location location, string tableName) : base(location)
         {
             this.tableName = tableName;
         }
