@@ -72,7 +72,7 @@
 
     public sealed class Block : AST
     {
-        public List<AST> statements = new();
+        public List<AST> body = new();
 
         public Block(Location location) : base(location)
         {
@@ -94,7 +94,7 @@
         public string? databaseName;
         public string? schemaName;
         public string tableName = null!;
-        public List<Column> columnDefinitions = new();
+        public List<Column> columns = new();
 
         public Table(Location location) : base(location)
         {

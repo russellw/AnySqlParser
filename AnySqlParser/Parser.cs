@@ -84,7 +84,7 @@ namespace AnySqlParser
                             {
                                 var a = new Block(location);
                                 while (!Eat("end"))
-                                    a.statements.Add(Statement());
+                                    a.body.Add(Statement());
                                 return a;
                             }
                     }
@@ -163,7 +163,7 @@ namespace AnySqlParser
                                 //columns
                                 Expect('(');
                                 do
-                                    a.columnDefinitions.Add(ColumnDefinition());
+                                    a.columns.Add(Column());
                                 while (Eat(','));
                                 Expect(')');
                                 return a;
@@ -174,7 +174,7 @@ namespace AnySqlParser
             throw Err(prevTokenString + ": unknown statement", prevLine);
         }
 
-        Column ColumnDefinition()
+        Column Column()
         {
             var location = new Location(file, line);
             var a = new Column(location);
@@ -661,16 +661,14 @@ namespace AnySqlParser
                             return;
                         }
 
-                        //Common digits are handled in the switch for speed
-                        //but there are other digits in Unicode
+                        //likewise digits 
                         if (char.IsDigit(c))
                         {
                             Number();
                             return;
                         }
 
-                        //Common whitespace characters are handled in the switch for speed
-                        //but there are other whitespace characters in Unicode
+                        //and whitespace 
                         if (char.IsWhiteSpace(c))
                         {
                             textIndex++;
