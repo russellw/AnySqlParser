@@ -399,11 +399,11 @@ namespace AnySqlParser
                         return;
                     case ',':
                         textIndex++;
-                        token = Token.Plus;
+                        token = Token.Comma;
                         return;
                     case ';':
                         textIndex++;
-                        token = Token.Comma;
+                        token = Token.Semicolon;
                         return;
                     case '.':
                         textIndex++;
