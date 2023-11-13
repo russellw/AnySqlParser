@@ -4,12 +4,12 @@ namespace AnySqlParser
 {
     public sealed class Parser
     {
-        public static List<Statement> ParseFile(string file)
+        public static List<AST> ParseFile(string file)
         {
             return ParseText(File.ReadAllText(file), file);
         }
 
-        public static List<Statement> ParseText(string text, string file = "SQL", int line = 1)
+        public static List<AST> ParseText(string text, string file = "SQL", int line = 1)
         {
             var parser = new Parser(text, file, line);
             return parser.statements;
@@ -32,7 +32,7 @@ namespace AnySqlParser
         int token;
         string tokenString = null!;
         string prevTokenString = null!;
-        readonly List<Statement> statements = new();
+        readonly List<AST> statements = new();
 
         Parser(string text, string file, int line)
         {
@@ -49,14 +49,14 @@ namespace AnySqlParser
         }
 
         //statements
-        Statement Statement()
+        AST Statement()
         {
             var a = Statement1();
             Eat(';');
             return a;
         }
 
-        Statement Statement1()
+        AST Statement1()
         {
             var location = new Location(file, line);
             switch (Keyword())
@@ -243,12 +243,12 @@ namespace AnySqlParser
         }
 
         //expressions
-        Expression Expression()
+        AST Expression()
         {
             return Primary();
         }
 
-        Expression Primary()
+        AST Primary()
         {
             var prevToken = token;
             StashLex();

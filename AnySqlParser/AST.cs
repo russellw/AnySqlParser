@@ -37,18 +37,11 @@
         }
     }
 
-    public abstract class Statement : AST
-    {
-        public Statement(Location location) : base(location)
-        {
-        }
-    }
-
-    public sealed class Insert : Statement
+    public sealed class Insert : AST
     {
         public string tableName;
         public List<string> columns = new();
-        public List<Expression> values = new();
+        public List<AST> values = new();
 
         public Insert(Location location, string tableName) : base(location)
         {
@@ -56,37 +49,37 @@
         }
     }
 
-    public sealed class Start : Statement
+    public sealed class Start : AST
     {
         public Start(Location location) : base(location)
         {
         }
     }
 
-    public sealed class Commit : Statement
+    public sealed class Commit : AST
     {
         public Commit(Location location) : base(location)
         {
         }
     }
 
-    public sealed class Rollback : Statement
+    public sealed class Rollback : AST
     {
         public Rollback(Location location) : base(location)
         {
         }
     }
 
-    public sealed class Block : Statement
+    public sealed class Block : AST
     {
-        public List<Statement> statements = new();
+        public List<AST> statements = new();
 
         public Block(Location location) : base(location)
         {
         }
     }
 
-    public sealed class SetParameter : Statement
+    public sealed class SetParameter : AST
     {
         public string name = null!;
         public string value = null!;
@@ -96,7 +89,7 @@
         }
     }
 
-    public sealed class Table : Statement
+    public sealed class Table : AST
     {
         public string? databaseName;
         public string? schemaName;
@@ -108,14 +101,7 @@
         }
     }
 
-    public abstract class Expression : AST
-    {
-        public Expression(Location location) : base(location)
-        {
-        }
-    }
-
-    public sealed class StringLiteral : Expression
+    public sealed class StringLiteral : AST
     {
         public string value;
 
@@ -125,7 +111,7 @@
         }
     }
 
-    public sealed class Number : Expression
+    public sealed class Number : AST
     {
         public string value;
 
@@ -135,7 +121,7 @@
         }
     }
 
-    public sealed class Null : Expression
+    public sealed class Null : AST
     {
         public Null(Location location) : base(location)
         {
