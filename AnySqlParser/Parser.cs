@@ -15,38 +15,21 @@ namespace AnySqlParser
             return parser.statements;
         }
 
-        enum Token
-        {
-            EOF,
-            Semicolon,
-            DoublePipe,
-            Word,
-            Minus,
-            Number,
-            Plus,
-            Star,
-            Slash,
-            Dot,
-            StringLiteral,
-            QuotedName,
-            Comma,
-            LParen,
-            RParen,
-            Percent,
-            Equal,
-            NotEqual,
-            Less,
-            LessEqual,
-            Greater,
-            GreaterEqual,
-        }
+        const int kDoublePipe = -2;
+        const int kGreaterEqual = -3;
+        const int kLessEqual = -4;
+        const int kNotEqual = -5;
+        const int kNumber = -6;
+        const int kQuotedName = -7;
+        const int kStringLiteral = -8;
+        const int kWord = -9;
 
         readonly string text;
         readonly string file;
         int line;
         int prevLine;
         int textIndex;
-        Token token;
+        int token;
         string tokenString = null!;
         string prevTokenString = null!;
         readonly List<Statement> statements = new();
@@ -57,7 +40,7 @@ namespace AnySqlParser
             this.file = file;
             this.line = line;
             Lex();
-            while (token != Token.EOF)
+            while (token != -1)
             {
                 var location = new Location(file, line);
                 Statement statement;
@@ -82,17 +65,17 @@ namespace AnySqlParser
                             var a = new Insert(location, Name());
 
                             //columns
-                            if (Eat(Token.LParen))
+                            if (Eat('('))
                             {
                                 do
                                     a.columns.Add(Name());
-                                while (Eat(Token.Comma));
-                                Expect(Token.RParen, ')');
+                                while (Eat(','));
+                                Expect(')');
                             }
 
                             //values
                             Expect("values");
-                            Expect(Token.LParen, '(');
+                            Expect('(');
 
                             statement = a;
                             break;
@@ -103,22 +86,22 @@ namespace AnySqlParser
                             case "table":
                                 {
                                     var a = new CreateTable(location, Name());
-                                    if (Eat(Token.Dot))
+                                    if (Eat('.'))
                                     {
                                         a.schemaName = a.tableName;
                                         a.tableName = Name();
-                                        if (Eat(Token.Dot))
+                                        if (Eat('.'))
                                         {
                                             a.databaseName = a.schemaName;
                                             a.schemaName = a.tableName;
                                             a.tableName = Name();
                                         }
                                     }
-                                    Expect(Token.LParen, '(');
+                                    Expect('(');
                                     do
                                         a.columnDefinitions.Add(ColumnDefinition());
-                                    while (Eat(Token.Comma));
-                                    Expect(Token.RParen, ')');
+                                    while (Eat(','));
+                                    Expect(')');
                                     statement = a;
                                     break;
                                 }
@@ -130,7 +113,7 @@ namespace AnySqlParser
                         throw Err(prevTokenString + ": unknown statement", prevLine);
                 }
                 statements.Add(statement);
-                Eat(Token.Semicolon);
+                Eat(';');
                 Eat("go");
             }
         }
@@ -144,26 +127,26 @@ namespace AnySqlParser
             //data type
             var k = token;
             var s = Name();
-            if (Eat(Token.Dot))
+            if (Eat('.'))
             {
                 a.typeSchemaName = s;
                 a.typeName = Keyword();
             }
             else
             {
-                if (k == Token.Word) s = s.ToLowerInvariant();
+                if (k == kWord) s = s.ToLowerInvariant();
                 a.typeName = s;
             }
-            if (Eat(Token.LParen))
+            if (Eat('('))
             {
                 a.size = Int();
-                if (Eat(Token.Comma))
+                if (Eat(','))
                     a.scale = Int();
-                Expect(Token.RParen, ')');
+                Expect(')');
             }
 
             //constraints etc
-            while (token == Token.Word)
+            while (token == kWord)
                 switch (Keyword())
                 {
                     case "null":
@@ -204,7 +187,7 @@ namespace AnySqlParser
         //etc
         int Int()
         {
-            if (token != Token.Number)
+            if (token != kNumber)
                 throw Err("expected integer");
             var n = int.Parse(tokenString, System.Globalization.CultureInfo.InvariantCulture);
             Lex();
@@ -213,7 +196,7 @@ namespace AnySqlParser
 
         string Keyword()
         {
-            if (token != Token.Word)
+            if (token != kWord)
                 throw Err("expected keyword");
             prevLine = line;
             prevTokenString = tokenString;
@@ -223,7 +206,7 @@ namespace AnySqlParser
 
         string KeywordMaybe()
         {
-            if (token != Token.Word)
+            if (token != kWord)
                 return "";
             return tokenString.ToLowerInvariant();
         }
@@ -232,8 +215,8 @@ namespace AnySqlParser
         {
             switch (token)
             {
-                case Token.Word:
-                case Token.QuotedName:
+                case kWord:
+                case kQuotedName:
                     {
                         var s = tokenString;
                         Lex();
@@ -243,9 +226,9 @@ namespace AnySqlParser
             throw Err("expected name");
         }
 
-        void Expect(Token k, char c)
+        void Expect(char k)
         {
-            if (!Eat(k)) throw Err($"expected '{c}'");
+            if (!Eat(k)) throw Err($"expected '{k}'");
         }
 
         void Expect(string s)
@@ -253,7 +236,7 @@ namespace AnySqlParser
             if (!Eat(s)) throw Err($"expected '{s}'");
         }
 
-        bool Eat(Token k)
+        bool Eat(int k)
         {
             if (token == k) { Lex(); return true; }
             return false;
@@ -261,7 +244,7 @@ namespace AnySqlParser
 
         bool Eat(string s)
         {
-            if (token == Token.Word && string.Equals(tokenString, s, StringComparison.OrdinalIgnoreCase))
+            if (token == kWord && string.Equals(tokenString, s, StringComparison.OrdinalIgnoreCase))
             {
                 Lex();
                 return true;
@@ -306,7 +289,7 @@ namespace AnySqlParser
                                             continue;
                                         }
                                         textIndex = i + 1;
-                                        token = Token.StringLiteral;
+                                        token = kStringLiteral;
                                         tokenString = sb.ToString();
                                         return;
                                 }
@@ -343,7 +326,7 @@ namespace AnySqlParser
                                             continue;
                                         }
                                         textIndex = i + 1;
-                                        token = Token.QuotedName;
+                                        token = kQuotedName;
                                         tokenString = sb.ToString();
                                         return;
                                 }
@@ -380,7 +363,7 @@ namespace AnySqlParser
                                             continue;
                                         }
                                         textIndex = i + 1;
-                                        token = Token.QuotedName;
+                                        token = kQuotedName;
                                         tokenString = sb.ToString();
                                         return;
                                 }
@@ -407,7 +390,7 @@ namespace AnySqlParser
                                             continue;
                                         }
                                         textIndex = i + 1;
-                                        token = Token.QuotedName;
+                                        token = kQuotedName;
                                         tokenString = sb.ToString();
                                         return;
                                 }
@@ -419,7 +402,7 @@ namespace AnySqlParser
                         if (textIndex + 1 < text.Length && text[textIndex + 1] == '=')
                         {
                             textIndex += 2;
-                            token = Token.NotEqual;
+                            token = kNotEqual;
                             return;
                         }
                         break;
@@ -427,7 +410,7 @@ namespace AnySqlParser
                         if (textIndex + 1 < text.Length && text[textIndex + 1] == '|')
                         {
                             textIndex += 2;
-                            token = Token.DoublePipe;
+                            token = kDoublePipe;
                             return;
                         }
                         break;
@@ -435,11 +418,11 @@ namespace AnySqlParser
                         if (textIndex + 1 < text.Length && text[textIndex + 1] == '=')
                         {
                             textIndex += 2;
-                            token = Token.GreaterEqual;
+                            token = kGreaterEqual;
                             return;
                         }
                         textIndex++;
-                        token = Token.Greater;
+                        token = c;
                         return;
                     case '<':
                         if (textIndex + 1 < text.Length)
@@ -447,31 +430,15 @@ namespace AnySqlParser
                             {
                                 case '=':
                                     textIndex += 2;
-                                    token = Token.LessEqual;
+                                    token = kLessEqual;
                                     return;
                                 case '>':
                                     textIndex += 2;
-                                    token = Token.NotEqual;
+                                    token = kNotEqual;
                                     return;
                             }
                         textIndex++;
-                        token = Token.Less;
-                        return;
-                    case ',':
-                        textIndex++;
-                        token = Token.Comma;
-                        return;
-                    case ';':
-                        textIndex++;
-                        token = Token.Semicolon;
-                        return;
-                    case '.':
-                        textIndex++;
-                        token = Token.Dot;
-                        return;
-                    case '+':
-                        textIndex++;
-                        token = Token.Plus;
+                        token = c;
                         return;
                     case '/':
                         if (textIndex + 1 < text.Length && text[textIndex + 1] == '*')
@@ -490,23 +457,18 @@ namespace AnySqlParser
                             continue;
                         }
                         textIndex++;
-                        token = Token.Slash;
+                        token = c;
                         return;
+                    case ',':
+                    case ';':
+                    case '.':
+                    case '+':
                     case '%':
-                        textIndex++;
-                        token = Token.Percent;
-                        return;
                     case '(':
-                        textIndex++;
-                        token = Token.LParen;
-                        return;
                     case ')':
-                        textIndex++;
-                        token = Token.RParen;
-                        return;
                     case '*':
                         textIndex++;
-                        token = Token.Star;
+                        token = c;
                         return;
                     case '-':
                         if (textIndex + 1 < text.Length && text[textIndex + 1] == '-')
@@ -516,7 +478,7 @@ namespace AnySqlParser
                             continue;
                         }
                         textIndex++;
-                        token = Token.Minus;
+                        token = c;
                         return;
                     case '\n':
                         textIndex++;
@@ -624,7 +586,7 @@ namespace AnySqlParser
                 }
                 throw Err($"stray '{c}'");
             }
-            token = Token.EOF;
+            token = -1;
         }
 
         void Word()
@@ -633,7 +595,7 @@ namespace AnySqlParser
             do
                 i++;
             while (i < text.Length && IsWordPart(text[i]));
-            token = Token.Word;
+            token = kWord;
             tokenString = text[textIndex..i];
             textIndex = i;
         }
@@ -650,7 +612,7 @@ namespace AnySqlParser
             do
                 i++;
             while (i < text.Length && char.IsDigit(text, i));
-            token = Token.Number;
+            token = kNumber;
             tokenString = text[textIndex..i];
             textIndex = i;
         }
