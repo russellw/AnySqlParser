@@ -42,8 +42,9 @@ namespace AnySqlParser
             Lex();
             while (token != -1)
             {
+                if (Eat("go"))
+                    continue;
                 statements.Add(Statement());
-                Eat("go");
             }
         }
 
@@ -60,6 +61,18 @@ namespace AnySqlParser
             var location = new Location(file, line);
             switch (Keyword())
             {
+                case "set":
+                    switch (token)
+                    {
+                        case kWord:
+                            {
+                                var a = new SetParameter(location);
+                                a.name = Keyword();
+                                a.value = Keyword();
+                                return a;
+                            }
+                    }
+                    throw Err("syntax error", prevLine);
                 case "begin":
                     switch (KeywordMaybe())
                     {

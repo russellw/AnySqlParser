@@ -75,6 +75,16 @@
         }
     }
 
+    public sealed class SetParameter : Statement
+    {
+        public string name = null!;
+        public string value = null!;
+
+        public SetParameter(Location location) : base(location)
+        {
+        }
+    }
+
     public sealed class Table : Statement
     {
         public string? databaseName;
