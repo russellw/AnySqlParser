@@ -256,12 +256,12 @@ namespace AnySqlParser
         }
 
         //expressions
-        AST Expression()
+        Expression Expression()
         {
             return Primary();
         }
 
-        AST Primary()
+        Expression Primary()
         {
             var prevToken = token;
             StashLex();

@@ -6,7 +6,7 @@
     {
         public readonly Location Location;
 
-        public AST(Location location)
+        protected AST(Location location)
         {
             Location = location;
         }
@@ -39,7 +39,7 @@
 
     public sealed class Select : AST
     {
-        public List<AST> SelectList = new();
+        public List<Expression> SelectList = new();
 
         public Select(Location location) : base(location)
         {
@@ -50,7 +50,7 @@
     {
         public string TableName = null!;
         public List<string> Columns = new();
-        public List<AST> Values = new();
+        public List<Expression> Values = new();
 
         public Insert(Location location) : base(location)
         {
@@ -105,33 +105,6 @@
         public List<Column> Columns = new();
 
         public Table(Location location) : base(location)
-        {
-        }
-    }
-
-    public sealed class StringLiteral : AST
-    {
-        public string Value;
-
-        public StringLiteral(Location location, string value) : base(location)
-        {
-            Value = value;
-        }
-    }
-
-    public sealed class Number : AST
-    {
-        public string Value;
-
-        public Number(Location location, string value) : base(location)
-        {
-            Value = value;
-        }
-    }
-
-    public sealed class Null : AST
-    {
-        public Null(Location location) : base(location)
         {
         }
     }
