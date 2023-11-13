@@ -520,6 +520,7 @@ namespace AnySqlParser
                                     token = kNotEqual;
                                     return;
                                 case '<':
+                                    //https://stackoverflow.com/questions/77475517/what-are-the-t-sql-and-operators-for
                                     textIndex += 2;
                                     token = kGreaterEqual;
                                     return;
