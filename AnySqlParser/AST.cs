@@ -4,33 +4,33 @@
 
     public abstract class AST
     {
-        public readonly Location location;
+        public readonly Location Location;
 
         public AST(Location location)
         {
-            this.location = location;
+            Location = location;
         }
     }
 
     public sealed class Column : AST
     {
-        public string name = null!;
+        public string Name = null!;
 
         //data type
-        public string? typeSchemaName;
-        public string typeName = null!;
-        public int size = -1;
-        public int scale = -1;
+        public string? TypeSchemaName;
+        public string TypeName = null!;
+        public int Size = -1;
+        public int Scale = -1;
 
         //constraints
-        public bool nullable = true;
-        public bool primaryKey;
+        public bool Nullable = true;
+        public bool PrimaryKey;
 
         //etc
-        public bool filestream;
-        public bool sparse;
-        public bool forReplication = true;
-        public bool rowguidcol;
+        public bool Filestream;
+        public bool Sparse;
+        public bool ForReplication = true;
+        public bool Rowguidcol;
 
         public Column(Location location) : base(location)
         {
@@ -39,7 +39,7 @@
 
     public sealed class Select : AST
     {
-        public List<AST> selectList = new();
+        public List<AST> SelectList = new();
 
         public Select(Location location) : base(location)
         {
@@ -48,9 +48,9 @@
 
     public sealed class Insert : AST
     {
-        public string tableName = null!;
-        public List<string> columns = new();
-        public List<AST> values = new();
+        public string TableName = null!;
+        public List<string> Columns = new();
+        public List<AST> Values = new();
 
         public Insert(Location location) : base(location)
         {
@@ -80,7 +80,7 @@
 
     public sealed class Block : AST
     {
-        public List<AST> body = new();
+        public List<AST> Body = new();
 
         public Block(Location location) : base(location)
         {
@@ -89,8 +89,8 @@
 
     public sealed class SetParameter : AST
     {
-        public string name = null!;
-        public string value = null!;
+        public string Name = null!;
+        public string Value = null!;
 
         public SetParameter(Location location) : base(location)
         {
@@ -99,10 +99,10 @@
 
     public sealed class Table : AST
     {
-        public string? databaseName;
-        public string? schemaName;
-        public string tableName = null!;
-        public List<Column> columns = new();
+        public string? DatabaseName;
+        public string? SchemaName;
+        public string TableName = null!;
+        public List<Column> Columns = new();
 
         public Table(Location location) : base(location)
         {
@@ -111,21 +111,21 @@
 
     public sealed class StringLiteral : AST
     {
-        public string value;
+        public string Value;
 
         public StringLiteral(Location location, string value) : base(location)
         {
-            this.value = value;
+            Value = value;
         }
     }
 
     public sealed class Number : AST
     {
-        public string value;
+        public string Value;
 
         public Number(Location location, string value) : base(location)
         {
-            this.value = value;
+            Value = value;
         }
     }
 

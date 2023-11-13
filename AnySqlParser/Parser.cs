@@ -67,8 +67,8 @@ namespace AnySqlParser
                         case kWord:
                             {
                                 var a = new SetParameter(location);
-                                a.name = Keyword();
-                                a.value = Keyword();
+                                a.Name = Keyword();
+                                a.Value = Keyword();
                                 return a;
                             }
                     }
@@ -84,7 +84,7 @@ namespace AnySqlParser
                             {
                                 var a = new Block(location);
                                 while (!Eat("end"))
-                                    a.body.Add(Statement());
+                                    a.Body.Add(Statement());
                                 return a;
                             }
                     }
@@ -119,7 +119,7 @@ namespace AnySqlParser
                     {
                         var a = new Select(location);
                         do
-                            a.selectList.Add(Expression());
+                            a.SelectList.Add(Expression());
                         while (Eat(','));
                         return a;
                     }
@@ -129,13 +129,13 @@ namespace AnySqlParser
                         var a = new Insert(location);
 
                         //table
-                        a.tableName = Name();
+                        a.TableName = Name();
 
                         //columns
                         if (Eat('('))
                         {
                             do
-                                a.columns.Add(Name());
+                                a.Columns.Add(Name());
                             while (Eat(','));
                             Expect(')');
                         }
@@ -144,7 +144,7 @@ namespace AnySqlParser
                         Expect("values");
                         Expect('(');
                         do
-                            a.values.Add(Expression());
+                            a.Values.Add(Expression());
                         while (Eat(','));
                         Expect(')');
 
@@ -158,23 +158,23 @@ namespace AnySqlParser
                                 var a = new Table(location);
 
                                 //name
-                                a.tableName = Name();
+                                a.TableName = Name();
                                 if (Eat('.'))
                                 {
-                                    a.schemaName = a.tableName;
-                                    a.tableName = Name();
+                                    a.SchemaName = a.TableName;
+                                    a.TableName = Name();
                                     if (Eat('.'))
                                     {
-                                        a.databaseName = a.schemaName;
-                                        a.schemaName = a.tableName;
-                                        a.tableName = Name();
+                                        a.DatabaseName = a.SchemaName;
+                                        a.SchemaName = a.TableName;
+                                        a.TableName = Name();
                                     }
                                 }
 
                                 //columns
                                 Expect('(');
                                 do
-                                    a.columns.Add(Column());
+                                    a.Columns.Add(Column());
                                 while (Eat(','));
                                 Expect(')');
                                 return a;
@@ -191,26 +191,26 @@ namespace AnySqlParser
             var a = new Column(location);
 
             //name
-            a.name = Name();
+            a.Name = Name();
 
             //data type
             var k = token;
             var s = Name();
             if (Eat('.'))
             {
-                a.typeSchemaName = s;
-                a.typeName = Keyword();
+                a.TypeSchemaName = s;
+                a.TypeName = Keyword();
             }
             else
             {
                 if (k == kWord) s = s.ToLowerInvariant();
-                a.typeName = s;
+                a.TypeName = s;
             }
             if (Eat('('))
             {
-                a.size = Int();
+                a.Size = Int();
                 if (Eat(','))
-                    a.scale = Int();
+                    a.Scale = Int();
                 Expect(')');
             }
 
@@ -221,27 +221,27 @@ namespace AnySqlParser
                     case "null":
                         break;
                     case "filestream":
-                        a.filestream = true;
+                        a.Filestream = true;
                         break;
                     case "sparse":
-                        a.sparse = true;
+                        a.Sparse = true;
                         break;
                     case "primary":
                         Expect("key");
-                        a.primaryKey = true;
+                        a.PrimaryKey = true;
                         break;
                     case "rowguidcol":
-                        a.rowguidcol = true;
+                        a.Rowguidcol = true;
                         break;
                     case "not":
                         switch (Keyword())
                         {
                             case "null":
-                                a.nullable = false;
+                                a.Nullable = false;
                                 break;
                             case "for":
                                 Expect("replication");
-                                a.forReplication = false;
+                                a.ForReplication = false;
                                 break;
                             default:
                                 throw Err(prevTokenString + ": unknown keyword", prevLine);
