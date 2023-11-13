@@ -2,7 +2,7 @@
 {
     public sealed class Column : AST
     {
-        public string name;
+        public string name = null!;
 
         //data type
         public string? typeSchemaName;
@@ -20,9 +20,8 @@
         public bool forReplication = true;
         public bool rowguidcol;
 
-        public Column(Location location, string name) : base(location)
+        public Column(Location location) : base(location)
         {
-            this.name = name;
         }
     }
 
@@ -89,12 +88,11 @@
     {
         public string? databaseName;
         public string? schemaName;
-        public string tableName;
+        public string tableName = null!;
         public List<Column> columnDefinitions = new();
 
-        public Table(Location location, string tableName) : base(location)
+        public Table(Location location) : base(location)
         {
-            this.tableName = tableName;
         }
     }
 }

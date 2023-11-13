@@ -144,7 +144,10 @@ namespace AnySqlParser
                     {
                         case "table":
                             {
-                                var a = new Table(location, Name());
+                                var a = new Table(location);
+
+                                //name
+                                a.tableName = Name();
                                 if (Eat('.'))
                                 {
                                     a.schemaName = a.tableName;
@@ -156,6 +159,8 @@ namespace AnySqlParser
                                         a.tableName = Name();
                                     }
                                 }
+
+                                //columns
                                 Expect('(');
                                 do
                                     a.columnDefinitions.Add(ColumnDefinition());
@@ -172,7 +177,10 @@ namespace AnySqlParser
         Column ColumnDefinition()
         {
             var location = new Location(file, line);
-            var a = new Column(location, Name());
+            var a = new Column(location);
+
+            //name
+            a.name = Name();
 
             //data type
             var k = token;
