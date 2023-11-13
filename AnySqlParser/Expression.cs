@@ -40,4 +40,21 @@
         {
         }
     }
+
+    public abstract class UnaryExpression : Expression
+    {
+        protected UnaryExpression(Location location) : base(location)
+        {
+        }
+    }
+
+    public sealed class BitNot : UnaryExpression
+    {
+        public Expression Operand;
+
+        public BitNot(Location location, Expression operand) : base(location)
+        {
+            Operand = operand;
+        }
+    }
 }

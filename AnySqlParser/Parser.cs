@@ -258,6 +258,14 @@ namespace AnySqlParser
         //expressions
         Expression Expression()
         {
+            return Prefix();
+        }
+
+        Expression Prefix()
+        {
+            var location = new Location(file, line);
+            if (Eat('~'))
+                return new BitNot(location, Prefix());
             return Primary();
         }
 
@@ -583,6 +591,7 @@ namespace AnySqlParser
                     case '%':
                     case '(':
                     case ')':
+                    case '~':
                     case '*':
                         textIndex++;
                         token = c;

@@ -68,9 +68,12 @@ namespace AnySqlParserTest
         public void Select()
         {
             var statements = Parser.ParseText("select 1");
-            Assert.True(statements.Count > 0);
-            var a = statements[0];
-            Assert.True(a is Select);
+            var a = ((Select)statements[0]).SelectList[0];
+            Assert.True(a is Number);
+
+            statements = Parser.ParseText("select ~1");
+            a = ((Select)statements[0]).SelectList[0];
+            Assert.True(a is BitNot);
         }
 
         [Fact]
