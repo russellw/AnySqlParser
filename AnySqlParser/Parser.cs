@@ -22,6 +22,7 @@ namespace AnySqlParser
             DoublePipe,
             Word,
             Minus,
+            Number,
             Plus,
             Star,
             Slash,
@@ -100,6 +101,7 @@ namespace AnySqlParser
             }
         }
 
+        //statements
         ColumnDefinition ColumnDefinition()
         {
             var location = new Location(file, line);
@@ -118,7 +120,15 @@ namespace AnySqlParser
                 if (k == Token.Word) s = s.ToLowerInvariant();
                 a.typeName = s;
             }
+            if (Eat(Token.LParen))
+            {
+                a.size = Int();
+                if (Eat(Token.Comma))
+                    a.scale = Int();
+                Expect(Token.RParen, ')');
+            }
 
+            //constraints etc
             while (token == Token.Word)
                 switch (Keyword())
                 {
@@ -157,16 +167,24 @@ namespace AnySqlParser
             return a;
         }
 
+        //etc
+        int Int()
+        {
+            if (token != Token.Number)
+                throw Err("expected integer");
+            var n = int.Parse(tokenString, System.Globalization.CultureInfo.InvariantCulture);
+            Lex();
+            return n;
+        }
+
         string Keyword()
         {
-            if (token == Token.Word)
-            {
-                prevLine = line;
-                prevTokenString = tokenString;
-                Lex();
-                return prevTokenString.ToLowerInvariant();
-            }
-            throw Err("expected keyword");
+            if (token != Token.Word)
+                throw Err("expected keyword");
+            prevLine = line;
+            prevTokenString = tokenString;
+            Lex();
+            return prevTokenString.ToLowerInvariant();
         }
 
         string Name()
@@ -210,6 +228,7 @@ namespace AnySqlParser
             return false;
         }
 
+        //tokenizer
         void Lex()
         {
             while (textIndex < text.Length)
@@ -524,21 +543,41 @@ namespace AnySqlParser
                     case 'z':
                         Word();
                         return;
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                    case '8':
+                    case '9':
+                        Number();
+                        return;
                     default:
-                        //Common whitespace characters are handled in the switch for speed
-                        //but there are other whitespace characters in Unicode
-                        if (char.IsWhiteSpace(c))
-                        {
-                            textIndex++;
-                            continue;
-                        }
-
                         //Common letters are handled in the switch for speed
                         //but there are other letters in Unicode
                         if (char.IsLetter(c))
                         {
                             Word();
                             return;
+                        }
+
+                        //Common digits are handled in the switch for speed
+                        //but there are other digits in Unicode
+                        if (char.IsDigit(c))
+                        {
+                            Number();
+                            return;
+                        }
+
+                        //Common whitespace characters are handled in the switch for speed
+                        //but there are other whitespace characters in Unicode
+                        if (char.IsWhiteSpace(c))
+                        {
+                            textIndex++;
+                            continue;
                         }
                         break;
                 }
@@ -564,6 +603,19 @@ namespace AnySqlParser
             return c == '_';
         }
 
+        void Number()
+        {
+            var i = textIndex;
+            do
+                i++;
+            while (i < text.Length && char.IsDigit(text, i));
+            token = Token.Number;
+            tokenString = text[textIndex..i];
+            textIndex = i;
+        }
+
+        //Error functions return exception objects instead of throwing immediately
+        //so 'throw Err(...)' can mark the end of a case block
         Exception Err(string message)
         {
             return Err(message, line);

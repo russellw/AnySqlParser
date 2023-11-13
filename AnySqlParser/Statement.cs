@@ -7,7 +7,7 @@
         //data type
         public string? typeSchemaName;
         public string typeName = null!;
-        public int precision = -1;
+        public int size = -1;
         public int scale = -1;
 
         //constraints
