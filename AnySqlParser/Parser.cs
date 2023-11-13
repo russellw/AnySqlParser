@@ -122,19 +122,34 @@ namespace AnySqlParser
             while (token == Token.Word)
                 switch (Keyword())
                 {
+                    case "null":
+                        break;
                     case "filestream":
                         a.filestream = true;
                         break;
                     case "sparse":
                         a.sparse = true;
                         break;
+                    case "primary":
+                        Expect("key");
+                        a.primaryKey = true;
+                        break;
                     case "rowguidcol":
                         a.rowguidcol = true;
                         break;
                     case "not":
-                        Expect("for");
-                        Expect("replication");
-                        a.notForReplication = true;
+                        switch (Keyword())
+                        {
+                            case "null":
+                                a.nullable = false;
+                                break;
+                            case "for":
+                                Expect("replication");
+                                a.forReplication = false;
+                                break;
+                            default:
+                                throw Err(prevTokenString + ": unknown keyword", prevLine);
+                        }
                         break;
                     default:
                         throw Err(prevTokenString + ": unknown keyword", prevLine);

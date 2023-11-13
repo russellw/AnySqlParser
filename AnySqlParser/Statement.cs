@@ -4,14 +4,20 @@
     {
         public readonly string name;
 
+        //data type
         public string? typeSchemaName;
         public string typeName = null!;
         public int precision = -1;
         public int scale = -1;
 
+        //constraints
+        public bool nullable = true;
+        public bool primaryKey;
+
+        //etc
         public bool filestream;
         public bool sparse;
-        public bool notForReplication;
+        public bool forReplication = true;
         public bool rowguidcol;
 
         public ColumnDefinition(Location location, string name) : base(location)
