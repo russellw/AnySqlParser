@@ -23,6 +23,8 @@ namespace AnySqlParser
         const int kQuotedName = -7;
         const int kStringLiteral = -8;
         const int kWord = -9;
+        const int kNotGreater = -10;
+        const int kNotLess = -11;
 
         readonly string text;
         readonly string file;
@@ -504,12 +506,22 @@ namespace AnySqlParser
                             throw Err("unclosed [", line1);
                         }
                     case '!':
-                        if (textIndex + 1 < text.Length && text[textIndex + 1] == '=')
-                        {
-                            textIndex += 2;
-                            token = kNotEqual;
-                            return;
-                        }
+                        if (textIndex + 1 < text.Length)
+                            switch (text[textIndex + 1])
+                            {
+                                case '=':
+                                    textIndex += 2;
+                                    token = kNotEqual;
+                                    return;
+                                case '<':
+                                    textIndex += 2;
+                                    token = kNotLess;
+                                    return;
+                                case '>':
+                                    textIndex += 2;
+                                    token = kNotGreater;
+                                    return;
+                            }
                         break;
                     case '|':
                         if (textIndex + 1 < text.Length && text[textIndex + 1] == '|')
