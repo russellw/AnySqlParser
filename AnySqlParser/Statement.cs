@@ -33,6 +33,17 @@
         }
     }
 
+    public class Insert : Statement
+    {
+        public string tableName;
+        public List<string> columns = new();
+
+        public Insert(Location location, string tableName) : base(location)
+        {
+            this.tableName = tableName;
+        }
+    }
+
     public class StartTransaction : Statement
     {
         public StartTransaction(Location location) : base(location)

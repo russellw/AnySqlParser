@@ -76,6 +76,27 @@ namespace AnySqlParser
                             statement = new StartTransaction(location);
                             break;
                         }
+                    case "insert":
+                        {
+                            Eat("into");
+                            var a = new Insert(location, Name());
+
+                            //columns
+                            if (Eat(Token.LParen))
+                            {
+                                do
+                                    a.columns.Add(Name());
+                                while (Eat(Token.Comma));
+                                Expect(Token.RParen, ')');
+                            }
+
+                            //values
+                            Expect("values");
+                            Expect(Token.LParen, '(');
+
+                            statement = a;
+                            break;
+                        }
                     case "create":
                         switch (Keyword())
                         {
