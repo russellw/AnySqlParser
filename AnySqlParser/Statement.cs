@@ -33,6 +33,13 @@
         }
     }
 
+    public class StartTransaction : Statement
+    {
+        public StartTransaction(Location location) : base(location)
+        {
+        }
+    }
+
     public class CreateTable : Statement
     {
         public string? databaseName;

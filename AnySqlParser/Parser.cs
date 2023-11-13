@@ -63,6 +63,19 @@ namespace AnySqlParser
                 Statement statement;
                 switch (Keyword())
                 {
+                    case "begin":
+                    case "start":
+                        {
+                            switch (KeywordMaybe())
+                            {
+                                case "transaction":
+                                case "tran":
+                                    Lex();
+                                    break;
+                            }
+                            statement = new StartTransaction(location);
+                            break;
+                        }
                     case "create":
                         switch (Keyword())
                         {
@@ -185,6 +198,13 @@ namespace AnySqlParser
             prevTokenString = tokenString;
             Lex();
             return prevTokenString.ToLowerInvariant();
+        }
+
+        string KeywordMaybe()
+        {
+            if (token != Token.Word)
+                return "";
+            return tokenString.ToLowerInvariant();
         }
 
         string Name()
