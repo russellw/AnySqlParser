@@ -23,8 +23,6 @@ namespace AnySqlParser
         const int kQuotedName = -7;
         const int kStringLiteral = -8;
         const int kWord = -9;
-        const int kNotGreater = -10;
-        const int kNotLess = -11;
 
         readonly string text;
         readonly string file;
@@ -523,11 +521,11 @@ namespace AnySqlParser
                                     return;
                                 case '<':
                                     textIndex += 2;
-                                    token = kNotLess;
+                                    token = kGreaterEqual;
                                     return;
                                 case '>':
                                     textIndex += 2;
-                                    token = kNotGreater;
+                                    token = kLessEqual;
                                     return;
                             }
                         break;
