@@ -196,9 +196,10 @@ namespace AnySqlParser
 
         Expression Primary()
         {
+            var prevToken = token;
             StashLex();
             var location = new Location(file, prevLine);
-            switch (token)
+            switch (prevToken)
             {
                 case kStringLiteral:
                     return new StringLiteral(location, tokenString);
