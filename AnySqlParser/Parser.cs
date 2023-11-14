@@ -262,8 +262,15 @@ namespace AnySqlParser
         Expression Prefix()
         {
             var location = new Location(file, line);
-            if (Eat('~'))
-                return new BitNot(location, Prefix());
+            switch (token)
+            {
+                case '~':
+                    Lex();
+                    return new BitNot(location, Prefix());
+                case '-':
+                    Lex();
+                    return new Minus(location, Prefix());
+            }
             return Primary();
         }
 

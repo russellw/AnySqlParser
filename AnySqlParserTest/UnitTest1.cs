@@ -74,6 +74,10 @@ namespace AnySqlParserTest
             statements = Parser.ParseText("select ~1");
             a = ((Select)statements[0]).SelectList[0];
             Assert.True(a is BitNot);
+
+            statements = Parser.ParseText("select -1");
+            a = ((Select)statements[0]).SelectList[0];
+            Assert.True(a is Minus);
         }
 
         [Fact]

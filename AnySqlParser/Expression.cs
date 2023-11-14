@@ -7,6 +7,7 @@
         }
     }
 
+    //arity 0
     public abstract class AtomicExpression : Expression
     {
         protected AtomicExpression(Location location) : base(location)
@@ -41,20 +42,28 @@
         }
     }
 
+    //arity 1
     public abstract class UnaryExpression : Expression
     {
-        protected UnaryExpression(Location location) : base(location)
+        public Expression Operand;
+
+        protected UnaryExpression(Location location, Expression operand) : base(location)
         {
+            Operand = operand;
         }
     }
 
     public sealed class BitNot : UnaryExpression
     {
-        public Expression Operand;
-
-        public BitNot(Location location, Expression operand) : base(location)
+        public BitNot(Location location, Expression operand) : base(location, operand)
         {
-            Operand = operand;
+        }
+    }
+
+    public sealed class Minus : UnaryExpression
+    {
+        public Minus(Location location, Expression operand) : base(location, operand)
+        {
         }
     }
 }
