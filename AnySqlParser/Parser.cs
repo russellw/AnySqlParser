@@ -266,10 +266,10 @@ namespace AnySqlParser
             {
                 case '~':
                     Lex();
-                    return new BitNot(location, Prefix());
+                    return new UnaryExpression(location, UnaryOperator.BitNot, Prefix());
                 case '-':
                     Lex();
-                    return new Minus(location, Prefix());
+                    return new UnaryExpression(location, UnaryOperator.Minus, Prefix());
             }
             return Primary();
         }

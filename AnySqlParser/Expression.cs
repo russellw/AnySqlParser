@@ -43,27 +43,56 @@
     }
 
     //arity 1
-    public abstract class UnaryExpression : Expression
+    public enum UnaryOperator
     {
+        Not,
+        BitNot,
+        Minus,
+    }
+
+    public sealed class UnaryExpression : Expression
+    {
+        public UnaryOperator Operator;
         public Expression Operand;
 
-        protected UnaryExpression(Location location, Expression operand) : base(location)
+        public UnaryExpression(Location location, UnaryOperator @operator, Expression operand) : base(location)
         {
+            Operator = @operator;
             Operand = operand;
         }
     }
 
-    public sealed class BitNot : UnaryExpression
+    //arity 2
+    public enum BinaryOperator
     {
-        public BitNot(Location location, Expression operand) : base(location, operand)
-        {
-        }
+        Add,
+        Subtract,
+        Multiply,
+        Divide,
+        Remainder,
+        Equal,
+        NotEqual,
+        Less,
+        LessEqual,
+        Greater,
+        GreaterEqual,
+        And,
+        Or,
+        BitAnd,
+        BitOr,
+        BitXor,
     }
 
-    public sealed class Minus : UnaryExpression
+    public sealed class BinaryExpression : Expression
     {
-        public Minus(Location location, Expression operand) : base(location, operand)
+        public BinaryOperator Operator;
+        public Expression Left, Right;
+
+        public BinaryExpression(Location location, BinaryOperator @operator, Expression left, Expression right) : base(location)
         {
+            Operator = @operator;
+            Left = left;
+            Right = right;
         }
     }
 }
