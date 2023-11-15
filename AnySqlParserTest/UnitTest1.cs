@@ -67,8 +67,8 @@ namespace AnySqlParserTest
         [Fact]
         public void Eq()
         {
-            var a = new StringLiteral(new Location("", 0), "x");
-            var b = new StringLiteral(new Location("", 0), "y");
+            Expression a = new StringLiteral(new Location("", 0), "x");
+            Expression b = new StringLiteral(new Location("", 0), "y");
             Assert.NotEqual(a, b);
             Assert.False(a.Equals(b));
             Assert.False(a.Eq(b));
@@ -77,6 +77,11 @@ namespace AnySqlParserTest
             b = new StringLiteral(new Location("", 0), "x");
             Assert.NotEqual(a, b);
             Assert.False(a.Equals(b));
+            Assert.True(a.Eq(b));
+
+            var L = new Location("", 0);
+            a = new BinaryExpression(L, BinaryOp.Add, new StringLiteral(L, "x"), new StringLiteral(L, "y"));
+            b = new BinaryExpression(L, BinaryOp.Add, new StringLiteral(L, "x"), new StringLiteral(L, "y"));
             Assert.True(a.Eq(b));
         }
 
@@ -90,12 +95,23 @@ namespace AnySqlParserTest
             statements = Parser.ParseText("select ~1");
             a = ((Select)statements[0]).SelectList[0];
             Assert.True(a is UnaryExpression);
+            var L = new Location("", 0);
+            Assert.True(a.Eq(new UnaryExpression(L, UnaryOp.BitNot, new Number(L, "1"))));
 
             statements = Parser.ParseText("select -1");
             a = ((Select)statements[0]).SelectList[0];
             Assert.True(a is UnaryExpression);
+            Assert.True(a.Eq(new UnaryExpression(L, UnaryOp.Minus, new Number(L, "1"))));
 
-            statements = Parser.ParseText("select exists(select 1)");
+            a = Selected(Parser.ParseText("select exists(select 1)"));
+            var S = new Select(L);
+            S.SelectList.Add(new Number(L, "1"));
+            Assert.True(a.Eq(new Exists(L, S)));
+        }
+
+        static Expression Selected(List<AST> statements)
+        {
+            return ((Select)statements[0]).SelectList[0];
         }
 
         [Fact]
