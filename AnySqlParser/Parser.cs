@@ -44,19 +44,19 @@ namespace AnySqlParser
             {
                 if (Eat("go"))
                     continue;
-                statements.Add(Statement());
+                statements.Add(StatementSemicolon());
             }
         }
 
         //statements
-        AST Statement()
+        AST StatementSemicolon()
         {
-            var a = Statement1();
+            var a = Statement();
             Eat(';');
             return a;
         }
 
-        AST Statement1()
+        AST Statement()
         {
             var location = new Location(file, line);
             switch (Keyword())
@@ -84,7 +84,7 @@ namespace AnySqlParser
                             {
                                 var a = new Block(location);
                                 while (!Eat("end"))
-                                    a.Body.Add(Statement());
+                                    a.Body.Add(StatementSemicolon());
                                 return a;
                             }
                     }
@@ -271,7 +271,7 @@ namespace AnySqlParser
                             {
                                 Lex();
                                 Expect('(');
-                                var a = new Exists(location, Statement1());
+                                var a = new Exists(location, Statement());
                                 Expect(')');
                                 return a;
                             }
