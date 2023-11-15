@@ -78,6 +78,8 @@ namespace AnySqlParserTest
             statements = Parser.ParseText("select -1");
             a = ((Select)statements[0]).SelectList[0];
             Assert.True(a is UnaryExpression);
+
+            statements = Parser.ParseText("select exists(select 1)");
         }
 
         [Fact]

@@ -264,6 +264,19 @@ namespace AnySqlParser
             var location = new Location(file, line);
             switch (token)
             {
+                case kWord:
+                    switch (tokenString.ToLowerInvariant())
+                    {
+                        case "exists":
+                            {
+                                Lex();
+                                Expect('(');
+                                var a = new Exists(location, Statement1());
+                                Expect(')');
+                                return a;
+                            }
+                    }
+                    break;
                 case '~':
                     Lex();
                     return new UnaryExpression(location, UnaryOperator.BitNot, Prefix());

@@ -8,10 +8,21 @@
     }
 
     //arity 0
+    //or expressions whose operands are not expressions
     public abstract class AtomicExpression : Expression
     {
         protected AtomicExpression(Location location) : base(location)
         {
+        }
+    }
+
+    public sealed class Exists : AtomicExpression
+    {
+        public AST Operand;
+
+        public Exists(Location location, AST operand) : base(location)
+        {
+            Operand = operand;
         }
     }
 
@@ -48,6 +59,7 @@
         Not,
         BitNot,
         Minus,
+        Exists,
     }
 
     public sealed class UnaryExpression : Expression
@@ -81,6 +93,7 @@
         BitAnd,
         BitOr,
         BitXor,
+        Concat,
     }
 
     public sealed class BinaryExpression : Expression
