@@ -165,4 +165,16 @@
             return false;
         }
     }
+
+    //arity N
+    public sealed class Call : Expression
+    {
+        public string Function;
+        public List<Expression> Arguments = new();
+
+        public Call(Location location, string function) : base(location)
+        {
+            Function = function;
+        }
+    }
 }

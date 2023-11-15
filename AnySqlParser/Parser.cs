@@ -469,7 +469,28 @@ namespace AnySqlParser
                     Lex();
                     return new UnaryExpression(location, UnaryOp.Minus, Prefix());
             }
-            return Primary();
+            return Postfix();
+        }
+
+        Expression Postfix()
+        {
+            var a = Primary();
+            var location = new Location(file, line);
+            if (Eat('('))
+            {
+                if (a is Identifier a1)
+                {
+                    var call = new Call(location, a1.Name);
+                    if (token != ')')
+                        do
+                            call.Arguments.Add(Expression());
+                        while (Eat(','));
+                    Expect(')');
+                    return call;
+                }
+                throw Err("call of non-function", location.Line);
+            }
+            return a;
         }
 
         Expression Primary()
