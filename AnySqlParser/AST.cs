@@ -159,9 +159,7 @@
 
     public sealed class Table : AST
     {
-        public string? DatabaseName;
-        public string? SchemaName;
-        public string TableName = null!;
+        public QualifiedName Name = null!;
         public List<Column> Columns = new();
 
         public Table(Location location) : base(location)

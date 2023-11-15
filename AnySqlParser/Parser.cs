@@ -232,22 +232,8 @@ namespace AnySqlParser
                         case "table":
                             {
                                 var a = new Table(location);
+                                a.Name = QualifiedName();
 
-                                //name
-                                a.TableName = Name();
-                                if (Eat('.'))
-                                {
-                                    a.SchemaName = a.TableName;
-                                    a.TableName = Name();
-                                    if (Eat('.'))
-                                    {
-                                        a.DatabaseName = a.SchemaName;
-                                        a.SchemaName = a.TableName;
-                                        a.TableName = Name();
-                                    }
-                                }
-
-                                //columns
                                 Expect('(');
                                 do
                                     a.Columns.Add(Column());
