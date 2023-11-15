@@ -7,16 +7,18 @@
         }
     }
 
-    //arity 0
-    //or expressions whose operands are not expressions
-    public abstract class AtomicExpression : Expression
+    public sealed class Call : Expression
     {
-        protected AtomicExpression(Location location) : base(location)
+        public QualifiedName Function;
+        public List<Expression> Arguments = new();
+
+        public Call(Location location, QualifiedName function) : base(location)
         {
+            Function = function;
         }
     }
 
-    public sealed class Exists : AtomicExpression
+    public sealed class Exists : Expression
     {
         public AST Operand;
 
@@ -33,7 +35,7 @@
         }
     }
 
-    public sealed class StringLiteral : AtomicExpression
+    public sealed class StringLiteral : Expression
     {
         public string Value;
 
@@ -50,7 +52,7 @@
         }
     }
 
-    public sealed class QualifiedName : AtomicExpression
+    public sealed class QualifiedName : Expression
     {
         public List<string> Names = new();
 
@@ -71,7 +73,7 @@
         }
     }
 
-    public sealed class Number : AtomicExpression
+    public sealed class Number : Expression
     {
         public string Value;
 
@@ -88,7 +90,7 @@
         }
     }
 
-    public sealed class Null : AtomicExpression
+    public sealed class Null : Expression
     {
         public Null(Location location) : base(location)
         {
@@ -97,88 +99,6 @@
         public override bool Eq(AST b)
         {
             return b is Null;
-        }
-    }
-
-    //arity 1
-    public enum UnaryOp
-    {
-        Not,
-        BitNot,
-        Minus,
-        Exists,
-    }
-
-    public sealed class UnaryExpression : Expression
-    {
-        public UnaryOp Op;
-        public Expression Operand;
-
-        public UnaryExpression(Location location, UnaryOp op, Expression operand) : base(location)
-        {
-            Op = op;
-            Operand = operand;
-        }
-
-        public override bool Eq(AST b)
-        {
-            if (b is UnaryExpression b1)
-                return Op == b1.Op && Operand.Eq(b1.Operand);
-            return false;
-        }
-    }
-
-    //arity 2
-    public enum BinaryOp
-    {
-        Add,
-        Subtract,
-        Multiply,
-        Divide,
-        Remainder,
-        Equal,
-        NotEqual,
-        Less,
-        LessEqual,
-        Greater,
-        GreaterEqual,
-        And,
-        Or,
-        BitAnd,
-        BitOr,
-        BitXor,
-        Concat,
-    }
-
-    public sealed class BinaryExpression : Expression
-    {
-        public BinaryOp Op;
-        public Expression Left, Right;
-
-        public BinaryExpression(Location location, BinaryOp op, Expression left, Expression right) : base(location)
-        {
-            Op = op;
-            Left = left;
-            Right = right;
-        }
-
-        public override bool Eq(AST b)
-        {
-            if (b is BinaryExpression b1)
-                return Op == b1.Op && Left.Eq(b1.Left) && Right.Eq(b1.Right);
-            return false;
-        }
-    }
-
-    //arity N
-    public sealed class Call : Expression
-    {
-        public QualifiedName Function;
-        public List<Expression> Arguments = new();
-
-        public Call(Location location, QualifiedName function) : base(location)
-        {
-            Function = function;
         }
     }
 }
