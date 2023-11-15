@@ -257,6 +257,22 @@ namespace AnySqlParser
                             }
                     }
                     throw Err(prevTokenString + ": unknown noun", prevLine);
+                case "drop":
+                    switch (Keyword())
+                    {
+                        case "proc":
+                        case "procedure":
+                            {
+                                var a = new DropProcedure(location);
+                                if (Eat("if"))
+                                {
+                                    Expect("exists");
+                                    a.IfExists = true;
+                                }
+                                return a;
+                            }
+                    }
+                    throw Err(prevTokenString + ": unknown noun", prevLine);
             }
             throw Err(prevTokenString + ": unknown statement", prevLine);
         }

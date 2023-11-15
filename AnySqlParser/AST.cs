@@ -21,6 +21,17 @@
         }
     }
 
+    public sealed class DropProcedure : AST
+    {
+        public bool IfExists;
+        public string SchemaName = null!;
+        public string Procedure = null!;
+
+        public DropProcedure(Location location) : base(location)
+        {
+        }
+    }
+
     public sealed class Column : AST
     {
         public string Name = null!;
