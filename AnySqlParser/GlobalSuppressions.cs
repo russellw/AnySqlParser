@@ -6,3 +6,4 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Style", "IDE0017:Simplify object initialization", Justification = "<Pending>")]
+[assembly: SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "<Pending>")]
