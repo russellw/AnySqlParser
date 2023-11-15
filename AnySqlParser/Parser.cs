@@ -159,9 +159,10 @@ namespace AnySqlParser
                         }
 
                         //select list
-                        do
-                            a.SelectList.Add(Expression());
-                        while (Eat(','));
+                        if (!Eat('*'))
+                            do
+                                a.SelectList.Add(Expression());
+                            while (Eat(','));
 
                         //Any keyword after the select list, must be a clause
                         while (token == kWord)
@@ -515,7 +516,7 @@ namespace AnySqlParser
                         return a;
                     }
             }
-            throw Err("expected expression", prevLine);
+            throw Err(Echo(prevToken, prevTokenString) + ": expected expression", prevLine);
         }
 
         //etc
@@ -810,6 +811,8 @@ namespace AnySqlParser
                         token = c;
                         return;
                     case ',':
+                    case '=':
+                    case '&':
                     case ';':
                     case '.':
                     case '+':
@@ -949,21 +952,41 @@ namespace AnySqlParser
             textIndex = i;
         }
 
+        void Number()
+        {
+            var i = textIndex;
+            do
+                i++;
+            while (i < text.Length && IsWordPart(text[i]));
+            token = kNumber;
+            tokenString = text[textIndex..i];
+            textIndex = i;
+        }
+
         static bool IsWordPart(char c)
         {
             if (char.IsLetterOrDigit(c)) return true;
             return c == '_';
         }
 
-        void Number()
+        static string Echo(int token, string tokenString)
         {
-            var i = textIndex;
-            do
-                i++;
-            while (i < text.Length && char.IsDigit(text, i));
-            token = kNumber;
-            tokenString = text[textIndex..i];
-            textIndex = i;
+            if (token >= 0)
+                return char.ToString((char)token);
+            switch (token)
+            {
+                case kDoublePipe:
+                    return "||";
+                case kGreaterEqual:
+                    return ">=";
+                case kLessEqual:
+                    return "<=";
+                case kNotEqual:
+                    return "<>";
+                case kStringLiteral:
+                    return $"'{tokenString}'";
+            }
+            return tokenString;
         }
 
         //Error functions return exception objects instead of throwing immediately
