@@ -331,6 +331,23 @@ namespace AnySqlParser
         //expressions
         Expression Expression()
         {
+            return And();
+        }
+
+        Expression And()
+        {
+            var a = Not();
+            var location = new Location(file, line);
+            if (Eat("and"))
+                return new BinaryExpression(location, BinaryOp.And, a, Not());
+            return a;
+        }
+
+        Expression Not()
+        {
+            var location = new Location(file, line);
+            if (Eat("not"))
+                return new UnaryExpression(location, UnaryOp.Not, Not());
             return Comparison();
         }
 
