@@ -24,8 +24,7 @@
     public sealed class DropProcedure : AST
     {
         public bool IfExists;
-        public string SchemaName = null!;
-        public string Procedure = null!;
+        public List<QualifiedName> Names = new();
 
         public DropProcedure(Location location) : base(location)
         {

@@ -50,19 +50,19 @@
         }
     }
 
-    public sealed class Identifier : AtomicExpression
+    public sealed class QualifiedName : AtomicExpression
     {
-        public string Name;
+        public List<string> Names = new();
 
-        public Identifier(Location location, string name) : base(location)
+        public QualifiedName(Location location, string name) : base(location)
         {
-            Name = name;
+            Names.Add(name);
         }
 
         public override bool Eq(AST b)
         {
-            if (b is Identifier b1)
-                return Name == b1.Name;
+            if (b is QualifiedName b1)
+                return Names == b1.Names;
             return false;
         }
     }
@@ -169,10 +169,10 @@
     //arity N
     public sealed class Call : Expression
     {
-        public string Function;
+        public QualifiedName Function;
         public List<Expression> Arguments = new();
 
-        public Call(Location location, string function) : base(location)
+        public Call(Location location, QualifiedName function) : base(location)
         {
             Function = function;
         }

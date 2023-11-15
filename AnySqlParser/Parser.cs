@@ -495,9 +495,9 @@ namespace AnySqlParser
             var location = new Location(file, line);
             if (Eat('('))
             {
-                if (a is Identifier a1)
+                if (a is QualifiedName a1)
                 {
-                    var call = new Call(location, a1.Name);
+                    var call = new Call(location, a1);
                     if (token != ')')
                         do
                             call.Arguments.Add(Expression());
@@ -522,9 +522,21 @@ namespace AnySqlParser
                 case kNumber:
                     return new Number(location, tokenString);
                 case kWord:
-                    if (string.Equals(prevTokenString, "null", StringComparison.OrdinalIgnoreCase))
-                        return new Null(location);
-                    return new Identifier(location, prevTokenString);
+                    {
+                        if (string.Equals(prevTokenString, "null", StringComparison.OrdinalIgnoreCase))
+                            return new Null(location);
+                        var a = new QualifiedName(location, prevTokenString);
+                        while (Eat('.'))
+                            a.Names.Add(Name());
+                        return a;
+                    }
+                case kQuotedName:
+                    {
+                        var a = new QualifiedName(location, prevTokenString);
+                        while (Eat('.'))
+                            a.Names.Add(Name());
+                        return a;
+                    }
                 case '(':
                     {
                         var a = Expression();
