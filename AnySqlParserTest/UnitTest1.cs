@@ -65,6 +65,14 @@ namespace AnySqlParserTest
         }
 
         [Fact]
+        public void Eq()
+        {
+            var a = new StringLiteral(new Location("", 0), "a");
+            var b = new StringLiteral(new Location("", 0), "b");
+            Assert.NotEqual(a, b);
+        }
+
+        [Fact]
         public void Select()
         {
             var statements = Parser.ParseText("select 1");

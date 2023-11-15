@@ -54,7 +54,7 @@
     }
 
     //arity 1
-    public enum UnaryOperator
+    public enum UnaryOp
     {
         Not,
         BitNot,
@@ -64,18 +64,18 @@
 
     public sealed class UnaryExpression : Expression
     {
-        public UnaryOperator Operator;
+        public UnaryOp Op;
         public Expression Operand;
 
-        public UnaryExpression(Location location, UnaryOperator @operator, Expression operand) : base(location)
+        public UnaryExpression(Location location, UnaryOp op, Expression operand) : base(location)
         {
-            Operator = @operator;
+            Op = op;
             Operand = operand;
         }
     }
 
     //arity 2
-    public enum BinaryOperator
+    public enum BinaryOp
     {
         Add,
         Subtract,
@@ -98,12 +98,12 @@
 
     public sealed class BinaryExpression : Expression
     {
-        public BinaryOperator Operator;
+        public BinaryOp Op;
         public Expression Left, Right;
 
-        public BinaryExpression(Location location, BinaryOperator @operator, Expression left, Expression right) : base(location)
+        public BinaryExpression(Location location, BinaryOp op, Expression left, Expression right) : base(location)
         {
-            Operator = @operator;
+            Op = op;
             Left = left;
             Right = right;
         }

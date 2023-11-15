@@ -279,10 +279,10 @@ namespace AnySqlParser
                     break;
                 case '~':
                     Lex();
-                    return new UnaryExpression(location, UnaryOperator.BitNot, Prefix());
+                    return new UnaryExpression(location, UnaryOp.BitNot, Prefix());
                 case '-':
                     Lex();
-                    return new UnaryExpression(location, UnaryOperator.Minus, Prefix());
+                    return new UnaryExpression(location, UnaryOp.Minus, Prefix());
             }
             return Primary();
         }
