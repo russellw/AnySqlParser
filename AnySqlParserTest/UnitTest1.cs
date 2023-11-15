@@ -107,6 +107,51 @@ namespace AnySqlParserTest
             var S = new Select(L);
             S.SelectList.Add(new Number(L, "1"));
             Assert.True(a.Eq(new Exists(L, S)));
+
+            a = Selected(Parser.ParseText("select exists(select 1*2)"));
+            S = new Select(L);
+            S.SelectList.Add(new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "1"), new Number(L, "2")));
+            Assert.True(a.Eq(new Exists(L, S)));
+
+            a = Selected(Parser.ParseText("select exists(select 1*2*3)"));
+            S = new Select(L);
+            S.SelectList.Add(new BinaryExpression(L, BinaryOp.Multiply,
+                new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "1"), new Number(L, "2")),
+                new Number(L, "3")
+                ));
+            Assert.True(a.Eq(new Exists(L, S)));
+
+            a = Selected(Parser.ParseText("select exists(select (1*2)*3)"));
+            S = new Select(L);
+            S.SelectList.Add(new BinaryExpression(L, BinaryOp.Multiply,
+                new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "1"), new Number(L, "2")),
+                new Number(L, "3")
+                ));
+            Assert.True(a.Eq(new Exists(L, S)));
+
+            a = Selected(Parser.ParseText("select exists(select 1*(2*3))"));
+            S = new Select(L);
+            S.SelectList.Add(new BinaryExpression(L, BinaryOp.Multiply,
+                new Number(L, "1"),
+                new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "2"), new Number(L, "3"))
+                ));
+            Assert.True(a.Eq(new Exists(L, S)));
+
+            a = Selected(Parser.ParseText("select exists(select 1*2+3)"));
+            S = new Select(L);
+            S.SelectList.Add(new BinaryExpression(L, BinaryOp.Add,
+                new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "1"), new Number(L, "2")),
+                new Number(L, "3")
+                ));
+            Assert.True(a.Eq(new Exists(L, S)));
+
+            a = Selected(Parser.ParseText("select exists(select 1+2*3)"));
+            S = new Select(L);
+            S.SelectList.Add(new BinaryExpression(L, BinaryOp.Add,
+                new Number(L, "1"),
+                new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "2"), new Number(L, "3"))
+                ));
+            Assert.True(a.Eq(new Exists(L, S)));
         }
 
         static Expression Selected(List<AST> statements)

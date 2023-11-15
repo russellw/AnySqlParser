@@ -331,7 +331,100 @@ namespace AnySqlParser
         //expressions
         Expression Expression()
         {
-            return Prefix();
+            return Comparison();
+        }
+
+        Expression Comparison()
+        {
+            var a = Addition();
+            BinaryOp op;
+            switch (token)
+            {
+                case '=':
+                    op = BinaryOp.Equal;
+                    break;
+                case '<':
+                    op = BinaryOp.Less;
+                    break;
+                case kNotEqual:
+                    op = BinaryOp.NotEqual;
+                    break;
+                case '>':
+                    op = BinaryOp.Greater;
+                    break;
+                case kLessEqual:
+                    op = BinaryOp.LessEqual;
+                    break;
+                case kGreaterEqual:
+                    op = BinaryOp.GreaterEqual;
+                    break;
+                default:
+                    return a;
+            }
+            var location = new Location(file, line);
+            Lex();
+            return new BinaryExpression(location, op, a, Addition());
+        }
+
+        Expression Addition()
+        {
+            var a = Multiplication();
+            for (; ; )
+            {
+                BinaryOp op;
+                switch (token)
+                {
+                    case '+':
+                        op = BinaryOp.Add;
+                        break;
+                    case '-':
+                        op = BinaryOp.Subtract;
+                        break;
+                    case kDoublePipe:
+                        op = BinaryOp.Concat;
+                        break;
+                    case '&':
+                        op = BinaryOp.BitAnd;
+                        break;
+                    case '|':
+                        op = BinaryOp.BitOr;
+                        break;
+                    case '^':
+                        op = BinaryOp.BitXor;
+                        break;
+                    default:
+                        return a;
+                }
+                var location = new Location(file, line);
+                Lex();
+                a = new BinaryExpression(location, op, a, Multiplication());
+            }
+        }
+
+        Expression Multiplication()
+        {
+            var a = Prefix();
+            for (; ; )
+            {
+                BinaryOp op;
+                switch (token)
+                {
+                    case '*':
+                        op = BinaryOp.Multiply;
+                        break;
+                    case '/':
+                        op = BinaryOp.Divide;
+                        break;
+                    case '%':
+                        op = BinaryOp.Remainder;
+                        break;
+                    default:
+                        return a;
+                }
+                var location = new Location(file, line);
+                Lex();
+                a = new BinaryExpression(location, op, a, Prefix());
+            }
         }
 
         Expression Prefix()
