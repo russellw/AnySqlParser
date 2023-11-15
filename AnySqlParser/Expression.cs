@@ -54,6 +54,10 @@
     {
         public List<string> Names = new();
 
+        public QualifiedName(Location location) : base(location)
+        {
+        }
+
         public QualifiedName(Location location, string name) : base(location)
         {
             Names.Add(name);

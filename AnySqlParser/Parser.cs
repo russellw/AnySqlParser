@@ -269,6 +269,9 @@ namespace AnySqlParser
                                     Expect("exists");
                                     a.IfExists = true;
                                 }
+                                do
+                                    a.Procedures.Add(QualifiedName());
+                                while (Eat(','));
                                 return a;
                             }
                     }
@@ -512,39 +515,49 @@ namespace AnySqlParser
 
         Expression Primary()
         {
-            var prevToken = token;
-            StashLex();
-            var location = new Location(file, prevLine);
-            switch (prevToken)
+            var location = new Location(file, line);
+            switch (token)
             {
                 case kStringLiteral:
-                    return new StringLiteral(location, tokenString);
+                    {
+                        var a = new StringLiteral(location, tokenString);
+                        Lex();
+                        return a;
+                    }
                 case kNumber:
-                    return new Number(location, tokenString);
+                    {
+                        var a = new Number(location, tokenString);
+                        Lex();
+                        return a;
+                    }
                 case kWord:
+                    if (string.Equals(tokenString, "null", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (string.Equals(prevTokenString, "null", StringComparison.OrdinalIgnoreCase))
-                            return new Null(location);
-                        var a = new QualifiedName(location, prevTokenString);
-                        while (Eat('.'))
-                            a.Names.Add(Name());
-                        return a;
+                        Lex();
+                        return new Null(location);
                     }
+                    return QualifiedName();
                 case kQuotedName:
-                    {
-                        var a = new QualifiedName(location, prevTokenString);
-                        while (Eat('.'))
-                            a.Names.Add(Name());
-                        return a;
-                    }
+                    return QualifiedName();
                 case '(':
                     {
+                        Lex();
                         var a = Expression();
                         Expect(')');
                         return a;
                     }
             }
-            throw Err(Echo(prevToken, prevTokenString) + ": expected expression", prevLine);
+            throw Err(Echo(token, tokenString) + ": expected expression");
+        }
+
+        QualifiedName QualifiedName()
+        {
+            var location = new Location(file, line);
+            var a = new QualifiedName(location);
+            do
+                a.Names.Add(Name());
+            while (Eat('.'));
+            return a;
         }
 
         //etc
