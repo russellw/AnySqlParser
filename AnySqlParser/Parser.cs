@@ -127,17 +127,22 @@ namespace AnySqlParser
                 case "select":
                     {
                         var a = new Select(location);
-                        while (token == kWord)
+
+                        //Some clauses are written before the select list
+                        //but unknown keywords must be left alone
+                        //as they might be part of the select list
+                        for (; ; )
+                        {
                             switch (KeywordMaybe())
                             {
                                 case "all":
                                     Lex();
                                     a.All = true;
-                                    break;
+                                    continue;
                                 case "distinct":
                                     Lex();
                                     a.Distinct = true;
-                                    break;
+                                    continue;
                                 case "top":
                                     Lex();
                                     a.Top = Expression();
@@ -148,11 +153,17 @@ namespace AnySqlParser
                                         Expect("ties");
                                         a.WithTies = true;
                                     }
-                                    break;
+                                    continue;
                             }
+                            break;
+                        }
+
+                        //select list
                         do
                             a.SelectList.Add(Expression());
                         while (Eat(','));
+
+                        //Any keyword after the select list, must be a clause
                         while (token == kWord)
                             switch (Keyword())
                             {
@@ -166,17 +177,10 @@ namespace AnySqlParser
                                 case "order":
                                     Expect("by");
                                     a.OrderBy = Expression();
-                                    switch (KeywordMaybe())
-                                    {
-                                        case "asc":
-                                            Lex();
-                                            a.Asc = true;
-                                            break;
-                                        case "desc":
-                                            Lex();
-                                            a.Desc = true;
-                                            break;
-                                    }
+                                    if (Eat("asc"))
+                                        a.Asc = true;
+                                    else if (Eat("desc"))
+                                        a.Desc = true;
                                     break;
                                 case "having":
                                     a.Having = Expression();
@@ -189,6 +193,8 @@ namespace AnySqlParser
                                         a.From.Add(Expression());
                                     while (Eat(','));
                                     break;
+                                default:
+                                    throw Err(prevTokenString + ": unknown keyword", prevLine);
                             }
                         return a;
                     }
