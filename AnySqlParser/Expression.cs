@@ -24,6 +24,13 @@
         {
             Operand = operand;
         }
+
+        public override bool Eq(AST b)
+        {
+            if (b is Exists b1)
+                return Operand.Eq(b1.Operand);
+            return false;
+        }
     }
 
     public sealed class StringLiteral : AtomicExpression
@@ -33,6 +40,13 @@
         public StringLiteral(Location location, string value) : base(location)
         {
             Value = value;
+        }
+
+        public override bool Eq(AST b)
+        {
+            if (b is StringLiteral b1)
+                return Value == b1.Value;
+            return false;
         }
     }
 
@@ -44,12 +58,24 @@
         {
             Value = value;
         }
+
+        public override bool Eq(AST b)
+        {
+            if (b is Number b1)
+                return Value == b1.Value;
+            return false;
+        }
     }
 
     public sealed class Null : AtomicExpression
     {
         public Null(Location location) : base(location)
         {
+        }
+
+        public override bool Eq(AST b)
+        {
+            return b is Null;
         }
     }
 
@@ -71,6 +97,13 @@
         {
             Op = op;
             Operand = operand;
+        }
+
+        public override bool Eq(AST b)
+        {
+            if (b is UnaryExpression b1)
+                return Op == b1.Op && Operand.Eq(b1.Operand);
+            return false;
         }
     }
 
@@ -106,6 +139,13 @@
             Op = op;
             Left = left;
             Right = right;
+        }
+
+        public override bool Eq(AST b)
+        {
+            if (b is BinaryExpression b1)
+                return Op == b1.Op && Left.Eq(b1.Left) && Right.Eq(b1.Right);
+            return false;
         }
     }
 }

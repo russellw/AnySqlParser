@@ -67,9 +67,17 @@ namespace AnySqlParserTest
         [Fact]
         public void Eq()
         {
-            var a = new StringLiteral(new Location("", 0), "a");
-            var b = new StringLiteral(new Location("", 0), "b");
+            var a = new StringLiteral(new Location("", 0), "x");
+            var b = new StringLiteral(new Location("", 0), "y");
             Assert.NotEqual(a, b);
+            Assert.False(a.Equals(b));
+            Assert.False(a.Eq(b));
+
+            a = new StringLiteral(new Location("", 0), "x");
+            b = new StringLiteral(new Location("", 0), "x");
+            Assert.NotEqual(a, b);
+            Assert.False(a.Equals(b));
+            Assert.True(a.Eq(b));
         }
 
         [Fact]

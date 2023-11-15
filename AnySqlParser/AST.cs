@@ -10,6 +10,15 @@
         {
             Location = location;
         }
+
+        //The omission of an override for Equals is intentional
+        //in most cases, syntax trees have reference semantics
+        //equality comparison by value is useful only in unusual situations
+        //and should not be the default
+        public virtual bool Eq(AST b)
+        {
+            return this == b;
+        }
     }
 
     public sealed class Column : AST
@@ -43,6 +52,19 @@
 
         public Select(Location location) : base(location)
         {
+        }
+
+        public override bool Eq(AST b)
+        {
+            if (b is Select b1)
+            {
+                if (SelectList.Count != b1.SelectList.Count)
+                    return false;
+                for (int i = 0; i < SelectList.Count; i++)
+                    if (!SelectList[i].Eq(b1.SelectList[i])) return false;
+                return true;
+            }
+            return false;
         }
     }
 
