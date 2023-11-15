@@ -61,6 +61,15 @@ namespace AnySqlParser
             var location = new Location(file, line);
             switch (Keyword())
             {
+                case "if":
+                    {
+                        var a = new If(location);
+                        a.condition = Expression();
+                        a.then = StatementSemicolon();
+                        if (Eat("else"))
+                            a.@else = StatementSemicolon();
+                        return a;
+                    }
                 case "set":
                     switch (token)
                     {

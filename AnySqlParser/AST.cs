@@ -46,6 +46,17 @@
         }
     }
 
+    public sealed class If : AST
+    {
+        public Expression condition = null!;
+        public AST then = null!;
+        public AST? @else;
+
+        public If(Location location) : base(location)
+        {
+        }
+    }
+
     public sealed class Select : AST
     {
         public List<Expression> SelectList = new();

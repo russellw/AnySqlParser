@@ -117,7 +117,7 @@ namespace AnySqlParserTest
         [Fact]
         public void Northwind()
         {
-            //var statements = Parser.ParseFile("sql-server-samples/instnwnd.sql");
+            var statements = Parser.ParseFile("sql-server-samples/instnwnd.sql");
             //Assert.True(statements.Count > 0);
         }
     }
