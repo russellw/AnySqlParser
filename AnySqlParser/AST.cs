@@ -60,15 +60,20 @@
         public int Size = -1;
         public int Scale = -1;
 
-        //constraints
-        public bool Nullable = true;
-        public bool PrimaryKey;
-
         //etc
         public bool Filestream;
         public bool Sparse;
+
+        public bool Identity;
+        public int IdentitySeed = -1;
+        public int IdentityIncrement = -1;
+
         public bool ForReplication = true;
+        public bool Nullable = true;
         public bool Rowguidcol;
+
+        //constraints
+        public bool PrimaryKey;
 
         public Column(Location location) : base(location)
         {

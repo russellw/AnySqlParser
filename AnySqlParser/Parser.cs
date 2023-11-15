@@ -329,6 +329,16 @@ namespace AnySqlParser
                     case "rowguidcol":
                         a.Rowguidcol = true;
                         break;
+                    case "identity":
+                        a.Identity = true;
+                        if (Eat('('))
+                        {
+                            a.IdentitySeed = Int();
+                            Expect(',');
+                            a.IdentityIncrement = Int();
+                            Expect(')');
+                        }
+                        break;
                     case "not":
                         switch (Keyword())
                         {
