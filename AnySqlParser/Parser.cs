@@ -127,9 +127,68 @@ namespace AnySqlParser
                 case "select":
                     {
                         var a = new Select(location);
+                        while (token == kWord)
+                            switch (Keyword())
+                            {
+                                case "all":
+                                    a.All = true;
+                                    break;
+                                case "distinct":
+                                    a.Distinct = true;
+                                    break;
+                                case "top":
+                                    a.Top = Expression();
+                                    while (token == kWord)
+                                        switch (Keyword())
+                                        {
+                                            case "percent":
+                                                a.Percent = true;
+                                                break;
+                                            case "with":
+                                                Expect("ties");
+                                                a.WithTies = true;
+                                                break;
+                                        }
+                                    break;
+                            }
                         do
                             a.SelectList.Add(Expression());
                         while (Eat(','));
+                        while (token == kWord)
+                            switch (Keyword())
+                            {
+                                case "where":
+                                    a.Where = Expression();
+                                    break;
+                                case "group":
+                                    Expect("by");
+                                    a.GroupBy = Expression();
+                                    break;
+                                case "order":
+                                    Expect("by");
+                                    a.OrderBy = Expression();
+                                    switch (KeywordMaybe())
+                                    {
+                                        case "asc":
+                                            a.Asc = true;
+                                            break;
+                                        case "desc":
+                                            a.Desc = true;
+                                            break;
+                                    }
+                                    break;
+                                case "having":
+                                    a.Having = Expression();
+                                    break;
+                                case "window":
+                                    a.Window = Expression();
+                                    break;
+                                case "from":
+                                    do
+                                        a.From.Add(Expression());
+                                    while (Eat(','));
+                                    break;
+                            }
                         return a;
                     }
                 case "insert":
