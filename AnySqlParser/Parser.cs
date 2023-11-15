@@ -256,7 +256,33 @@ namespace AnySqlParser
                                     a.IfExists = true;
                                 }
                                 do
-                                    a.Procedures.Add(QualifiedName());
+                                    a.Names.Add(QualifiedName());
+                                while (Eat(','));
+                                return a;
+                            }
+                        case "view":
+                            {
+                                var a = new DropView(location);
+                                if (Eat("if"))
+                                {
+                                    Expect("exists");
+                                    a.IfExists = true;
+                                }
+                                do
+                                    a.Names.Add(QualifiedName());
+                                while (Eat(','));
+                                return a;
+                            }
+                        case "table":
+                            {
+                                var a = new DropTable(location);
+                                if (Eat("if"))
+                                {
+                                    Expect("exists");
+                                    a.IfExists = true;
+                                }
+                                do
+                                    a.Names.Add(QualifiedName());
                                 while (Eat(','));
                                 return a;
                             }

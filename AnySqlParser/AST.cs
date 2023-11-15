@@ -24,9 +24,29 @@
     public sealed class DropProcedure : AST
     {
         public bool IfExists;
-        public List<QualifiedName> Procedures = new();
+        public List<QualifiedName> Names = new();
 
         public DropProcedure(Location location) : base(location)
+        {
+        }
+    }
+
+    public sealed class DropView : AST
+    {
+        public bool IfExists;
+        public List<QualifiedName> Names = new();
+
+        public DropView(Location location) : base(location)
+        {
+        }
+    }
+
+    public sealed class DropTable : AST
+    {
+        public bool IfExists;
+        public List<QualifiedName> Names = new();
+
+        public DropTable(Location location) : base(location)
         {
         }
     }
