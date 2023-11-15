@@ -50,6 +50,23 @@
         }
     }
 
+    public sealed class Identifier : AtomicExpression
+    {
+        public string Name;
+
+        public Identifier(Location location, string name) : base(location)
+        {
+            Name = name;
+        }
+
+        public override bool Eq(AST b)
+        {
+            if (b is Identifier b1)
+                return Name == b1.Name;
+            return false;
+        }
+    }
+
     public sealed class Number : AtomicExpression
     {
         public string Value;

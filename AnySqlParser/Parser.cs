@@ -128,27 +128,26 @@ namespace AnySqlParser
                     {
                         var a = new Select(location);
                         while (token == kWord)
-                            switch (Keyword())
+                            switch (KeywordMaybe())
                             {
                                 case "all":
+                                    Lex();
                                     a.All = true;
                                     break;
                                 case "distinct":
+                                    Lex();
                                     a.Distinct = true;
                                     break;
                                 case "top":
+                                    Lex();
                                     a.Top = Expression();
-                                    while (token == kWord)
-                                        switch (Keyword())
-                                        {
-                                            case "percent":
-                                                a.Percent = true;
-                                                break;
-                                            case "with":
-                                                Expect("ties");
-                                                a.WithTies = true;
-                                                break;
-                                        }
+                                    if (Eat("percent"))
+                                        a.Percent = true;
+                                    if (Eat("with"))
+                                    {
+                                        Expect("ties");
+                                        a.WithTies = true;
+                                    }
                                     break;
                             }
                         do
@@ -170,9 +169,11 @@ namespace AnySqlParser
                                     switch (KeywordMaybe())
                                     {
                                         case "asc":
+                                            Lex();
                                             a.Asc = true;
                                             break;
                                         case "desc":
+                                            Lex();
                                             a.Desc = true;
                                             break;
                                     }
@@ -369,7 +370,7 @@ namespace AnySqlParser
                 case kWord:
                     if (string.Equals(prevTokenString, "null", StringComparison.OrdinalIgnoreCase))
                         return new Null(location);
-                    throw Err("variables not yet implemented", prevLine);
+                    return new Identifier(location, prevTokenString);
                 case '(':
                     {
                         var a = Expression();
