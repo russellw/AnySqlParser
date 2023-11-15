@@ -36,8 +36,7 @@
         public string Name = null!;
 
         //data type
-        public string? TypeSchemaName;
-        public string TypeName = null!;
+        public QualifiedName TypeName = null!;
         public int Size = -1;
         public int Scale = -1;
 

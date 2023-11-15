@@ -275,18 +275,7 @@ namespace AnySqlParser
             a.Name = Name();
 
             //data type
-            var k = token;
-            var s = Name();
-            if (Eat('.'))
-            {
-                a.TypeSchemaName = s;
-                a.TypeName = Keyword();
-            }
-            else
-            {
-                if (k == kWord) s = s.ToLowerInvariant();
-                a.TypeName = s;
-            }
+            a.TypeName = QualifiedName();
             if (Eat('('))
             {
                 a.Size = Int();
