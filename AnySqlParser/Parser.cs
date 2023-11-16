@@ -231,32 +231,26 @@ namespace AnySqlParser
                                 var a = new Table(location, QualifiedName());
                                 Expect('(');
                                 do
+                                {
+                                    var constraintName = "";
+                                    if (Eat("constraint"))
+                                        constraintName = Name();
                                     switch (KeywordMaybe())
                                     {
+                                        case "foreign":
+                                            a.ForeignKeys.Add(ForeignKey(constraintName));
+                                            break;
                                         case "primary":
                                         case "unique":
-                                            a.Keys.Add(Key(""));
+                                            a.Keys.Add(Key(constraintName));
                                             break;
-                                        case "constraint":
-                                            {
-                                                Lex();
-                                                var constraintName = Name();
-                                                switch (KeywordMaybe())
-                                                {
-                                                    case "primary":
-                                                    case "unique":
-                                                        a.Keys.Add(Key(constraintName));
-                                                        break;
-                                                    default:
-                                                        throw Err("expected constraint");
-                                                }
-                                                break;
-                                            }
                                         default:
+                                            if (constraintName != "")
+                                                throw Err("expected constraint");
                                             a.Columns.Add(Column());
                                             break;
                                     }
-                                while (Eat(','));
+                                } while (Eat(','));
                                 Expect(')');
                                 return a;
                             }
