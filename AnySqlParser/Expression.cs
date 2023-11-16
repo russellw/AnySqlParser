@@ -5,6 +5,15 @@
         protected Expression(Location location) : base(location)
         {
         }
+
+        //The omission of an override for Equals is intentional
+        //in most cases, syntax trees have reference semantics
+        //equality comparison by value is useful only in unusual situations
+        //and should not be the default
+        public virtual bool Eq(AST b)
+        {
+            return this == b;
+        }
     }
 
     public sealed class Call : Expression
@@ -25,13 +34,6 @@
         public Exists(Location location, AST query) : base(location)
         {
             Query = query;
-        }
-
-        public override bool Eq(AST b)
-        {
-            if (b is Exists b1)
-                return Query.Eq(b1.Query);
-            return false;
         }
     }
 
