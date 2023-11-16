@@ -264,7 +264,7 @@ namespace AnySqlParser
                                             break;
                                         default:
                                             if (constraintName != "")
-                                                throw Err("expected constraint");
+                                                throw Err(Echo() + ": expected constraint");
                                             a.Columns.Add(Column());
                                             break;
                                     }
@@ -757,7 +757,7 @@ namespace AnySqlParser
         int Int()
         {
             if (token != kNumber)
-                throw Err("expected integer");
+                throw Err(Echo() + ": expected integer");
             var n = int.Parse(tokenString, System.Globalization.CultureInfo.InvariantCulture);
             Lex();
             return n;
@@ -782,17 +782,17 @@ namespace AnySqlParser
                         return s;
                     }
             }
-            throw Err("expected name");
+            throw Err(Echo() + ": expected name");
         }
 
         void Expect(char k)
         {
-            if (!Eat(k)) throw Err($"expected '{k}'");
+            if (!Eat(k)) throw Err($"{Echo()}: expected '{k}'");
         }
 
         void Expect(string s)
         {
-            if (!Eat(s)) throw Err($"expected '{s}'");
+            if (!Eat(s)) throw Err($"{Echo()}: expected '{s}'");
         }
 
         bool Eat(int k)
