@@ -1,7 +1,8 @@
 ﻿namespace AnySqlParser
 {
-    public sealed class Column : AST
+    public sealed class Column
     {
+        public readonly Location Location;
         public string Name = null!;
 
         //data type
@@ -24,8 +25,9 @@
         //constraints
         public bool PrimaryKey;
 
-        public Column(Location location) : base(location)
+        public Column(Location location)
         {
+            Location = location;
         }
     }
 
