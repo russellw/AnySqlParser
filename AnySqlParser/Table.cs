@@ -63,11 +63,41 @@
         }
     }
 
+    public enum Action
+    {
+        NoAction,
+        Cascade,
+        SetNull,
+        SetDefault,
+    }
+
+    public sealed class ForeignKey
+    {
+        public readonly Location Location;
+        public string ConstraintName;
+
+        public List<string> Columns = new();
+
+        public string RefTableName = null!;
+        public List<string> RefColumns = new();
+
+        public Action OnDelete = Action.NoAction;
+        public Action OnUpdate = Action.NoAction;
+        public bool ForReplication = true;
+
+        public ForeignKey(Location location, string constraintName)
+        {
+            Location = location;
+            ConstraintName = constraintName;
+        }
+    }
+
     public sealed class Table : AST
     {
         public QualifiedName Name;
         public List<Column> Columns = new();
         public List<Key> Keys = new();
+        public List<ForeignKey> ForeignKeys = new();
 
         public Table(Location location, QualifiedName name) : base(location)
         {
