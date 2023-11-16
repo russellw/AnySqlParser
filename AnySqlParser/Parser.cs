@@ -213,8 +213,6 @@ namespace AnySqlParser
                         Lex();
                         Eat("into");
                         var a = new Insert(location);
-
-                        //table
                         a.TableName = Name();
 
                         //columns
@@ -406,6 +404,7 @@ namespace AnySqlParser
             var location = new Location(file, line);
             var a = new Key(location, constraintName);
 
+            //primary?
             switch (Keyword())
             {
                 case "primary":
@@ -420,11 +419,20 @@ namespace AnySqlParser
                     throw Err(Echo() + ": expected key type");
             }
 
-            if (Eat("clustered"))
-                a.Clustered = true;
-            else if (Eat("nonclustered"))
-                a.Clustered = false;
+            //clustered?
+            switch (Keyword())
+            {
+                case "clustered":
+                    Lex();
+                    a.Clustered = true;
+                    break;
+                case "nonclustered":
+                    Lex();
+                    a.Clustered = false;
+                    break;
+            }
 
+            //columns
             Expect('(');
             do
                 a.Columns.Add(ColumnOrder());
@@ -440,12 +448,14 @@ namespace AnySqlParser
             Expect("key");
             var a = new ForeignKey(location, constraintName);
 
+            //columns
             Expect('(');
             do
                 a.Columns.Add(Name());
             while (Eat(','));
             Expect(')');
 
+            //references
             Expect("references");
             a.RefTableName = QualifiedName();
             if (Eat('('))
@@ -456,6 +466,7 @@ namespace AnySqlParser
                 Expect(')');
             }
 
+            //actions
             while (Eat("on"))
                 switch (Keyword())
                 {
@@ -471,6 +482,7 @@ namespace AnySqlParser
                         throw Err(Echo() + ": expected event type");
                 }
 
+            //replication
             if (Eat("not"))
             {
                 Expect("for");
@@ -505,7 +517,7 @@ namespace AnySqlParser
                             Lex();
                             return AnySqlParser.Action.SetDefault;
                     }
-                    break;
+                    throw Err(Echo() + ": expected replacement value");
             }
             throw Err(Echo() + ": expected action");
         }
@@ -535,9 +547,15 @@ namespace AnySqlParser
 
         bool Desc()
         {
-            if (Eat("desc"))
-                return true;
-            Eat("asc");
+            switch (Keyword())
+            {
+                case "desc":
+                    Lex();
+                    return true;
+                case "asc":
+                    Lex();
+                    return false;
+            }
             return false;
         }
 
