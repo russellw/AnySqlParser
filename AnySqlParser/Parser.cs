@@ -953,12 +953,12 @@ namespace AnySqlParser
 
         void Expect(char k)
         {
-            if (!Eat(k)) throw Err($"{Echo()}: expected '{k}'");
+            if (!Eat(k)) throw Err(Echo() + ": expected " + k);
         }
 
         void Expect(string s)
         {
-            if (!Eat(s)) throw Err($"{Echo()}: expected '{s}'");
+            if (!Eat(s)) throw Err(Echo() + ": expected " + s.ToUpperInvariant());
         }
 
         bool Eat(int k)
@@ -1321,7 +1321,7 @@ namespace AnySqlParser
                         }
                         break;
                 }
-                throw Err($"stray '{c}'");
+                throw Err("stray " + c);
             }
             token = -1;
         }
