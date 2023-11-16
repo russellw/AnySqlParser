@@ -413,6 +413,75 @@ namespace AnySqlParser
             return a;
         }
 
+        ForeignKey ForeignKey(string constraintName)
+        {
+            var location = new Location(file, line);
+            Expect("foreign");
+            Expect("key");
+            var a = new ForeignKey(location, constraintName);
+
+            Expect('(');
+            do
+                a.Columns.Add(Name());
+            while (Eat(','));
+            Expect(')');
+
+            Expect("references");
+            a.RefTableName = QualifiedName();
+            if (Eat('('))
+            {
+                do
+                    a.RefColumns.Add(Name());
+                while (Eat(','));
+                Expect(')');
+            }
+
+            while (Eat("on"))
+                switch (Keyword())
+                {
+                    case "delete":
+                        a.OnDelete = Action();
+                        break;
+                    case "update":
+                        a.OnUpdate = Action();
+                        break;
+                    default:
+                        throw Err(prevTokenString + ": unknown event", prevLine);
+                }
+
+            if (Eat("not"))
+            {
+                Expect("for");
+                Expect("replication");
+                a.ForReplication = false;
+            }
+            return a;
+        }
+
+        Action Action()
+        {
+            switch (Keyword())
+            {
+                case "cascade":
+                    return AnySqlParser.Action.Cascade;
+                case "no":
+                    Expect("action");
+                    return AnySqlParser.Action.NoAction;
+                case "restrict":
+                    return AnySqlParser.Action.NoAction;
+                case "set":
+                    switch (Keyword())
+                    {
+                        case "null":
+                            return AnySqlParser.Action.SetNull;
+                        case "default":
+                            return AnySqlParser.Action.SetDefault;
+                    }
+                    break;
+            }
+            throw Err(prevTokenString + ": unknown action", prevLine);
+        }
+
         bool Desc()
         {
             if (Eat("desc"))

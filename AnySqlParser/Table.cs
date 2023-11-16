@@ -77,7 +77,7 @@
 
         public List<string> Columns = new();
 
-        public string RefTableName = null!;
+        public QualifiedName RefTableName = null!;
         public List<string> RefColumns = new();
 
         public Action OnDelete = Action.NoAction;
