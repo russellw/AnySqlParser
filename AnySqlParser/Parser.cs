@@ -160,43 +160,167 @@ namespace AnySqlParser
                         return a;
                     }
                 case "create":
-                    Lex();
-                    switch (Keyword())
                     {
-                        case "table":
-                            {
-                                Lex();
-                                var a = new Table(location, QualifiedName());
-                                Expect('(');
-                                do
+                        Lex();
+                        var unique = Eat("unique");
+                        var clustered = Clustered();
+                        switch (Keyword())
+                        {
+                            case "index":
                                 {
-                                    var constraintName = "";
-                                    if (Eat("constraint"))
-                                        constraintName = Name();
-                                    switch (Keyword())
+                                    Lex();
+                                    var a = new Index(location);
+                                    a.Unique = unique;
+                                    a.Clustered = clustered;
+                                    a.Name = Name();
+
+                                    //table
+                                    Expect("on");
+                                    a.TableName = QualifiedName();
+
+                                    //columns
+                                    Expect('(');
+                                    do
+                                        a.Columns.Add(ColumnOrder());
+                                    while (Eat(','));
+                                    Expect(')');
+
+                                    //include
+                                    if (Eat("include"))
                                     {
-                                        case "foreign":
-                                            a.ForeignKeys.Add(ForeignKey(constraintName));
-                                            break;
-                                        case "check":
-                                            a.Checks.Add(Check(constraintName));
-                                            break;
-                                        case "primary":
-                                        case "unique":
-                                            a.Keys.Add(Key(constraintName));
-                                            break;
-                                        default:
-                                            if (constraintName != "")
-                                                throw Err(Echo() + ": expected constraint");
-                                            a.Columns.Add(Column());
-                                            break;
+                                        Expect('(');
+                                        do
+                                            a.Include.Add(Name());
+                                        while (Eat(','));
+                                        Expect(')');
                                     }
-                                } while (Eat(','));
-                                Expect(')');
-                                return a;
-                            }
+
+                                    //where
+                                    if (Eat("where"))
+                                        a.Where = Expression();
+
+                                    //relational index options
+                                    if (Eat("with"))
+                                    {
+                                        Expect('(');
+                                        do
+                                            switch (Keyword())
+                                            {
+                                                case "pad_index":
+                                                    Lex();
+                                                    Eat('=');
+                                                    a.PadIndex = OnOff();
+                                                    break;
+                                                case "sort_in_tempdb":
+                                                    Lex();
+                                                    Eat('=');
+                                                    a.SortInTempdb = OnOff();
+                                                    break;
+                                                case "ignore_dup_key":
+                                                    Lex();
+                                                    Eat('=');
+                                                    a.IgnoreDupKey = OnOff();
+                                                    break;
+                                                case "statistics_norecompute":
+                                                    Lex();
+                                                    Eat('=');
+                                                    a.StatisticsNorecompute = OnOff();
+                                                    break;
+                                                case "statistics_incremental":
+                                                    Lex();
+                                                    Eat('=');
+                                                    a.StatisticsIncremental = OnOff();
+                                                    break;
+                                                case "drop_existing":
+                                                    Lex();
+                                                    Eat('=');
+                                                    a.DropExisting = OnOff();
+                                                    break;
+                                                case "online":
+                                                    Lex();
+                                                    Eat('=');
+                                                    a.Online = OnOff();
+                                                    break;
+                                                case "resumable":
+                                                    Lex();
+                                                    Eat('=');
+                                                    a.Resumable = OnOff();
+                                                    break;
+                                                case "allow_row_locks":
+                                                    Lex();
+                                                    Eat('=');
+                                                    a.AllowRowLocks = OnOff();
+                                                    break;
+                                                case "allow_page_locks":
+                                                    Lex();
+                                                    Eat('=');
+                                                    a.AllowPageLocks = OnOff();
+                                                    break;
+                                                case "optimize_for_sequential_key":
+                                                    Lex();
+                                                    Eat('=');
+                                                    a.OptimizeForSequentialKey = OnOff();
+                                                    break;
+
+                                                case "fillfactor":
+                                                    Lex();
+                                                    Eat('=');
+                                                    a.FillFactor = Int();
+                                                    break;
+                                                case "maxdop":
+                                                    Lex();
+                                                    Eat('=');
+                                                    a.Maxdop = Int();
+                                                    break;
+                                                case "max_duration":
+                                                    Lex();
+                                                    Eat('=');
+                                                    a.MaxDuration = Int();
+                                                    a.MaxDurationMinutes = Eat("minutes");
+                                                    break;
+                                                default:
+                                                    throw Err(Echo() + ": expected relational index option");
+                                            }
+                                        while (Eat(','));
+                                        Expect(')');
+                                    }
+                                    return a;
+                                }
+                            case "table":
+                                {
+                                    Lex();
+                                    var a = new Table(location, QualifiedName());
+                                    Expect('(');
+                                    do
+                                    {
+                                        var constraintName = "";
+                                        if (Eat("constraint"))
+                                            constraintName = Name();
+                                        switch (Keyword())
+                                        {
+                                            case "foreign":
+                                                a.ForeignKeys.Add(ForeignKey(constraintName));
+                                                break;
+                                            case "check":
+                                                a.Checks.Add(Check(constraintName));
+                                                break;
+                                            case "primary":
+                                            case "unique":
+                                                a.Keys.Add(Key(constraintName));
+                                                break;
+                                            default:
+                                                if (constraintName != "")
+                                                    throw Err(Echo() + ": expected constraint");
+                                                a.Columns.Add(Column());
+                                                break;
+                                        }
+                                    } while (Eat(','));
+                                    Expect(')');
+                                    return a;
+                                }
+                        }
+                        throw Err(Echo() + ": expected noun");
                     }
-                    throw Err(Echo() + ": expected noun");
                 case "drop":
                     Lex();
                     switch (Keyword())
@@ -426,17 +550,7 @@ namespace AnySqlParser
             }
 
             //clustered?
-            switch (Keyword())
-            {
-                case "clustered":
-                    Lex();
-                    a.Clustered = true;
-                    break;
-                case "nonclustered":
-                    Lex();
-                    a.Clustered = false;
-                    break;
-            }
+            a.Clustered = Clustered();
 
             //columns
             Expect('(');
@@ -543,6 +657,20 @@ namespace AnySqlParser
         }
 
         //etc
+        bool? Clustered()
+        {
+            switch (Keyword())
+            {
+                case "clustered":
+                    Lex();
+                    return true;
+                case "nonclustered":
+                    Lex();
+                    return false;
+            }
+            return null;
+        }
+
         ColumnOrder ColumnOrder()
         {
             var location = new Location(file, line);
@@ -563,6 +691,20 @@ namespace AnySqlParser
                     return false;
             }
             return false;
+        }
+
+        bool OnOff()
+        {
+            switch (Keyword())
+            {
+                case "on":
+                    Lex();
+                    return true;
+                case "off":
+                    Lex();
+                    return false;
+            }
+            throw Err(Echo() + ": expected ON or OFF");
         }
 
         //expressions
