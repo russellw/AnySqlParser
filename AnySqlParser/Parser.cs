@@ -27,11 +27,9 @@ namespace AnySqlParser
         readonly string text;
         readonly string file;
         int line;
-        int prevLine;
         int textIndex;
         int token;
         string tokenString = null!;
-        string prevTokenString = null!;
         readonly List<Statement> statements = new();
 
         Parser(string text, string file, int line)
@@ -63,6 +61,7 @@ namespace AnySqlParser
             {
                 case "if":
                     {
+                        Lex();
                         var a = new If(location);
                         a.condition = Expression();
                         a.then = StatementSemicolon();
@@ -71,19 +70,22 @@ namespace AnySqlParser
                         return a;
                     }
                 case "set":
+                    Lex();
                     switch (token)
                     {
                         case kWord:
                             {
+                                Lex();
                                 var a = new SetParameter(location);
-                                a.Name = Keyword();
-                                a.Value = Keyword();
+                                a.Name = Name();
+                                a.Value = Name();
                                 return a;
                             }
                     }
-                    throw Err("syntax error", prevLine);
+                    throw Err(Echo() + ": syntax error");
                 case "begin":
-                    switch (KeywordMaybe())
+                    Lex();
+                    switch (Keyword())
                     {
                         case "transaction":
                         case "tran":
@@ -98,7 +100,8 @@ namespace AnySqlParser
                             }
                     }
                 case "start":
-                    switch (KeywordMaybe())
+                    Lex();
+                    switch (Keyword())
                     {
                         case "transaction":
                         case "tran":
@@ -107,7 +110,8 @@ namespace AnySqlParser
                     }
                     return new Start(location);
                 case "commit":
-                    switch (KeywordMaybe())
+                    Lex();
+                    switch (Keyword())
                     {
                         case "transaction":
                         case "tran":
@@ -116,7 +120,8 @@ namespace AnySqlParser
                     }
                     return new Commit(location);
                 case "rollback":
-                    switch (KeywordMaybe())
+                    Lex();
+                    switch (Keyword())
                     {
                         case "transaction":
                         case "tran":
@@ -126,6 +131,7 @@ namespace AnySqlParser
                     return new Rollback(location);
                 case "select":
                     {
+                        Expect("select");
                         var a = new Select(location);
 
                         //Some clauses are written before the select list
@@ -133,7 +139,7 @@ namespace AnySqlParser
                         //as they might be part of the select list
                         for (; ; )
                         {
-                            switch (KeywordMaybe())
+                            switch (Keyword())
                             {
                                 case "all":
                                     Lex();
@@ -169,35 +175,42 @@ namespace AnySqlParser
                             switch (Keyword())
                             {
                                 case "where":
+                                    Lex();
                                     a.Where = Expression();
                                     break;
                                 case "group":
+                                    Lex();
                                     Expect("by");
                                     a.GroupBy = Expression();
                                     break;
                                 case "order":
+                                    Lex();
                                     Expect("by");
                                     a.OrderBy = Expression();
                                     a.Desc = Desc();
                                     break;
                                 case "having":
+                                    Lex();
                                     a.Having = Expression();
                                     break;
                                 case "window":
+                                    Lex();
                                     a.Window = Expression();
                                     break;
                                 case "from":
+                                    Lex();
                                     do
                                         a.From.Add(Expression());
                                     while (Eat(','));
                                     break;
                                 default:
-                                    throw Err(prevTokenString + ": unknown keyword", prevLine);
+                                    throw Err(Echo() + ": unknown clause");
                             }
                         return a;
                     }
                 case "insert":
                     {
+                        Lex();
                         Eat("into");
                         var a = new Insert(location);
 
@@ -224,10 +237,12 @@ namespace AnySqlParser
                         return a;
                     }
                 case "create":
+                    Lex();
                     switch (Keyword())
                     {
                         case "table":
                             {
+                                Lex();
                                 var a = new Table(location, QualifiedName());
                                 Expect('(');
                                 do
@@ -235,7 +250,7 @@ namespace AnySqlParser
                                     var constraintName = "";
                                     if (Eat("constraint"))
                                         constraintName = Name();
-                                    switch (KeywordMaybe())
+                                    switch (Keyword())
                                     {
                                         case "foreign":
                                             a.ForeignKeys.Add(ForeignKey(constraintName));
@@ -258,13 +273,15 @@ namespace AnySqlParser
                                 return a;
                             }
                     }
-                    throw Err(prevTokenString + ": unknown noun", prevLine);
+                    throw Err(Echo() + ": unknown noun");
                 case "drop":
+                    Lex();
                     switch (Keyword())
                     {
                         case "proc":
                         case "procedure":
                             {
+                                Lex();
                                 var a = new DropProcedure(location);
                                 if (Eat("if"))
                                 {
@@ -278,6 +295,7 @@ namespace AnySqlParser
                             }
                         case "view":
                             {
+                                Lex();
                                 var a = new DropView(location);
                                 if (Eat("if"))
                                 {
@@ -291,6 +309,7 @@ namespace AnySqlParser
                             }
                         case "table":
                             {
+                                Lex();
                                 var a = new DropTable(location);
                                 if (Eat("if"))
                                 {
@@ -303,9 +322,9 @@ namespace AnySqlParser
                                 return a;
                             }
                     }
-                    throw Err(prevTokenString + ": unknown noun", prevLine);
+                    throw Err(Echo() + ": unknown noun");
             }
-            throw Err(prevTokenString + ": unknown statement", prevLine);
+            throw Err(Echo() + ": unknown statement");
         }
 
         Column Column()
@@ -328,21 +347,27 @@ namespace AnySqlParser
                 switch (Keyword())
                 {
                     case "null":
+                        Lex();
                         break;
                     case "filestream":
+                        Lex();
                         a.Filestream = true;
                         break;
                     case "sparse":
+                        Lex();
                         a.Sparse = true;
                         break;
                     case "primary":
+                        Lex();
                         Expect("key");
                         a.PrimaryKey = true;
                         break;
                     case "rowguidcol":
+                        Lex();
                         a.Rowguidcol = true;
                         break;
                     case "identity":
+                        Lex();
                         a.Identity = true;
                         if (Eat('('))
                         {
@@ -353,21 +378,24 @@ namespace AnySqlParser
                         }
                         break;
                     case "not":
+                        Lex();
                         switch (Keyword())
                         {
                             case "null":
+                                Lex();
                                 a.Nullable = false;
                                 break;
                             case "for":
+                                Lex();
                                 Expect("replication");
                                 a.ForReplication = false;
                                 break;
                             default:
-                                throw Err(prevTokenString + ": unknown keyword", prevLine);
+                                throw Err(Echo() + ": unknown option");
                         }
                         break;
                     default:
-                        throw Err(prevTokenString + ": unknown keyword", prevLine);
+                        throw Err(Echo() + ": unknown constraint");
                 }
             return a;
         }
@@ -381,13 +409,15 @@ namespace AnySqlParser
             switch (Keyword())
             {
                 case "primary":
+                    Lex();
                     Expect("key");
                     a.Primary = true;
                     break;
                 case "unique":
+                    Lex();
                     break;
                 default:
-                    throw Err(prevTokenString + ": unknown key type", prevLine);
+                    throw Err(Echo() + ": unknown key type");
             }
 
             if (Eat("clustered"))
@@ -430,13 +460,15 @@ namespace AnySqlParser
                 switch (Keyword())
                 {
                     case "delete":
+                        Lex();
                         a.OnDelete = Action();
                         break;
                     case "update":
+                        Lex();
                         a.OnUpdate = Action();
                         break;
                     default:
-                        throw Err(prevTokenString + ": unknown event", prevLine);
+                        throw Err(Echo() + ": unknown event");
                 }
 
             if (Eat("not"))
@@ -453,37 +485,41 @@ namespace AnySqlParser
             switch (Keyword())
             {
                 case "cascade":
+                    Lex();
                     return AnySqlParser.Action.Cascade;
                 case "no":
+                    Lex();
                     Expect("action");
                     return AnySqlParser.Action.NoAction;
                 case "restrict":
+                    Lex();
                     return AnySqlParser.Action.NoAction;
                 case "set":
+                    Lex();
                     switch (Keyword())
                     {
                         case "null":
+                            Lex();
                             return AnySqlParser.Action.SetNull;
                         case "default":
+                            Lex();
                             return AnySqlParser.Action.SetDefault;
                     }
                     break;
             }
-            throw Err(prevTokenString + ": unknown action", prevLine);
+            throw Err(Echo() + ": unknown action");
         }
 
         Check Check(string constraintName)
         {
             var location = new Location(file, line);
             var a = new Check(location, constraintName);
-
             if (Eat("not"))
             {
                 Expect("for");
                 Expect("replication");
                 a.ForReplication = false;
             }
-
             a.Expression = Expression();
             return a;
         }
@@ -704,7 +740,7 @@ namespace AnySqlParser
                         return a;
                     }
             }
-            throw Err(Echo(token, tokenString) + ": expected expression");
+            throw Err(Echo() + ": expected expression");
         }
 
         QualifiedName QualifiedName()
@@ -728,14 +764,6 @@ namespace AnySqlParser
         }
 
         string Keyword()
-        {
-            if (token != kWord)
-                throw Err("expected keyword");
-            StashLex();
-            return prevTokenString.ToLowerInvariant();
-        }
-
-        string KeywordMaybe()
         {
             if (token != kWord)
                 return "";
@@ -784,13 +812,6 @@ namespace AnySqlParser
         }
 
         //tokenizer
-        void StashLex()
-        {
-            prevLine = line;
-            prevTokenString = tokenString;
-            Lex();
-        }
-
         void Lex()
         {
             while (textIndex < text.Length)
@@ -1167,7 +1188,7 @@ namespace AnySqlParser
             return c == '_';
         }
 
-        static string Echo(int token, string tokenString)
+        string Echo()
         {
             if (token >= 0)
                 return char.ToString((char)token);
