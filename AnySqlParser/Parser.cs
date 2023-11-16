@@ -178,10 +178,7 @@ namespace AnySqlParser
                                 case "order":
                                     Expect("by");
                                     a.OrderBy = Expression();
-                                    if (Eat("asc"))
-                                        a.Asc = true;
-                                    else if (Eat("desc"))
-                                        a.Desc = true;
+                                    AscDesc(ref a.Asc, ref a.Desc);
                                     break;
                                 case "having":
                                     a.Having = Expression();
@@ -412,7 +409,16 @@ namespace AnySqlParser
         {
             var location = new Location(file, line);
             var a = new KeyColumn(location, Name());
+            AscDesc(ref a.Asc, ref a.Desc);
             return a;
+        }
+
+        void AscDesc(ref bool asc, ref bool desc)
+        {
+            if (Eat("asc"))
+                asc = true;
+            else if (Eat("desc"))
+                desc = true;
         }
 
         //expressions
