@@ -82,7 +82,7 @@ namespace AnySqlParser
                                 return a;
                             }
                     }
-                    throw Err(Echo() + ": syntax error");
+                    throw Err(Echo() + ": expected parameter");
                 case "begin":
                     Lex();
                     switch (Keyword())
@@ -204,7 +204,7 @@ namespace AnySqlParser
                                     while (Eat(','));
                                     break;
                                 default:
-                                    throw Err(Echo() + ": unknown clause");
+                                    throw Err(Echo() + ": expected clause");
                             }
                         return a;
                     }
@@ -273,7 +273,7 @@ namespace AnySqlParser
                                 return a;
                             }
                     }
-                    throw Err(Echo() + ": unknown noun");
+                    throw Err(Echo() + ": expected noun");
                 case "drop":
                     Lex();
                     switch (Keyword())
@@ -322,9 +322,9 @@ namespace AnySqlParser
                                 return a;
                             }
                     }
-                    throw Err(Echo() + ": unknown noun");
+                    throw Err(Echo() + ": expected noun");
             }
-            throw Err(Echo() + ": unknown statement");
+            throw Err(Echo() + ": expected statement");
         }
 
         Column Column()
@@ -391,11 +391,11 @@ namespace AnySqlParser
                                 a.ForReplication = false;
                                 break;
                             default:
-                                throw Err(Echo() + ": unknown option");
+                                throw Err(Echo() + ": expected option");
                         }
                         break;
                     default:
-                        throw Err(Echo() + ": unknown constraint");
+                        throw Err(Echo() + ": expected constraint");
                 }
             return a;
         }
@@ -417,7 +417,7 @@ namespace AnySqlParser
                     Lex();
                     break;
                 default:
-                    throw Err(Echo() + ": unknown key type");
+                    throw Err(Echo() + ": expected key type");
             }
 
             if (Eat("clustered"))
@@ -468,7 +468,7 @@ namespace AnySqlParser
                         a.OnUpdate = Action();
                         break;
                     default:
-                        throw Err(Echo() + ": unknown event");
+                        throw Err(Echo() + ": expected event type");
                 }
 
             if (Eat("not"))
@@ -507,7 +507,7 @@ namespace AnySqlParser
                     }
                     break;
             }
-            throw Err(Echo() + ": unknown action");
+            throw Err(Echo() + ": expected action");
         }
 
         Check Check(string constraintName)
@@ -1140,14 +1140,14 @@ namespace AnySqlParser
                             return;
                         }
 
-                        //likewise digits 
+                        //likewise digits
                         if (char.IsDigit(c))
                         {
                             Number();
                             return;
                         }
 
-                        //and whitespace 
+                        //and whitespace
                         if (char.IsWhiteSpace(c))
                         {
                             textIndex++;
