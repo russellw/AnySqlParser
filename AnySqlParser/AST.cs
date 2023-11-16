@@ -80,7 +80,6 @@
         public Expression? Window;
 
         public Expression? OrderBy;
-        public bool Asc;
         public bool Desc;
 
         public Select(Location location) : base(location)

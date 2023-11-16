@@ -37,7 +37,6 @@
         public readonly Location Location;
 
         public string Name;
-        public bool Asc;
         public bool Desc;
 
         public KeyColumn(Location location, string name)
