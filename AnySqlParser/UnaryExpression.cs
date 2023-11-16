@@ -19,7 +19,7 @@
             Operand = operand;
         }
 
-        public override bool Eq(AST b)
+        public override bool Eq(Expression b)
         {
             if (b is UnaryExpression b1)
                 return Op == b1.Op && Operand.Eq(b1.Operand);

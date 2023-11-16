@@ -1,16 +1,19 @@
 ﻿namespace AnySqlParser
 {
-    public abstract class Expression : AST
+    public abstract class Expression
     {
-        protected Expression(Location location) : base(location)
+        public readonly Location Location;
+
+        protected Expression(Location location)
         {
+            Location = location;
         }
 
         //The omission of an override for Equals is intentional
         //in most cases, syntax trees have reference semantics
         //equality comparison by value is useful only in unusual situations
         //and should not be the default
-        public virtual bool Eq(AST b)
+        public virtual bool Eq(Expression b)
         {
             return this == b;
         }
@@ -46,7 +49,7 @@
             Value = value;
         }
 
-        public override bool Eq(AST b)
+        public override bool Eq(Expression b)
         {
             if (b is StringLiteral b1)
                 return Value == b1.Value;
@@ -67,7 +70,7 @@
             Names.Add(name);
         }
 
-        public override bool Eq(AST b)
+        public override bool Eq(Expression b)
         {
             if (b is QualifiedName b1)
                 return Names == b1.Names;
@@ -84,7 +87,7 @@
             Value = value;
         }
 
-        public override bool Eq(AST b)
+        public override bool Eq(Expression b)
         {
             if (b is Number b1)
                 return Value == b1.Value;
@@ -98,7 +101,7 @@
         {
         }
 
-        public override bool Eq(AST b)
+        public override bool Eq(Expression b)
         {
             return b is Null;
         }

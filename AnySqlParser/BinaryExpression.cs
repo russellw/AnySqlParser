@@ -33,7 +33,7 @@
             Right = right;
         }
 
-        public override bool Eq(AST b)
+        public override bool Eq(Expression b)
         {
             if (b is BinaryExpression b1)
                 return Op == b1.Op && Left.Eq(b1.Left) && Right.Eq(b1.Right);
