@@ -91,12 +91,30 @@
         }
     }
 
+    public sealed class Check
+    {
+        public readonly Location Location;
+        public string ConstraintName;
+
+        public Expression Expression = null!;
+        public bool ForReplication = true;
+
+        public Check(Location location, string constraintName)
+        {
+            Location = location;
+            ConstraintName = constraintName;
+        }
+    }
+
     public sealed class Table : AST
     {
         public QualifiedName Name;
         public List<Column> Columns = new();
+
+        //table constraints
         public List<Key> Keys = new();
         public List<ForeignKey> ForeignKeys = new();
+        public List<Check> Checks = new();
 
         public Table(Location location, QualifiedName name) : base(location)
         {

@@ -240,6 +240,9 @@ namespace AnySqlParser
                                         case "foreign":
                                             a.ForeignKeys.Add(ForeignKey(constraintName));
                                             break;
+                                        case "check":
+                                            a.Checks.Add(Check(constraintName));
+                                            break;
                                         case "primary":
                                         case "unique":
                                             a.Keys.Add(Key(constraintName));
@@ -369,6 +372,7 @@ namespace AnySqlParser
             return a;
         }
 
+        //table constraints
         Key Key(string constraintName)
         {
             var location = new Location(file, line);
@@ -476,6 +480,16 @@ namespace AnySqlParser
             throw Err(prevTokenString + ": unknown action", prevLine);
         }
 
+        Check Check(string constraintName)
+        {
+            var location = new Location(file, line);
+            var a = new Check(location, constraintName);
+
+            a.Expression = Expression();
+            return a;
+        }
+
+        //etc
         bool Desc()
         {
             if (Eat("desc"))
