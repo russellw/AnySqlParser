@@ -485,6 +485,13 @@ namespace AnySqlParser
             var location = new Location(file, line);
             var a = new Check(location, constraintName);
 
+            if (Eat("not"))
+            {
+                Expect("for");
+                Expect("replication");
+                a.ForReplication = false;
+            }
+
             a.Expression = Expression();
             return a;
         }
