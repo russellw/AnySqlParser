@@ -234,7 +234,31 @@ namespace AnySqlParser
                                 var a = new Table(location, QualifiedName());
                                 Expect('(');
                                 do
-                                    a.Columns.Add(Column());
+                                    switch (KeywordMaybe())
+                                    {
+                                        case "primary":
+                                        case "unique":
+                                            a.Keys.Add(Key(""));
+                                            break;
+                                        case "constraint":
+                                            {
+                                                Lex();
+                                                var constraintName = Name();
+                                                switch (KeywordMaybe())
+                                                {
+                                                    case "primary":
+                                                    case "unique":
+                                                        a.Keys.Add(Key(constraintName));
+                                                        break;
+                                                    default:
+                                                        throw Err("expected constraint");
+                                                }
+                                                break;
+                                            }
+                                        default:
+                                            a.Columns.Add(Column());
+                                            break;
+                                    }
                                 while (Eat(','));
                                 Expect(')');
                                 return a;
@@ -351,6 +375,43 @@ namespace AnySqlParser
                     default:
                         throw Err(prevTokenString + ": unknown keyword", prevLine);
                 }
+            return a;
+        }
+
+        Key Key(string constraintName)
+        {
+            var location = new Location(file, line);
+            var a = new Key(location, constraintName);
+
+            switch (Keyword())
+            {
+                case "primary":
+                    Expect("key");
+                    a.Primary = true;
+                    break;
+                case "unique":
+                    break;
+                default:
+                    throw Err(prevTokenString + ": unknown key type", prevLine);
+            }
+
+            if (Eat("clustered"))
+                a.Clustered = true;
+            else if (Eat("nonclustered"))
+                a.Clustered = false;
+
+            Expect('(');
+            do
+                a.Columns.Add(KeyColumn());
+            while (Eat(','));
+            Expect(')');
+            return a;
+        }
+
+        KeyColumn KeyColumn()
+        {
+            var location = new Location(file, line);
+            var a = new KeyColumn(location, Name());
             return a;
         }
 

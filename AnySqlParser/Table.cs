@@ -50,13 +50,16 @@
     public sealed class Key
     {
         public readonly Location Location;
+        public string ConstraintName;
 
         public bool Primary;
         public bool? Clustered;
+        public List<KeyColumn> Columns = new();
 
-        public Key(Location location)
+        public Key(Location location, string constraintName)
         {
             Location = location;
+            ConstraintName = constraintName;
         }
     }
 
@@ -64,6 +67,7 @@
     {
         public QualifiedName Name;
         public List<Column> Columns = new();
+        public List<Key> Keys = new();
 
         public Table(Location location, QualifiedName name) : base(location)
         {
