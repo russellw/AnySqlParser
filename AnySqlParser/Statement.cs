@@ -92,7 +92,7 @@
 
     public sealed class Insert : Statement
     {
-        public string TableName = null!;
+        public QualifiedName TableName = null!;
         public List<string> Columns = new();
         public List<Expression> Values = new();
 

@@ -136,7 +136,9 @@ namespace AnySqlParser
                         Lex();
                         Eat("into");
                         var a = new Insert(location);
-                        a.TableName = Name();
+
+                        //table
+                        a.TableName = QualifiedName();
 
                         //columns
                         if (Eat('('))
