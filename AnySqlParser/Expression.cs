@@ -20,17 +20,17 @@
 
     public sealed class Exists : Expression
     {
-        public AST Operand;
+        public AST Query;
 
-        public Exists(Location location, AST operand) : base(location)
+        public Exists(Location location, AST query) : base(location)
         {
-            Operand = operand;
+            Query = query;
         }
 
         public override bool Eq(AST b)
         {
             if (b is Exists b1)
-                return Operand.Eq(b1.Operand);
+                return Query.Eq(b1.Query);
             return false;
         }
     }
