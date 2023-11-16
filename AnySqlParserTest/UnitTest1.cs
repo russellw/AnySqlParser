@@ -144,7 +144,7 @@ namespace AnySqlParserTest
             Assert.True(a.Eq(b));
         }
 
-        static Expression Selected(List<AST> statements)
+        static Expression Selected(List<Statement> statements)
         {
             return ((Select)statements[0]).SelectList[0];
         }

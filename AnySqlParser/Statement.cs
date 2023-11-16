@@ -14,17 +14,17 @@
         }
     }
 
-    public abstract class AST
+    public abstract class Statement
     {
         public readonly Location Location;
 
-        protected AST(Location location)
+        protected Statement(Location location)
         {
             Location = location;
         }
     }
 
-    public sealed class DropProcedure : AST
+    public sealed class DropProcedure : Statement
     {
         public bool IfExists;
         public List<QualifiedName> Names = new();
@@ -34,7 +34,7 @@
         }
     }
 
-    public sealed class DropView : AST
+    public sealed class DropView : Statement
     {
         public bool IfExists;
         public List<QualifiedName> Names = new();
@@ -44,7 +44,7 @@
         }
     }
 
-    public sealed class DropTable : AST
+    public sealed class DropTable : Statement
     {
         public bool IfExists;
         public List<QualifiedName> Names = new();
@@ -54,18 +54,18 @@
         }
     }
 
-    public sealed class If : AST
+    public sealed class If : Statement
     {
         public Expression condition = null!;
-        public AST then = null!;
-        public AST? @else;
+        public Statement then = null!;
+        public Statement? @else;
 
         public If(Location location) : base(location)
         {
         }
     }
 
-    public sealed class Select : AST
+    public sealed class Select : Statement
     {
         public bool All;
         public bool Distinct;
@@ -90,7 +90,7 @@
         }
     }
 
-    public sealed class Insert : AST
+    public sealed class Insert : Statement
     {
         public string TableName = null!;
         public List<string> Columns = new();
@@ -101,37 +101,37 @@
         }
     }
 
-    public sealed class Start : AST
+    public sealed class Start : Statement
     {
         public Start(Location location) : base(location)
         {
         }
     }
 
-    public sealed class Commit : AST
+    public sealed class Commit : Statement
     {
         public Commit(Location location) : base(location)
         {
         }
     }
 
-    public sealed class Rollback : AST
+    public sealed class Rollback : Statement
     {
         public Rollback(Location location) : base(location)
         {
         }
     }
 
-    public sealed class Block : AST
+    public sealed class Block : Statement
     {
-        public List<AST> Body = new();
+        public List<Statement> Body = new();
 
         public Block(Location location) : base(location)
         {
         }
     }
 
-    public sealed class SetParameter : AST
+    public sealed class SetParameter : Statement
     {
         public string Name = null!;
         public string Value = null!;

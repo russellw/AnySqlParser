@@ -92,7 +92,7 @@
         }
     }
 
-    public sealed class Table : AST
+    public sealed class Table : Statement
     {
         public QualifiedName Name;
         public List<Column> Columns = new();
