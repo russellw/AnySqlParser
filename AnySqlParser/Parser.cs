@@ -787,10 +787,10 @@ namespace AnySqlParser
             return n;
         }
 
-        string Keyword()
+        string? Keyword()
         {
             if (token != kWord)
-                return "";
+                return null;
             return tokenString.ToLowerInvariant();
         }
 
