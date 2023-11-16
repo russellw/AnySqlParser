@@ -231,9 +231,7 @@ namespace AnySqlParser
                     {
                         case "table":
                             {
-                                var a = new Table(location);
-                                a.Name = QualifiedName();
-
+                                var a = new Table(location, QualifiedName());
                                 Expect('(');
                                 do
                                     a.Columns.Add(Column());
@@ -295,10 +293,7 @@ namespace AnySqlParser
         Column Column()
         {
             var location = new Location(file, line);
-            var a = new Column(location);
-
-            //name
-            a.Name = Name();
+            var a = new Column(location, Name());
 
             //data type
             a.TypeName = QualifiedName();

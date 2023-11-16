@@ -3,7 +3,7 @@
     public sealed class Column
     {
         public readonly Location Location;
-        public string Name = null!;
+        public string Name;
 
         //data type
         public QualifiedName TypeName = null!;
@@ -25,7 +25,36 @@
         //constraints
         public bool PrimaryKey;
 
-        public Column(Location location)
+        public Column(Location location, string name)
+        {
+            Location = location;
+            Name = name;
+        }
+    }
+
+    public sealed class KeyColumn
+    {
+        public readonly Location Location;
+
+        public string Name;
+        public bool Asc;
+        public bool Desc;
+
+        public KeyColumn(Location location, string name)
+        {
+            Location = location;
+            Name = name;
+        }
+    }
+
+    public sealed class Key
+    {
+        public readonly Location Location;
+
+        public bool Primary;
+        public bool? Clustered;
+
+        public Key(Location location)
         {
             Location = location;
         }
@@ -33,11 +62,12 @@
 
     public sealed class Table : AST
     {
-        public QualifiedName Name = null!;
+        public QualifiedName Name;
         public List<Column> Columns = new();
 
-        public Table(Location location) : base(location)
+        public Table(Location location, QualifiedName name) : base(location)
         {
+            Name = name;
         }
     }
 }
