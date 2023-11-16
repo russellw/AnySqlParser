@@ -2,6 +2,20 @@
 {
     public readonly record struct Location(string File, int Line);
 
+    public sealed class ColumnOrder
+    {
+        public readonly Location Location;
+
+        public string Name;
+        public bool Desc;
+
+        public ColumnOrder(Location location, string name)
+        {
+            Location = location;
+            Name = name;
+        }
+    }
+
     public abstract class AST
     {
         public readonly Location Location;

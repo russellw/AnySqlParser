@@ -397,17 +397,9 @@ namespace AnySqlParser
 
             Expect('(');
             do
-                a.Columns.Add(KeyColumn());
+                a.Columns.Add(ColumnOrder());
             while (Eat(','));
             Expect(')');
-            return a;
-        }
-
-        KeyColumn KeyColumn()
-        {
-            var location = new Location(file, line);
-            var a = new KeyColumn(location, Name());
-            a.Desc = Desc();
             return a;
         }
 
@@ -497,6 +489,14 @@ namespace AnySqlParser
         }
 
         //etc
+        ColumnOrder ColumnOrder()
+        {
+            var location = new Location(file, line);
+            var a = new ColumnOrder(location, Name());
+            a.Desc = Desc();
+            return a;
+        }
+
         bool Desc()
         {
             if (Eat("desc"))

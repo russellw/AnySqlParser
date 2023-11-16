@@ -32,20 +32,6 @@
         }
     }
 
-    public sealed class KeyColumn
-    {
-        public readonly Location Location;
-
-        public string Name;
-        public bool Desc;
-
-        public KeyColumn(Location location, string name)
-        {
-            Location = location;
-            Name = name;
-        }
-    }
-
     public sealed class Key
     {
         public readonly Location Location;
@@ -53,7 +39,7 @@
 
         public bool Primary;
         public bool? Clustered;
-        public List<KeyColumn> Columns = new();
+        public List<ColumnOrder> Columns = new();
 
         public Key(Location location, string constraintName)
         {
