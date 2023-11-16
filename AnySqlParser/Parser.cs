@@ -130,84 +130,7 @@ namespace AnySqlParser
                     }
                     return new Rollback(location);
                 case "select":
-                    {
-                        Expect("select");
-                        var a = new Select(location);
-
-                        //Some clauses are written before the select list
-                        //but unknown keywords must be left alone
-                        //as they might be part of the select list
-                        for (; ; )
-                        {
-                            switch (Keyword())
-                            {
-                                case "all":
-                                    Lex();
-                                    a.All = true;
-                                    continue;
-                                case "distinct":
-                                    Lex();
-                                    a.Distinct = true;
-                                    continue;
-                                case "top":
-                                    Lex();
-                                    a.Top = Expression();
-                                    if (Eat("percent"))
-                                        a.Percent = true;
-                                    if (Eat("with"))
-                                    {
-                                        Expect("ties");
-                                        a.WithTies = true;
-                                    }
-                                    continue;
-                            }
-                            break;
-                        }
-
-                        //select list
-                        if (!Eat('*'))
-                            do
-                                a.SelectList.Add(Expression());
-                            while (Eat(','));
-
-                        //Any keyword after the select list, must be a clause
-                        while (token == kWord)
-                            switch (Keyword())
-                            {
-                                case "where":
-                                    Lex();
-                                    a.Where = Expression();
-                                    break;
-                                case "group":
-                                    Lex();
-                                    Expect("by");
-                                    a.GroupBy = Expression();
-                                    break;
-                                case "order":
-                                    Lex();
-                                    Expect("by");
-                                    a.OrderBy = Expression();
-                                    a.Desc = Desc();
-                                    break;
-                                case "having":
-                                    Lex();
-                                    a.Having = Expression();
-                                    break;
-                                case "window":
-                                    Lex();
-                                    a.Window = Expression();
-                                    break;
-                                case "from":
-                                    Lex();
-                                    do
-                                        a.From.Add(Expression());
-                                    while (Eat(','));
-                                    break;
-                                default:
-                                    throw Err(Echo() + ": expected clause");
-                            }
-                        return a;
-                    }
+                    return Select();
                 case "insert":
                     {
                         Lex();
@@ -325,6 +248,88 @@ namespace AnySqlParser
             throw Err(Echo() + ": expected statement");
         }
 
+        Select Select()
+        {
+            var location = new Location(file, line);
+            Expect("select");
+            var a = new Select(location);
+
+            //Some clauses are written before the select list
+            //but unknown keywords must be left alone
+            //as they might be part of the select list
+            for (; ; )
+            {
+                switch (Keyword())
+                {
+                    case "all":
+                        Lex();
+                        a.All = true;
+                        continue;
+                    case "distinct":
+                        Lex();
+                        a.Distinct = true;
+                        continue;
+                    case "top":
+                        Lex();
+                        a.Top = Expression();
+                        if (Eat("percent"))
+                            a.Percent = true;
+                        if (Eat("with"))
+                        {
+                            Expect("ties");
+                            a.WithTies = true;
+                        }
+                        continue;
+                }
+                break;
+            }
+
+            //select list
+            if (!Eat('*'))
+                do
+                    a.SelectList.Add(Expression());
+                while (Eat(','));
+
+            //Any keyword after the select list, must be a clause
+            while (token == kWord)
+                switch (Keyword())
+                {
+                    case "where":
+                        Lex();
+                        a.Where = Expression();
+                        break;
+                    case "group":
+                        Lex();
+                        Expect("by");
+                        a.GroupBy = Expression();
+                        break;
+                    case "order":
+                        Lex();
+                        Expect("by");
+                        a.OrderBy = Expression();
+                        a.Desc = Desc();
+                        break;
+                    case "having":
+                        Lex();
+                        a.Having = Expression();
+                        break;
+                    case "window":
+                        Lex();
+                        a.Window = Expression();
+                        break;
+                    case "from":
+                        Lex();
+                        do
+                            a.From.Add(Expression());
+                        while (Eat(','));
+                        break;
+                    default:
+                        throw Err(Echo() + ": expected clause");
+                }
+            return a;
+        }
+
+        //tables
         Column Column()
         {
             var location = new Location(file, line);
@@ -398,7 +403,6 @@ namespace AnySqlParser
             return a;
         }
 
-        //table constraints
         Key Key(string constraintName)
         {
             var location = new Location(file, line);
@@ -687,7 +691,7 @@ namespace AnySqlParser
                             {
                                 Lex();
                                 Expect('(');
-                                var a = new Exists(location, Statement());
+                                var a = new Exists(location, Select());
                                 Expect(')');
                                 return a;
                             }

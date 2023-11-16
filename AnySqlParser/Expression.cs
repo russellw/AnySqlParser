@@ -32,9 +32,9 @@
 
     public sealed class Exists : Expression
     {
-        public Statement Query;
+        public Select Query;
 
-        public Exists(Location location, Statement query) : base(location)
+        public Exists(Location location, Select query) : base(location)
         {
             Query = query;
         }
