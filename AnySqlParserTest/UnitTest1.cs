@@ -109,30 +109,37 @@ public class UnitTest1
 		Assert.True(a.Eq(b));
 
 		a = Selected(Parser.ParseText("select 1*2*3"));
-		b = new BinaryExpression(L, BinaryOp.Multiply,
+		b = new BinaryExpression(L,
+								 BinaryOp.Multiply,
 								 new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "1"), new Number(L, "2")),
 								 new Number(L, "3"));
 		Assert.True(a.Eq(b));
 
 		a = Selected(Parser.ParseText("select (1*2)*3"));
-		b = new BinaryExpression(L, BinaryOp.Multiply,
+		b = new BinaryExpression(L,
+								 BinaryOp.Multiply,
 								 new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "1"), new Number(L, "2")),
 								 new Number(L, "3"));
 		Assert.True(a.Eq(b));
 
 		a = Selected(Parser.ParseText("select 1*(2*3)"));
-		b = new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "1"),
+		b = new BinaryExpression(L,
+								 BinaryOp.Multiply,
+								 new Number(L, "1"),
 								 new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "2"), new Number(L, "3")));
 		Assert.True(a.Eq(b));
 
 		a = Selected(Parser.ParseText("select 1*2+3"));
-		b = new BinaryExpression(L, BinaryOp.Add,
+		b = new BinaryExpression(L,
+								 BinaryOp.Add,
 								 new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "1"), new Number(L, "2")),
 								 new Number(L, "3"));
 		Assert.True(a.Eq(b));
 
 		a = Selected(Parser.ParseText("select 1+2*3"));
-		b = new BinaryExpression(L, BinaryOp.Add, new Number(L, "1"),
+		b = new BinaryExpression(L,
+								 BinaryOp.Add,
+								 new Number(L, "1"),
 								 new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "2"), new Number(L, "3")));
 		Assert.True(a.Eq(b));
 	}
