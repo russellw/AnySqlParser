@@ -19,32 +19,32 @@ public abstract class Expression
 	}
 }
 
-public sealed class Call : Expression
+public sealed class Call: Expression
 {
 	public QualifiedName Function;
 	public List<Expression> Arguments = new();
 
-	public Call(Location location, QualifiedName function) : base(location)
+	public Call(Location location, QualifiedName function): base(location)
 	{
 		Function = function;
 	}
 }
 
-public sealed class Exists : Expression
+public sealed class Exists: Expression
 {
 	public Select Query;
 
-	public Exists(Location location, Select query) : base(location)
+	public Exists(Location location, Select query): base(location)
 	{
 		Query = query;
 	}
 }
 
-public sealed class StringLiteral : Expression
+public sealed class StringLiteral: Expression
 {
 	public string Value;
 
-	public StringLiteral(Location location, string value) : base(location)
+	public StringLiteral(Location location, string value): base(location)
 	{
 		Value = value;
 	}
@@ -57,15 +57,15 @@ public sealed class StringLiteral : Expression
 	}
 }
 
-public sealed class QualifiedName : Expression
+public sealed class QualifiedName: Expression
 {
 	public List<string> Names = new();
 
-	public QualifiedName(Location location) : base(location)
+	public QualifiedName(Location location): base(location)
 	{
 	}
 
-	public QualifiedName(Location location, string name) : base(location)
+	public QualifiedName(Location location, string name): base(location)
 	{
 		Names.Add(name);
 	}
@@ -78,11 +78,11 @@ public sealed class QualifiedName : Expression
 	}
 }
 
-public sealed class Number : Expression
+public sealed class Number: Expression
 {
 	public string Value;
 
-	public Number(Location location, string value) : base(location)
+	public Number(Location location, string value): base(location)
 	{
 		Value = value;
 	}
@@ -95,9 +95,9 @@ public sealed class Number : Expression
 	}
 }
 
-public sealed class Null : Expression
+public sealed class Null: Expression
 {
-	public Null(Location location) : base(location)
+	public Null(Location location): base(location)
 	{
 	}
 

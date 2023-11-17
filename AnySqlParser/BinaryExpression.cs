@@ -21,12 +21,12 @@ public enum BinaryOp
 	Concat,
 }
 
-public sealed class BinaryExpression : Expression
+public sealed class BinaryExpression: Expression
 {
 	public BinaryOp Op;
 	public Expression Left, Right;
 
-	public BinaryExpression(Location location, BinaryOp op, Expression left, Expression right) : base(location)
+	public BinaryExpression(Location location, BinaryOp op, Expression left, Expression right): base(location)
 	{
 		Op = op;
 		Left = left;

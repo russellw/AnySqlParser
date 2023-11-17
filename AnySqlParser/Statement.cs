@@ -24,48 +24,48 @@ public abstract class Statement
 	}
 }
 
-public sealed class DropProcedure : Statement
+public sealed class DropProcedure: Statement
 {
 	public bool IfExists;
 	public List<QualifiedName> Names = new();
 
-	public DropProcedure(Location location) : base(location)
+	public DropProcedure(Location location): base(location)
 	{
 	}
 }
 
-public sealed class DropView : Statement
+public sealed class DropView: Statement
 {
 	public bool IfExists;
 	public List<QualifiedName> Names = new();
 
-	public DropView(Location location) : base(location)
+	public DropView(Location location): base(location)
 	{
 	}
 }
 
-public sealed class DropTable : Statement
+public sealed class DropTable: Statement
 {
 	public bool IfExists;
 	public List<QualifiedName> Names = new();
 
-	public DropTable(Location location) : base(location)
+	public DropTable(Location location): base(location)
 	{
 	}
 }
 
-public sealed class If : Statement
+public sealed class If: Statement
 {
 	public Expression condition = null!;
 	public Statement then = null!;
 	public Statement? @else;
 
-	public If(Location location) : base(location)
+	public If(Location location): base(location)
 	{
 	}
 }
 
-public sealed class Select : Statement
+public sealed class Select: Statement
 {
 	public bool All;
 	public bool Distinct;
@@ -85,63 +85,63 @@ public sealed class Select : Statement
 	public Expression? OrderBy;
 	public bool Desc;
 
-	public Select(Location location) : base(location)
+	public Select(Location location): base(location)
 	{
 	}
 }
 
-public sealed class Insert : Statement
+public sealed class Insert: Statement
 {
 	public QualifiedName TableName = null!;
 	public List<string> Columns = new();
 	public List<Expression> Values = new();
 
-	public Insert(Location location) : base(location)
+	public Insert(Location location): base(location)
 	{
 	}
 }
 
-public sealed class Start : Statement
+public sealed class Start: Statement
 {
-	public Start(Location location) : base(location)
+	public Start(Location location): base(location)
 	{
 	}
 }
 
-public sealed class Commit : Statement
+public sealed class Commit: Statement
 {
-	public Commit(Location location) : base(location)
+	public Commit(Location location): base(location)
 	{
 	}
 }
 
-public sealed class Rollback : Statement
+public sealed class Rollback: Statement
 {
-	public Rollback(Location location) : base(location)
+	public Rollback(Location location): base(location)
 	{
 	}
 }
 
-public sealed class Block : Statement
+public sealed class Block: Statement
 {
 	public List<Statement> Body = new();
 
-	public Block(Location location) : base(location)
+	public Block(Location location): base(location)
 	{
 	}
 }
 
-public sealed class SetParameter : Statement
+public sealed class SetParameter: Statement
 {
 	public string Name = null!;
 	public string Value = null!;
 
-	public SetParameter(Location location) : base(location)
+	public SetParameter(Location location): base(location)
 	{
 	}
 }
 
-public sealed class Index : Statement
+public sealed class Index: Statement
 {
 	public bool Unique;
 	public bool? Clustered;
@@ -170,7 +170,7 @@ public sealed class Index : Statement
 	public bool? OptimizeForSequentialKey;
 	public int Maxdop = -1;
 
-	public Index(Location location) : base(location)
+	public Index(Location location): base(location)
 	{
 	}
 }

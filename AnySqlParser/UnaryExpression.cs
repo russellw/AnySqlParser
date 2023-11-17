@@ -8,12 +8,12 @@ public enum UnaryOp
 	Exists,
 }
 
-public sealed class UnaryExpression : Expression
+public sealed class UnaryExpression: Expression
 {
 	public UnaryOp Op;
 	public Expression Operand;
 
-	public UnaryExpression(Location location, UnaryOp op, Expression operand) : base(location)
+	public UnaryExpression(Location location, UnaryOp op, Expression operand): base(location)
 	{
 		Op = op;
 		Operand = operand;

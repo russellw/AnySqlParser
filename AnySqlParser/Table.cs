@@ -93,7 +93,7 @@ public sealed class Check
 	}
 }
 
-public sealed class Table : Statement
+public sealed class Table: Statement
 {
 	public QualifiedName Name;
 	public List<Column> Columns = new();
@@ -103,7 +103,7 @@ public sealed class Table : Statement
 	public List<ForeignKey> ForeignKeys = new();
 	public List<Check> Checks = new();
 
-	public Table(Location location, QualifiedName name) : base(location)
+	public Table(Location location, QualifiedName name): base(location)
 	{
 		Name = name;
 	}
