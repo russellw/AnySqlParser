@@ -33,8 +33,7 @@ public sealed class Parser {
 		this.file = file;
 		this.line = line;
 		Lex();
-		while (token != -1)
-		{
+		while (token != -1) {
 			if (Eat("go"))
 				continue;
 			statements.Add(StatementSemicolon());
@@ -50,8 +49,7 @@ public sealed class Parser {
 
 	Statement Statement() {
 		var location = new Location(file, line);
-		switch (Keyword())
-		{
+		switch (Keyword()) {
 		case "if": {
 			Lex();
 			var a = new If(location);
@@ -63,8 +61,7 @@ public sealed class Parser {
 		}
 		case "set":
 			Lex();
-			switch (token)
-			{
+			switch (token) {
 			case kWord: {
 				Lex();
 				var a = new SetParameter(location);
@@ -76,8 +73,7 @@ public sealed class Parser {
 			throw ErrorToken("expected parameter");
 		case "begin":
 			Lex();
-			switch (Keyword())
-			{
+			switch (Keyword()) {
 			case "transaction":
 			case "tran":
 				Lex();
@@ -91,8 +87,7 @@ public sealed class Parser {
 			}
 		case "start":
 			Lex();
-			switch (Keyword())
-			{
+			switch (Keyword()) {
 			case "transaction":
 			case "tran":
 				Lex();
@@ -101,8 +96,7 @@ public sealed class Parser {
 			return new Start(location);
 		case "commit":
 			Lex();
-			switch (Keyword())
-			{
+			switch (Keyword()) {
 			case "transaction":
 			case "tran":
 				Lex();
@@ -111,8 +105,7 @@ public sealed class Parser {
 			return new Commit(location);
 		case "rollback":
 			Lex();
-			switch (Keyword())
-			{
+			switch (Keyword()) {
 			case "transaction":
 			case "tran":
 				Lex();
@@ -130,8 +123,7 @@ public sealed class Parser {
 			a.TableName = QualifiedName();
 
 			// columns
-			if (Eat('('))
-			{
+			if (Eat('(')) {
 				do
 					a.Columns.Add(Name());
 				while (Eat(','));
@@ -152,8 +144,7 @@ public sealed class Parser {
 			Lex();
 			var unique = Eat("unique");
 			var clustered = Clustered();
-			switch (Keyword())
-			{
+			switch (Keyword()) {
 			case "index": {
 				Lex();
 				var a = new Index(location);
@@ -173,8 +164,7 @@ public sealed class Parser {
 				Expect(')');
 
 				// include
-				if (Eat("include"))
-				{
+				if (Eat("include")) {
 					Expect('(');
 					do
 						a.Include.Add(Name());
@@ -187,12 +177,10 @@ public sealed class Parser {
 					a.Where = Expression();
 
 				// relational index options
-				if (Eat("with"))
-				{
+				if (Eat("with")) {
 					Expect('(');
 					do
-						switch (Keyword())
-						{
+						switch (Keyword()) {
 						case "pad_index":
 							Lex();
 							Eat('=');
@@ -277,13 +265,11 @@ public sealed class Parser {
 				Lex();
 				var a = new Table(location, QualifiedName());
 				Expect('(');
-				do
-				{
+				do {
 					string? constraintName = null;
 					if (Eat("constraint"))
 						constraintName = Name();
-					switch (Keyword())
-					{
+					switch (Keyword()) {
 					case "foreign":
 						a.ForeignKeys.Add(ForeignKey(constraintName));
 						break;
@@ -309,14 +295,12 @@ public sealed class Parser {
 		}
 		case "drop":
 			Lex();
-			switch (Keyword())
-			{
+			switch (Keyword()) {
 			case "proc":
 			case "procedure": {
 				Lex();
 				var a = new DropProcedure(location);
-				if (Eat("if"))
-				{
+				if (Eat("if")) {
 					Expect("exists");
 					a.IfExists = true;
 				}
@@ -328,8 +312,7 @@ public sealed class Parser {
 			case "view": {
 				Lex();
 				var a = new DropView(location);
-				if (Eat("if"))
-				{
+				if (Eat("if")) {
 					Expect("exists");
 					a.IfExists = true;
 				}
@@ -341,8 +324,7 @@ public sealed class Parser {
 			case "table": {
 				Lex();
 				var a = new DropTable(location);
-				if (Eat("if"))
-				{
+				if (Eat("if")) {
 					Expect("exists");
 					a.IfExists = true;
 				}
@@ -365,10 +347,8 @@ public sealed class Parser {
 		// Some clauses are written before the select list
 		// but unknown keywords must be left alone
 		// as they might be part of the select list
-		for (;;)
-		{
-			switch (Keyword())
-			{
+		for (;;) {
+			switch (Keyword()) {
 			case "all":
 				Lex();
 				a.All = true;
@@ -382,8 +362,7 @@ public sealed class Parser {
 				a.Top = Expression();
 				if (Eat("percent"))
 					a.Percent = true;
-				if (Eat("with"))
-				{
+				if (Eat("with")) {
 					Expect("ties");
 					a.WithTies = true;
 				}
@@ -400,8 +379,7 @@ public sealed class Parser {
 
 		// Any keyword after the select list, must be a clause
 		while (token == kWord)
-			switch (Keyword())
-			{
+			switch (Keyword()) {
 			case "where":
 				Lex();
 				a.Where = Expression();
@@ -444,8 +422,7 @@ public sealed class Parser {
 
 		// data type
 		a.TypeName = QualifiedName();
-		if (Eat('('))
-		{
+		if (Eat('(')) {
 			a.Size = Int();
 			if (Eat(','))
 				a.Scale = Int();
@@ -453,10 +430,8 @@ public sealed class Parser {
 		}
 
 		// constraints etc
-		while (token == kWord)
-		{
-			switch (Keyword())
-			{
+		while (token == kWord) {
+			switch (Keyword()) {
 			case "default":
 				Lex();
 				a.Default = Expression();
@@ -484,8 +459,7 @@ public sealed class Parser {
 			case "identity":
 				Lex();
 				a.Identity = true;
-				if (Eat('('))
-				{
+				if (Eat('(')) {
 					a.IdentitySeed = Int();
 					Expect(',');
 					a.IdentityIncrement = Int();
@@ -494,8 +468,7 @@ public sealed class Parser {
 				break;
 			case "not":
 				Lex();
-				switch (Keyword())
-				{
+				switch (Keyword()) {
 				case "null":
 					Lex();
 					a.Nullable = false;
@@ -521,8 +494,7 @@ public sealed class Parser {
 		var a = new Key(location, constraintName);
 
 		// primary?
-		switch (Keyword())
-		{
+		switch (Keyword()) {
 		case "primary":
 			Lex();
 			Expect("key");
@@ -563,8 +535,7 @@ public sealed class Parser {
 		// references
 		Expect("references");
 		a.RefTableName = QualifiedName();
-		if (Eat('('))
-		{
+		if (Eat('(')) {
 			do
 				a.RefColumns.Add(Name());
 			while (Eat(','));
@@ -573,8 +544,7 @@ public sealed class Parser {
 
 		// actions
 		while (Eat("on"))
-			switch (Keyword())
-			{
+			switch (Keyword()) {
 			case "delete":
 				Lex();
 				a.OnDelete = Action();
@@ -588,8 +558,7 @@ public sealed class Parser {
 			}
 
 		// replication
-		if (Eat("not"))
-		{
+		if (Eat("not")) {
 			Expect("for");
 			Expect("replication");
 			a.ForReplication = false;
@@ -598,8 +567,7 @@ public sealed class Parser {
 	}
 
 	Action Action() {
-		switch (Keyword())
-		{
+		switch (Keyword()) {
 		case "cascade":
 			Lex();
 			return AnySqlParser.Action.Cascade;
@@ -612,8 +580,7 @@ public sealed class Parser {
 			return AnySqlParser.Action.NoAction;
 		case "set":
 			Lex();
-			switch (Keyword())
-			{
+			switch (Keyword()) {
 			case "null":
 				Lex();
 				return AnySqlParser.Action.SetNull;
@@ -629,8 +596,7 @@ public sealed class Parser {
 	Check Check(string? constraintName) {
 		var location = new Location(file, line);
 		var a = new Check(location, constraintName);
-		if (Eat("not"))
-		{
+		if (Eat("not")) {
 			Expect("for");
 			Expect("replication");
 			a.ForReplication = false;
@@ -641,8 +607,7 @@ public sealed class Parser {
 
 	// etc
 	bool? Clustered() {
-		switch (Keyword())
-		{
+		switch (Keyword()) {
 		case "clustered":
 			Lex();
 			return true;
@@ -661,8 +626,7 @@ public sealed class Parser {
 	}
 
 	bool Desc() {
-		switch (Keyword())
-		{
+		switch (Keyword()) {
 		case "desc":
 			Lex();
 			return true;
@@ -674,8 +638,7 @@ public sealed class Parser {
 	}
 
 	bool OnOff() {
-		switch (Keyword())
-		{
+		switch (Keyword()) {
 		case "on":
 			Lex();
 			return true;
@@ -709,8 +672,7 @@ public sealed class Parser {
 	Expression Comparison() {
 		var a = Addition();
 		BinaryOp op;
-		switch (token)
-		{
+		switch (token) {
 		case '=':
 			op = BinaryOp.Equal;
 			break;
@@ -739,11 +701,9 @@ public sealed class Parser {
 
 	Expression Addition() {
 		var a = Multiplication();
-		for (;;)
-		{
+		for (;;) {
 			BinaryOp op;
-			switch (token)
-			{
+			switch (token) {
 			case '+':
 				op = BinaryOp.Add;
 				break;
@@ -773,11 +733,9 @@ public sealed class Parser {
 
 	Expression Multiplication() {
 		var a = Prefix();
-		for (;;)
-		{
+		for (;;) {
 			BinaryOp op;
-			switch (token)
-			{
+			switch (token) {
 			case '*':
 				op = BinaryOp.Multiply;
 				break;
@@ -798,11 +756,9 @@ public sealed class Parser {
 
 	Expression Prefix() {
 		var location = new Location(file, line);
-		switch (token)
-		{
+		switch (token) {
 		case kWord:
-			switch (tokenString.ToLowerInvariant())
-			{
+			switch (tokenString.ToLowerInvariant()) {
 			case "exists": {
 				Lex();
 				Expect('(');
@@ -825,10 +781,8 @@ public sealed class Parser {
 	Expression Postfix() {
 		var a = Primary();
 		var location = new Location(file, line);
-		if (Eat('('))
-		{
-			if (a is QualifiedName a1)
-			{
+		if (Eat('(')) {
+			if (a is QualifiedName a1) {
 				var call = new Call(location, a1);
 				if (token != ')')
 					do
@@ -844,8 +798,7 @@ public sealed class Parser {
 
 	Expression Primary() {
 		var location = new Location(file, line);
-		switch (token)
-		{
+		switch (token) {
 		case kStringLiteral: {
 			var a = new StringLiteral(location, tokenString);
 			Lex();
@@ -857,8 +810,7 @@ public sealed class Parser {
 			return a;
 		}
 		case kWord:
-			if (string.Equals(tokenString, "null", StringComparison.OrdinalIgnoreCase))
-			{
+			if (string.Equals(tokenString, "null", StringComparison.OrdinalIgnoreCase)) {
 				Lex();
 				return new Null(location);
 			}
@@ -900,8 +852,7 @@ public sealed class Parser {
 	}
 
 	string Name() {
-		switch (token)
-		{
+		switch (token) {
 		case kWord:
 		case kQuotedName: {
 			var s = tokenString;
@@ -923,8 +874,7 @@ public sealed class Parser {
 	}
 
 	bool Eat(int k) {
-		if (token == k)
-		{
+		if (token == k) {
 			Lex();
 			return true;
 		}
@@ -932,8 +882,7 @@ public sealed class Parser {
 	}
 
 	bool Eat(string s) {
-		if (token == kWord && string.Equals(tokenString, s, StringComparison.OrdinalIgnoreCase))
-		{
+		if (token == kWord && string.Equals(tokenString, s, StringComparison.OrdinalIgnoreCase)) {
 			Lex();
 			return true;
 		}
@@ -942,24 +891,19 @@ public sealed class Parser {
 
 	// tokenizer
 	void Lex() {
-		while (textIndex < text.Length)
-		{
+		while (textIndex < text.Length) {
 			var c = text[textIndex];
-			switch (c)
-			{
+			switch (c) {
 			case '\'': {
 				var line1 = line;
 				var sb = new StringBuilder();
-				for (var i = textIndex + 1; i < text.Length;)
-				{
-					switch (text[i])
-					{
+				for (var i = textIndex + 1; i < text.Length;) {
+					switch (text[i]) {
 					case '\n':
 						line++;
 						break;
 					case '\\':
-						switch (text[i + 1])
-						{
+						switch (text[i + 1]) {
 						case '\'':
 						case '\\':
 							sb.Append(text[i + 1]);
@@ -968,8 +912,7 @@ public sealed class Parser {
 						}
 						break;
 					case '\'':
-						if (text[i + 1] == '\'')
-						{
+						if (text[i + 1] == '\'') {
 							i += 2;
 							sb.Append('\'');
 							continue;
@@ -986,16 +929,13 @@ public sealed class Parser {
 			case '"': {
 				var line1 = line;
 				var sb = new StringBuilder();
-				for (var i = textIndex + 1; i < text.Length;)
-				{
-					switch (text[i])
-					{
+				for (var i = textIndex + 1; i < text.Length;) {
+					switch (text[i]) {
 					case '\n':
 						line++;
 						break;
 					case '\\':
-						switch (text[i + 1])
-						{
+						switch (text[i + 1]) {
 						case '"':
 						case '\\':
 							sb.Append(text[i + 1]);
@@ -1004,8 +944,7 @@ public sealed class Parser {
 						}
 						break;
 					case '"':
-						if (text[i + 1] == '"')
-						{
+						if (text[i + 1] == '"') {
 							i += 2;
 							sb.Append('"');
 							continue;
@@ -1022,16 +961,13 @@ public sealed class Parser {
 			case '`': {
 				var line1 = line;
 				var sb = new StringBuilder();
-				for (var i = textIndex + 1; i < text.Length;)
-				{
-					switch (text[i])
-					{
+				for (var i = textIndex + 1; i < text.Length;) {
+					switch (text[i]) {
 					case '\n':
 						line++;
 						break;
 					case '\\':
-						switch (text[i + 1])
-						{
+						switch (text[i + 1]) {
 						case '`':
 						case '\\':
 							sb.Append(text[i + 1]);
@@ -1040,8 +976,7 @@ public sealed class Parser {
 						}
 						break;
 					case '`':
-						if (text[i + 1] == '`')
-						{
+						if (text[i + 1] == '`') {
 							i += 2;
 							sb.Append('`');
 							continue;
@@ -1058,16 +993,13 @@ public sealed class Parser {
 			case '[': {
 				var line1 = line;
 				var sb = new StringBuilder();
-				for (var i = textIndex + 1; i < text.Length;)
-				{
-					switch (text[i])
-					{
+				for (var i = textIndex + 1; i < text.Length;) {
+					switch (text[i]) {
 					case '\n':
 						line++;
 						break;
 					case ']':
-						if (text[i + 1] == ']')
-						{
+						if (text[i + 1] == ']') {
 							i += 2;
 							sb.Append(']');
 							continue;
@@ -1083,8 +1015,7 @@ public sealed class Parser {
 			}
 			case '!':
 				if (textIndex + 1 < text.Length)
-					switch (text[textIndex + 1])
-					{
+					switch (text[textIndex + 1]) {
 					case '=':
 						textIndex += 2;
 						token = kNotEqual;
@@ -1101,16 +1032,14 @@ public sealed class Parser {
 					}
 				break;
 			case '|':
-				if (textIndex + 1 < text.Length && text[textIndex + 1] == '|')
-				{
+				if (textIndex + 1 < text.Length && text[textIndex + 1] == '|') {
 					textIndex += 2;
 					token = kDoublePipe;
 					return;
 				}
 				break;
 			case '>':
-				if (textIndex + 1 < text.Length && text[textIndex + 1] == '=')
-				{
+				if (textIndex + 1 < text.Length && text[textIndex + 1] == '=') {
 					textIndex += 2;
 					token = kGreaterEqual;
 					return;
@@ -1120,8 +1049,7 @@ public sealed class Parser {
 				return;
 			case '<':
 				if (textIndex + 1 < text.Length)
-					switch (text[textIndex + 1])
-					{
+					switch (text[textIndex + 1]) {
 					case '=':
 						textIndex += 2;
 						token = kLessEqual;
@@ -1135,12 +1063,10 @@ public sealed class Parser {
 				token = c;
 				return;
 			case '/':
-				if (textIndex + 1 < text.Length && text[textIndex + 1] == '*')
-				{
+				if (textIndex + 1 < text.Length && text[textIndex + 1] == '*') {
 					var line1 = line;
 					var i = textIndex + 2;
-					for (;;)
-					{
+					for (;;) {
 						if (text.Length <= i + 1)
 							throw Error("unclosed /*", line1);
 						if (text[i] == '\n')
@@ -1170,8 +1096,7 @@ public sealed class Parser {
 				token = c;
 				return;
 			case '-':
-				if (textIndex + 1 < text.Length && text[textIndex + 1] == '-')
-				{
+				if (textIndex + 1 < text.Length && text[textIndex + 1] == '-') {
 					textIndex = text.IndexOf('\n', textIndex + 2);
 					if (textIndex < 0)
 						textIndex = text.Length;
@@ -1261,22 +1186,19 @@ public sealed class Parser {
 			default:
 				// Common letters are handled in the switch for speed
 				// but there are other letters in Unicode
-				if (char.IsLetter(c))
-				{
+				if (char.IsLetter(c)) {
 					Word();
 					return;
 				}
 
 				// likewise digits
-				if (char.IsDigit(c))
-				{
+				if (char.IsDigit(c)) {
 					Number();
 					return;
 				}
 
 				// and whitespace
-				if (char.IsWhiteSpace(c))
-				{
+				if (char.IsWhiteSpace(c)) {
 					textIndex++;
 					continue;
 				}
@@ -1322,8 +1244,7 @@ public sealed class Parser {
 	string Echo() {
 		if (token >= 0)
 			return char.ToString((char)token);
-		switch (token)
-		{
+		switch (token) {
 		case kDoublePipe:
 			return "||";
 		case kGreaterEqual:
