@@ -473,8 +473,13 @@ namespace AnySqlParser
 
             //constraints etc
             while (token == kWord)
+            {
                 switch (Keyword())
                 {
+                    case "default":
+                        Lex();
+                        a.Default = Expression();
+                        break;
                     case "null":
                         Lex();
                         break;
@@ -526,6 +531,7 @@ namespace AnySqlParser
                     default:
                         throw Err(Echo() + ": expected constraint");
                 }
+            }
             return a;
         }
 

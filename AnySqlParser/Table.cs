@@ -13,6 +13,7 @@
         //etc
         public bool Filestream;
         public bool Sparse;
+        public Expression? Default;
 
         public bool Identity;
         public int IdentitySeed = -1;
