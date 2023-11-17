@@ -1,4 +1,4 @@
-﻿namespace AnySqlParser {
+namespace AnySqlParser {
 public enum BinaryOp {
 	Add,
 	Subtract,

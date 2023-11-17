@@ -1,4 +1,4 @@
-﻿namespace AnySqlParser {
+namespace AnySqlParser {
 public sealed class ColumnOrder {
 	public readonly Location Location;
 

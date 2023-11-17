@@ -1,4 +1,4 @@
-﻿namespace AnySqlParser {
+namespace AnySqlParser {
 public enum UnaryOp {
 	Not,
 	BitNot,

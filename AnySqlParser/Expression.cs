@@ -1,4 +1,4 @@
-﻿namespace AnySqlParser {
+namespace AnySqlParser {
 public abstract class Expression {
 	public readonly Location Location;
 

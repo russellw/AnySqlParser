@@ -131,6 +131,13 @@ public class UnitTest1 {
 								 new Number(L, "1"),
 								 new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "2"), new Number(L, "3")));
 		Assert.True(a.Eq(b));
+
+		a = Selected(Parser.ParseText("select 1=2*3"));
+		b = new BinaryExpression(L,
+								 BinaryOp.Equal,
+								 new Number(L, "1"),
+								 new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "2"), new Number(L, "3")));
+		Assert.True(a.Eq(b));
 	}
 
 	static Expression Selected(List<Statement> statements) {
