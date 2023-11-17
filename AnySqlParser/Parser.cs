@@ -293,7 +293,7 @@ namespace AnySqlParser
                                     Expect('(');
                                     do
                                     {
-                                        var constraintName = "";
+                                        string? constraintName = null;
                                         if (Eat("constraint"))
                                             constraintName = Name();
                                         switch (Keyword())
@@ -309,7 +309,7 @@ namespace AnySqlParser
                                                 a.Keys.Add(Key(constraintName));
                                                 break;
                                             default:
-                                                if (constraintName != "")
+                                                if (constraintName != null)
                                                     throw Err(Echo() + ": expected constraint");
                                                 a.Columns.Add(Column());
                                                 break;
@@ -535,7 +535,7 @@ namespace AnySqlParser
             return a;
         }
 
-        Key Key(string constraintName)
+        Key Key(string? constraintName)
         {
             var location = new Location(file, line);
             var a = new Key(location, constraintName);
@@ -567,7 +567,7 @@ namespace AnySqlParser
             return a;
         }
 
-        ForeignKey ForeignKey(string constraintName)
+        ForeignKey ForeignKey(string? constraintName)
         {
             var location = new Location(file, line);
             Expect("foreign");
@@ -648,7 +648,7 @@ namespace AnySqlParser
             throw Err(Echo() + ": expected action");
         }
 
-        Check Check(string constraintName)
+        Check Check(string? constraintName)
         {
             var location = new Location(file, line);
             var a = new Check(location, constraintName);

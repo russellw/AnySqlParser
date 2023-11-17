@@ -36,13 +36,13 @@
     public sealed class Key
     {
         public readonly Location Location;
-        public string ConstraintName;
+        public string? ConstraintName;
 
         public bool Primary;
         public bool? Clustered;
         public List<ColumnOrder> Columns = new();
 
-        public Key(Location location, string constraintName)
+        public Key(Location location, string? constraintName)
         {
             Location = location;
             ConstraintName = constraintName;
@@ -60,7 +60,7 @@
     public sealed class ForeignKey
     {
         public readonly Location Location;
-        public string ConstraintName;
+        public string? ConstraintName;
 
         public List<string> Columns = new();
 
@@ -71,7 +71,7 @@
         public Action OnUpdate = Action.NoAction;
         public bool ForReplication = true;
 
-        public ForeignKey(Location location, string constraintName)
+        public ForeignKey(Location location, string? constraintName)
         {
             Location = location;
             ConstraintName = constraintName;
@@ -81,12 +81,12 @@
     public sealed class Check
     {
         public readonly Location Location;
-        public string ConstraintName;
+        public string? ConstraintName;
 
         public Expression Expression = null!;
         public bool ForReplication = true;
 
-        public Check(Location location, string constraintName)
+        public Check(Location location, string? constraintName)
         {
             Location = location;
             ConstraintName = constraintName;
