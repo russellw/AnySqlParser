@@ -1,109 +1,109 @@
 ﻿namespace AnySqlParser
 {
-    public abstract class Expression
+public abstract class Expression
+{
+    public readonly Location Location;
+
+    protected Expression(Location location)
     {
-        public readonly Location Location;
-
-        protected Expression(Location location)
-        {
-            Location = location;
-        }
-
-        //The omission of an override for Equals is intentional
-        //in most cases, syntax trees have reference semantics
-        //equality comparison by value is useful only in unusual situations
-        //and should not be the default
-        public virtual bool Eq(Expression b)
-        {
-            return this == b;
-        }
+        Location = location;
     }
 
-    public sealed class Call : Expression
+    // The omission of an override for Equals is intentional
+    // in most cases, syntax trees have reference semantics
+    // equality comparison by value is useful only in unusual situations
+    // and should not be the default
+    public virtual bool Eq(Expression b)
     {
-        public QualifiedName Function;
-        public List<Expression> Arguments = new();
+        return this == b;
+    }
+}
 
-        public Call(Location location, QualifiedName function) : base(location)
-        {
-            Function = function;
-        }
+public sealed class Call : Expression
+{
+    public QualifiedName Function;
+    public List<Expression> Arguments = new();
+
+    public Call(Location location, QualifiedName function) : base(location)
+    {
+        Function = function;
+    }
+}
+
+public sealed class Exists : Expression
+{
+    public Select Query;
+
+    public Exists(Location location, Select query) : base(location)
+    {
+        Query = query;
+    }
+}
+
+public sealed class StringLiteral : Expression
+{
+    public string Value;
+
+    public StringLiteral(Location location, string value) : base(location)
+    {
+        Value = value;
     }
 
-    public sealed class Exists : Expression
+    public override bool Eq(Expression b)
     {
-        public Select Query;
+        if (b is StringLiteral b1)
+            return Value == b1.Value;
+        return false;
+    }
+}
 
-        public Exists(Location location, Select query) : base(location)
-        {
-            Query = query;
-        }
+public sealed class QualifiedName : Expression
+{
+    public List<string> Names = new();
+
+    public QualifiedName(Location location) : base(location)
+    {
     }
 
-    public sealed class StringLiteral : Expression
+    public QualifiedName(Location location, string name) : base(location)
     {
-        public string Value;
-
-        public StringLiteral(Location location, string value) : base(location)
-        {
-            Value = value;
-        }
-
-        public override bool Eq(Expression b)
-        {
-            if (b is StringLiteral b1)
-                return Value == b1.Value;
-            return false;
-        }
+        Names.Add(name);
     }
 
-    public sealed class QualifiedName : Expression
+    public override bool Eq(Expression b)
     {
-        public List<string> Names = new();
+        if (b is QualifiedName b1)
+            return Names == b1.Names;
+        return false;
+    }
+}
 
-        public QualifiedName(Location location) : base(location)
-        {
-        }
+public sealed class Number : Expression
+{
+    public string Value;
 
-        public QualifiedName(Location location, string name) : base(location)
-        {
-            Names.Add(name);
-        }
-
-        public override bool Eq(Expression b)
-        {
-            if (b is QualifiedName b1)
-                return Names == b1.Names;
-            return false;
-        }
+    public Number(Location location, string value) : base(location)
+    {
+        Value = value;
     }
 
-    public sealed class Number : Expression
+    public override bool Eq(Expression b)
     {
-        public string Value;
+        if (b is Number b1)
+            return Value == b1.Value;
+        return false;
+    }
+}
 
-        public Number(Location location, string value) : base(location)
-        {
-            Value = value;
-        }
-
-        public override bool Eq(Expression b)
-        {
-            if (b is Number b1)
-                return Value == b1.Value;
-            return false;
-        }
+public sealed class Null : Expression
+{
+    public Null(Location location) : base(location)
+    {
     }
 
-    public sealed class Null : Expression
+    public override bool Eq(Expression b)
     {
-        public Null(Location location) : base(location)
-        {
-        }
-
-        public override bool Eq(Expression b)
-        {
-            return b is Null;
-        }
+        return b is Null;
     }
+}
 }

@@ -1,29 +1,29 @@
 ﻿namespace AnySqlParser
 {
-    public enum UnaryOp
+public enum UnaryOp
+{
+    Not,
+    BitNot,
+    Minus,
+    Exists,
+}
+
+public sealed class UnaryExpression : Expression
+{
+    public UnaryOp Op;
+    public Expression Operand;
+
+    public UnaryExpression(Location location, UnaryOp op, Expression operand) : base(location)
     {
-        Not,
-        BitNot,
-        Minus,
-        Exists,
+        Op = op;
+        Operand = operand;
     }
 
-    public sealed class UnaryExpression : Expression
+    public override bool Eq(Expression b)
     {
-        public UnaryOp Op;
-        public Expression Operand;
-
-        public UnaryExpression(Location location, UnaryOp op, Expression operand) : base(location)
-        {
-            Op = op;
-            Operand = operand;
-        }
-
-        public override bool Eq(Expression b)
-        {
-            if (b is UnaryExpression b1)
-                return Op == b1.Op && Operand.Eq(b1.Operand);
-            return false;
-        }
+        if (b is UnaryExpression b1)
+            return Op == b1.Op && Operand.Eq(b1.Operand);
+        return false;
     }
+}
 }
