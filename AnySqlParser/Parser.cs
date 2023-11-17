@@ -40,7 +40,7 @@ public sealed class Parser {
 		}
 	}
 
-	// statements
+	// Statements
 	Statement StatementSemicolon() {
 		var a = Statement();
 		Eat(';');
@@ -119,10 +119,10 @@ public sealed class Parser {
 			Eat("into");
 			var a = new Insert(location);
 
-			// table
+			// Table
 			a.TableName = QualifiedName();
 
-			// columns
+			// Columns
 			if (Eat('(')) {
 				do
 					a.Columns.Add(Name());
@@ -130,7 +130,7 @@ public sealed class Parser {
 				Expect(')');
 			}
 
-			// values
+			// Values
 			Expect("values");
 			Expect('(');
 			do
@@ -152,18 +152,18 @@ public sealed class Parser {
 				a.Clustered = clustered;
 				a.Name = Name();
 
-				// table
+				// Table
 				Expect("on");
 				a.TableName = QualifiedName();
 
-				// columns
+				// Columns
 				Expect('(');
 				do
 					a.Columns.Add(ColumnOrder());
 				while (Eat(','));
 				Expect(')');
 
-				// include
+				// Include
 				if (Eat("include")) {
 					Expect('(');
 					do
@@ -172,11 +172,11 @@ public sealed class Parser {
 					Expect(')');
 				}
 
-				// where
+				// Where
 				if (Eat("where"))
 					a.Where = Expression();
 
-				// relational index options
+				// Relational index options
 				if (Eat("with")) {
 					Expect('(');
 					do
@@ -371,7 +371,7 @@ public sealed class Parser {
 			break;
 		}
 
-		// select list
+		// Select list
 		if (!Eat('*'))
 			do
 				a.SelectList.Add(Expression());
@@ -415,12 +415,12 @@ public sealed class Parser {
 		return a;
 	}
 
-	// tables
+	// Tables
 	Column Column() {
 		var location = new Location(file, line);
 		var a = new Column(location, Name());
 
-		// data type
+		// Data type
 		a.TypeName = QualifiedName();
 		if (Eat('(')) {
 			a.Size = Int();
@@ -429,7 +429,7 @@ public sealed class Parser {
 			Expect(')');
 		}
 
-		// constraints etc
+		// Constraints etc
 		while (token == kWord) {
 			switch (Keyword()) {
 			case "default":
@@ -493,7 +493,7 @@ public sealed class Parser {
 		var location = new Location(file, line);
 		var a = new Key(location, constraintName);
 
-		// primary?
+		// Primary?
 		switch (Keyword()) {
 		case "primary":
 			Lex();
@@ -507,10 +507,10 @@ public sealed class Parser {
 			throw ErrorToken("expected key type");
 		}
 
-		// clustered?
+		// Clustered?
 		a.Clustered = Clustered();
 
-		// columns
+		// Columns
 		Expect('(');
 		do
 			a.Columns.Add(ColumnOrder());
@@ -525,14 +525,14 @@ public sealed class Parser {
 		Expect("key");
 		var a = new ForeignKey(location, constraintName);
 
-		// columns
+		// Columns
 		Expect('(');
 		do
 			a.Columns.Add(Name());
 		while (Eat(','));
 		Expect(')');
 
-		// references
+		// References
 		Expect("references");
 		a.RefTableName = QualifiedName();
 		if (Eat('(')) {
@@ -542,7 +542,7 @@ public sealed class Parser {
 			Expect(')');
 		}
 
-		// actions
+		// Actions
 		while (Eat("on"))
 			switch (Keyword()) {
 			case "delete":
@@ -557,7 +557,7 @@ public sealed class Parser {
 				throw ErrorToken("expected event type");
 			}
 
-		// replication
+		// Replication
 		if (Eat("not")) {
 			Expect("for");
 			Expect("replication");
@@ -605,7 +605,7 @@ public sealed class Parser {
 		return a;
 	}
 
-	// etc
+	// Etc
 	bool? Clustered() {
 		switch (Keyword()) {
 		case "clustered":
@@ -649,7 +649,7 @@ public sealed class Parser {
 		throw ErrorToken("expected ON or OFF");
 	}
 
-	// expressions
+	// Expressions
 	Expression Expression() {
 		return And();
 	}
@@ -836,7 +836,7 @@ public sealed class Parser {
 		return a;
 	}
 
-	// etc
+	// Etc
 	int Int() {
 		if (token != kNumber)
 			throw ErrorToken("expected integer");
@@ -889,7 +889,7 @@ public sealed class Parser {
 		return false;
 	}
 
-	// tokenizer
+	// Tokenizer
 	void Lex() {
 		while (textIndex < text.Length) {
 			var c = text[textIndex];
@@ -1191,13 +1191,13 @@ public sealed class Parser {
 					return;
 				}
 
-				// likewise digits
+				// Likewise digits
 				if (char.IsDigit(c)) {
 					Number();
 					return;
 				}
 
-				// and whitespace
+				// And whitespace
 				if (char.IsWhiteSpace(c)) {
 					textIndex++;
 					continue;

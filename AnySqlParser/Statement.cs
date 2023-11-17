@@ -123,7 +123,7 @@ public sealed class Index: Statement {
 	public List<string> Include = new();
 	public Expression? Where;
 
-	// relational index options
+	// Relational index options
 	public bool? PadIndex;
 	public int FillFactor = -1;
 	public bool? SortInTempdb;

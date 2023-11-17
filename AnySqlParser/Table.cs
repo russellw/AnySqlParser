@@ -3,12 +3,12 @@ public sealed class Column {
 	public readonly Location Location;
 	public string Name;
 
-	// data type
+	// Data type
 	public QualifiedName TypeName = null!;
 	public int Size = -1;
 	public int Scale = -1;
 
-	// etc
+	// Etc
 	public bool Filestream;
 	public bool Sparse;
 	public Expression? Default;
@@ -21,7 +21,7 @@ public sealed class Column {
 	public bool Nullable = true;
 	public bool Rowguidcol;
 
-	// constraints
+	// Constraints
 	public bool PrimaryKey;
 
 	public Column(Location location, string name) {
@@ -87,7 +87,7 @@ public sealed class Table: Statement {
 	public QualifiedName Name;
 	public List<Column> Columns = new();
 
-	// table constraints
+	// Table constraints
 	public List<Key> Keys = new();
 	public List<ForeignKey> ForeignKeys = new();
 	public List<Check> Checks = new();
