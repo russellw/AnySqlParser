@@ -1,26 +1,21 @@
 using AnySqlParser;
 
-namespace AnySqlParserTest
-{
-public class UnitTest1
-{
+namespace AnySqlParserTest {
+public class UnitTest1 {
 	[Fact]
-	public void Blank()
-	{
+	public void Blank() {
 		Assert.Empty(Parser.ParseText(""));
 		Assert.Empty(Parser.ParseText("\t\n"));
 	}
 
 	[Fact]
-	public void LineComment()
-	{
+	public void LineComment() {
 		Assert.Empty(Parser.ParseText("--"));
 		Assert.Empty(Parser.ParseText("--\n--\n"));
 	}
 
 	[Fact]
-	public void BlockComment()
-	{
+	public void BlockComment() {
 		Assert.Empty(Parser.ParseText("/**/"));
 		Assert.Empty(Parser.ParseText(" /*.*/ "));
 		Assert.Empty(Parser.ParseText("/**************/"));
@@ -37,36 +32,31 @@ public class UnitTest1
 	}
 
 	[Fact]
-	public void StrayCharacter()
-	{
+	public void StrayCharacter() {
 		Assert.Throws<FormatException>(() => Parser.ParseText("!"));
 		Assert.Throws<FormatException>(() => Parser.ParseText("|"));
 	}
 
 	[Fact]
-	public void StringLiteral()
-	{
+	public void StringLiteral() {
 		Assert.Throws<FormatException>(() => Parser.ParseText("'"));
 	}
 
 	[Fact]
-	public void QuotedName()
-	{
+	public void QuotedName() {
 		Assert.Throws<FormatException>(() => Parser.ParseText("\"..."));
 		Assert.Throws<FormatException>(() => Parser.ParseText("`"));
 		Assert.Throws<FormatException>(() => Parser.ParseText("["));
 	}
 
 	[Fact]
-	public void SampleDB1()
-	{
+	public void SampleDB1() {
 		var statements = Parser.ParseFile("sql-server-samples/sampleDB1.sql");
 		Assert.True(statements[0] is Table);
 	}
 
 	[Fact]
-	public void Eq()
-	{
+	public void Eq() {
 		Expression a = new StringLiteral(new Location("", 0), "x");
 		Expression b = new StringLiteral(new Location("", 0), "y");
 		Assert.NotEqual(a, b);
@@ -86,8 +76,7 @@ public class UnitTest1
 	}
 
 	[Fact]
-	public void Select()
-	{
+	public void Select() {
 		var statements = Parser.ParseText("select 1");
 		var a = ((Select)statements[0]).SelectList[0];
 		Assert.True(a is Number);
@@ -144,14 +133,12 @@ public class UnitTest1
 		Assert.True(a.Eq(b));
 	}
 
-	static Expression Selected(List<Statement> statements)
-	{
+	static Expression Selected(List<Statement> statements) {
 		return ((Select)statements[0]).SelectList[0];
 	}
 
 	[Fact]
-	public void Northwind()
-	{
+	public void Northwind() {
 		var statements = Parser.ParseFile("sql-server-samples/instnwnd.sql");
 		// Assert.True(statements.Count > 0);
 	}

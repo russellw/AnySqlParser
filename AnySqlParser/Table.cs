@@ -1,7 +1,5 @@
-﻿namespace AnySqlParser
-{
-public sealed class Column
-{
+﻿namespace AnySqlParser {
+public sealed class Column {
 	public readonly Location Location;
 	public string Name;
 
@@ -26,15 +24,13 @@ public sealed class Column
 	// constraints
 	public bool PrimaryKey;
 
-	public Column(Location location, string name)
-	{
+	public Column(Location location, string name) {
 		Location = location;
 		Name = name;
 	}
 }
 
-public sealed class Key
-{
+public sealed class Key {
 	public readonly Location Location;
 	public string? ConstraintName;
 
@@ -42,23 +38,20 @@ public sealed class Key
 	public bool? Clustered;
 	public List<ColumnOrder> Columns = new();
 
-	public Key(Location location, string? constraintName)
-	{
+	public Key(Location location, string? constraintName) {
 		Location = location;
 		ConstraintName = constraintName;
 	}
 }
 
-public enum Action
-{
+public enum Action {
 	NoAction,
 	Cascade,
 	SetNull,
 	SetDefault,
 }
 
-public sealed class ForeignKey
-{
+public sealed class ForeignKey {
 	public readonly Location Location;
 	public string? ConstraintName;
 
@@ -71,30 +64,26 @@ public sealed class ForeignKey
 	public Action OnUpdate = Action.NoAction;
 	public bool ForReplication = true;
 
-	public ForeignKey(Location location, string? constraintName)
-	{
+	public ForeignKey(Location location, string? constraintName) {
 		Location = location;
 		ConstraintName = constraintName;
 	}
 }
 
-public sealed class Check
-{
+public sealed class Check {
 	public readonly Location Location;
 	public string? ConstraintName;
 
 	public Expression Expression = null!;
 	public bool ForReplication = true;
 
-	public Check(Location location, string? constraintName)
-	{
+	public Check(Location location, string? constraintName) {
 		Location = location;
 		ConstraintName = constraintName;
 	}
 }
 
-public sealed class Table: Statement
-{
+public sealed class Table: Statement {
 	public QualifiedName Name;
 	public List<Column> Columns = new();
 
@@ -103,8 +92,7 @@ public sealed class Table: Statement
 	public List<ForeignKey> ForeignKeys = new();
 	public List<Check> Checks = new();
 
-	public Table(Location location, QualifiedName name): base(location)
-	{
+	public Table(Location location, QualifiedName name): base(location) {
 		Name = name;
 	}
 }

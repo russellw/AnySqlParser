@@ -1,16 +1,12 @@
 ﻿using System.Text;
 
-namespace AnySqlParser
-{
-public sealed class Parser
-{
-	public static List<Statement> ParseFile(string file)
-	{
+namespace AnySqlParser {
+public sealed class Parser {
+	public static List<Statement> ParseFile(string file) {
 		return ParseText(File.ReadAllText(file), file);
 	}
 
-	public static List<Statement> ParseText(string text, string file = "SQL", int line = 1)
-	{
+	public static List<Statement> ParseText(string text, string file = "SQL", int line = 1) {
 		var parser = new Parser(text, file, line);
 		return parser.statements;
 	}
@@ -32,8 +28,7 @@ public sealed class Parser
 	string tokenString = null!;
 	readonly List<Statement> statements = new();
 
-	Parser(string text, string file, int line)
-	{
+	Parser(string text, string file, int line) {
 		this.text = text;
 		this.file = file;
 		this.line = line;
@@ -47,15 +42,13 @@ public sealed class Parser
 	}
 
 	// statements
-	Statement StatementSemicolon()
-	{
+	Statement StatementSemicolon() {
 		var a = Statement();
 		Eat(';');
 		return a;
 	}
 
-	Statement Statement()
-	{
+	Statement Statement() {
 		var location = new Location(file, line);
 		switch (Keyword())
 		{
@@ -364,8 +357,7 @@ public sealed class Parser
 		throw ErrorToken("expected statement");
 	}
 
-	Select Select()
-	{
+	Select Select() {
 		var location = new Location(file, line);
 		Expect("select");
 		var a = new Select(location);
@@ -446,8 +438,7 @@ public sealed class Parser
 	}
 
 	// tables
-	Column Column()
-	{
+	Column Column() {
 		var location = new Location(file, line);
 		var a = new Column(location, Name());
 
@@ -525,8 +516,7 @@ public sealed class Parser
 		return a;
 	}
 
-	Key Key(string? constraintName)
-	{
+	Key Key(string? constraintName) {
 		var location = new Location(file, line);
 		var a = new Key(location, constraintName);
 
@@ -557,8 +547,7 @@ public sealed class Parser
 		return a;
 	}
 
-	ForeignKey ForeignKey(string? constraintName)
-	{
+	ForeignKey ForeignKey(string? constraintName) {
 		var location = new Location(file, line);
 		Expect("foreign");
 		Expect("key");
@@ -608,8 +597,7 @@ public sealed class Parser
 		return a;
 	}
 
-	Action Action()
-	{
+	Action Action() {
 		switch (Keyword())
 		{
 		case "cascade":
@@ -638,8 +626,7 @@ public sealed class Parser
 		throw ErrorToken("expected action");
 	}
 
-	Check Check(string? constraintName)
-	{
+	Check Check(string? constraintName) {
 		var location = new Location(file, line);
 		var a = new Check(location, constraintName);
 		if (Eat("not"))
@@ -653,8 +640,7 @@ public sealed class Parser
 	}
 
 	// etc
-	bool? Clustered()
-	{
+	bool? Clustered() {
 		switch (Keyword())
 		{
 		case "clustered":
@@ -667,16 +653,14 @@ public sealed class Parser
 		return null;
 	}
 
-	ColumnOrder ColumnOrder()
-	{
+	ColumnOrder ColumnOrder() {
 		var location = new Location(file, line);
 		var a = new ColumnOrder(location, Name());
 		a.Desc = Desc();
 		return a;
 	}
 
-	bool Desc()
-	{
+	bool Desc() {
 		switch (Keyword())
 		{
 		case "desc":
@@ -689,8 +673,7 @@ public sealed class Parser
 		return false;
 	}
 
-	bool OnOff()
-	{
+	bool OnOff() {
 		switch (Keyword())
 		{
 		case "on":
@@ -704,13 +687,11 @@ public sealed class Parser
 	}
 
 	// expressions
-	Expression Expression()
-	{
+	Expression Expression() {
 		return And();
 	}
 
-	Expression And()
-	{
+	Expression And() {
 		var a = Not();
 		var location = new Location(file, line);
 		if (Eat("and"))
@@ -718,16 +699,14 @@ public sealed class Parser
 		return a;
 	}
 
-	Expression Not()
-	{
+	Expression Not() {
 		var location = new Location(file, line);
 		if (Eat("not"))
 			return new UnaryExpression(location, UnaryOp.Not, Not());
 		return Comparison();
 	}
 
-	Expression Comparison()
-	{
+	Expression Comparison() {
 		var a = Addition();
 		BinaryOp op;
 		switch (token)
@@ -758,8 +737,7 @@ public sealed class Parser
 		return new BinaryExpression(location, op, a, Addition());
 	}
 
-	Expression Addition()
-	{
+	Expression Addition() {
 		var a = Multiplication();
 		for (;;)
 		{
@@ -793,8 +771,7 @@ public sealed class Parser
 		}
 	}
 
-	Expression Multiplication()
-	{
+	Expression Multiplication() {
 		var a = Prefix();
 		for (;;)
 		{
@@ -819,8 +796,7 @@ public sealed class Parser
 		}
 	}
 
-	Expression Prefix()
-	{
+	Expression Prefix() {
 		var location = new Location(file, line);
 		switch (token)
 		{
@@ -846,8 +822,7 @@ public sealed class Parser
 		return Postfix();
 	}
 
-	Expression Postfix()
-	{
+	Expression Postfix() {
 		var a = Primary();
 		var location = new Location(file, line);
 		if (Eat('('))
@@ -867,8 +842,7 @@ public sealed class Parser
 		return a;
 	}
 
-	Expression Primary()
-	{
+	Expression Primary() {
 		var location = new Location(file, line);
 		switch (token)
 		{
@@ -901,8 +875,7 @@ public sealed class Parser
 		throw ErrorToken("expected expression");
 	}
 
-	QualifiedName QualifiedName()
-	{
+	QualifiedName QualifiedName() {
 		var location = new Location(file, line);
 		var a = new QualifiedName(location);
 		do
@@ -912,8 +885,7 @@ public sealed class Parser
 	}
 
 	// etc
-	int Int()
-	{
+	int Int() {
 		if (token != kNumber)
 			throw ErrorToken("expected integer");
 		var n = int.Parse(tokenString, System.Globalization.CultureInfo.InvariantCulture);
@@ -921,15 +893,13 @@ public sealed class Parser
 		return n;
 	}
 
-	string? Keyword()
-	{
+	string? Keyword() {
 		if (token != kWord)
 			return null;
 		return tokenString.ToLowerInvariant();
 	}
 
-	string Name()
-	{
+	string Name() {
 		switch (token)
 		{
 		case kWord:
@@ -942,20 +912,17 @@ public sealed class Parser
 		throw ErrorToken("expected name");
 	}
 
-	void Expect(char k)
-	{
+	void Expect(char k) {
 		if (!Eat(k))
 			throw ErrorToken("expected " + k);
 	}
 
-	void Expect(string s)
-	{
+	void Expect(string s) {
 		if (!Eat(s))
 			throw ErrorToken("expected " + s.ToUpperInvariant());
 	}
 
-	bool Eat(int k)
-	{
+	bool Eat(int k) {
 		if (token == k)
 		{
 			Lex();
@@ -964,8 +931,7 @@ public sealed class Parser
 		return false;
 	}
 
-	bool Eat(string s)
-	{
+	bool Eat(string s) {
 		if (token == kWord && string.Equals(tokenString, s, StringComparison.OrdinalIgnoreCase))
 		{
 			Lex();
@@ -975,8 +941,7 @@ public sealed class Parser
 	}
 
 	// tokenizer
-	void Lex()
-	{
+	void Lex() {
 		while (textIndex < text.Length)
 		{
 			var c = text[textIndex];
@@ -1322,8 +1287,7 @@ public sealed class Parser
 		token = -1;
 	}
 
-	void Word()
-	{
+	void Word() {
 		var i = textIndex;
 		do
 			i++;
@@ -1333,8 +1297,7 @@ public sealed class Parser
 		textIndex = i;
 	}
 
-	void Number()
-	{
+	void Number() {
 		var i = textIndex;
 		do
 			i++;
@@ -1344,8 +1307,7 @@ public sealed class Parser
 		textIndex = i;
 	}
 
-	static bool IsWordPart(char c)
-	{
+	static bool IsWordPart(char c) {
 		if (char.IsLetterOrDigit(c))
 			return true;
 		return c == '_';
@@ -1353,13 +1315,11 @@ public sealed class Parser
 
 	// Error functions return exception objects instead of throwing immediately
 	// so 'throw Err(...)' can mark the end of a case block
-	Exception ErrorToken(string message)
-	{
+	Exception ErrorToken(string message) {
 		return Error($"{Echo()}: {message}");
 	}
 
-	string Echo()
-	{
+	string Echo() {
 		if (token >= 0)
 			return char.ToString((char)token);
 		switch (token)
@@ -1378,13 +1338,11 @@ public sealed class Parser
 		return tokenString;
 	}
 
-	Exception Error(string message)
-	{
+	Exception Error(string message) {
 		return Error(message, line);
 	}
 
-	Exception Error(string message, int line)
-	{
+	Exception Error(string message, int line) {
 		return new FormatException($"{file}:{line}: {message}");
 	}
 }
