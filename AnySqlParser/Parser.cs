@@ -82,7 +82,7 @@ namespace AnySqlParser
                                 return a;
                             }
                     }
-                    throw ErrToken("expected parameter");
+                    throw ErrorToken("expected parameter");
                 case "begin":
                     Lex();
                     switch (Keyword())
@@ -279,7 +279,7 @@ namespace AnySqlParser
                                                     a.MaxDurationMinutes = Eat("minutes");
                                                     break;
                                                 default:
-                                                    throw ErrToken("expected relational index option");
+                                                    throw ErrorToken("expected relational index option");
                                             }
                                         while (Eat(','));
                                         Expect(')');
@@ -310,7 +310,7 @@ namespace AnySqlParser
                                                 break;
                                             default:
                                                 if (constraintName != null)
-                                                    throw ErrToken("expected constraint");
+                                                    throw ErrorToken("expected constraint");
                                                 a.Columns.Add(Column());
                                                 break;
                                         }
@@ -319,7 +319,7 @@ namespace AnySqlParser
                                     return a;
                                 }
                         }
-                        throw ErrToken("expected noun");
+                        throw ErrorToken("expected noun");
                     }
                 case "drop":
                     Lex();
@@ -369,9 +369,9 @@ namespace AnySqlParser
                                 return a;
                             }
                     }
-                    throw ErrToken("expected noun");
+                    throw ErrorToken("expected noun");
             }
-            throw ErrToken("expected statement");
+            throw ErrorToken("expected statement");
         }
 
         Select Select()
@@ -450,7 +450,7 @@ namespace AnySqlParser
                         while (Eat(','));
                         break;
                     default:
-                        throw ErrToken("expected clause");
+                        throw ErrorToken("expected clause");
                 }
             return a;
         }
@@ -525,11 +525,11 @@ namespace AnySqlParser
                                 a.ForReplication = false;
                                 break;
                             default:
-                                throw ErrToken("expected option");
+                                throw ErrorToken("expected option");
                         }
                         break;
                     default:
-                        throw ErrToken("expected constraint");
+                        throw ErrorToken("expected constraint");
                 }
             }
             return a;
@@ -552,7 +552,7 @@ namespace AnySqlParser
                     Lex();
                     break;
                 default:
-                    throw ErrToken("expected key type");
+                    throw ErrorToken("expected key type");
             }
 
             //clustered?
@@ -605,7 +605,7 @@ namespace AnySqlParser
                         a.OnUpdate = Action();
                         break;
                     default:
-                        throw ErrToken("expected event type");
+                        throw ErrorToken("expected event type");
                 }
 
             //replication
@@ -643,9 +643,9 @@ namespace AnySqlParser
                             Lex();
                             return AnySqlParser.Action.SetDefault;
                     }
-                    throw ErrToken("expected replacement value");
+                    throw ErrorToken("expected replacement value");
             }
-            throw ErrToken("expected action");
+            throw ErrorToken("expected action");
         }
 
         Check Check(string? constraintName)
@@ -710,7 +710,7 @@ namespace AnySqlParser
                     Lex();
                     return false;
             }
-            throw ErrToken("expected ON or OFF");
+            throw ErrorToken("expected ON or OFF");
         }
 
         //expressions
@@ -873,7 +873,7 @@ namespace AnySqlParser
                     Expect(')');
                     return call;
                 }
-                throw Err("call of non-function", location.Line);
+                throw Error("call of non-function", location.Line);
             }
             return a;
         }
@@ -912,7 +912,7 @@ namespace AnySqlParser
                         return a;
                     }
             }
-            throw ErrToken("expected expression");
+            throw ErrorToken("expected expression");
         }
 
         QualifiedName QualifiedName()
@@ -929,7 +929,7 @@ namespace AnySqlParser
         int Int()
         {
             if (token != kNumber)
-                throw ErrToken("expected integer");
+                throw ErrorToken("expected integer");
             var n = int.Parse(tokenString, System.Globalization.CultureInfo.InvariantCulture);
             Lex();
             return n;
@@ -954,17 +954,17 @@ namespace AnySqlParser
                         return s;
                     }
             }
-            throw ErrToken("expected name");
+            throw ErrorToken("expected name");
         }
 
         void Expect(char k)
         {
-            if (!Eat(k)) throw ErrToken("expected " + k);
+            if (!Eat(k)) throw ErrorToken("expected " + k);
         }
 
         void Expect(string s)
         {
-            if (!Eat(s)) throw ErrToken("expected " + s.ToUpperInvariant());
+            if (!Eat(s)) throw ErrorToken("expected " + s.ToUpperInvariant());
         }
 
         bool Eat(int k)
@@ -1026,7 +1026,7 @@ namespace AnySqlParser
                                 }
                                 sb.Append(text[i++]);
                             }
-                            throw Err("unclosed '", line1);
+                            throw Error("unclosed '", line1);
                         }
                     case '"':
                         {
@@ -1063,7 +1063,7 @@ namespace AnySqlParser
                                 }
                                 sb.Append(text[i++]);
                             }
-                            throw Err("unclosed \"", line1);
+                            throw Error("unclosed \"", line1);
                         }
                     case '`':
                         {
@@ -1100,7 +1100,7 @@ namespace AnySqlParser
                                 }
                                 sb.Append(text[i++]);
                             }
-                            throw Err("unclosed `", line1);
+                            throw Error("unclosed `", line1);
                         }
                     case '[':
                         {
@@ -1127,7 +1127,7 @@ namespace AnySqlParser
                                 }
                                 sb.Append(text[i++]);
                             }
-                            throw Err("unclosed [", line1);
+                            throw Error("unclosed [", line1);
                         }
                     case '!':
                         if (textIndex + 1 < text.Length)
@@ -1189,7 +1189,7 @@ namespace AnySqlParser
                             var i = textIndex + 2;
                             for (; ; )
                             {
-                                if (text.Length <= i + 1) throw Err("unclosed /*", line1);
+                                if (text.Length <= i + 1) throw Error("unclosed /*", line1);
                                 if (text[i] == '\n') line++;
                                 else
                                     if (text[i] == '*' && text[i + 1] == '/') break;
@@ -1327,7 +1327,7 @@ namespace AnySqlParser
                         }
                         break;
                 }
-                throw Err("stray " + c);
+                throw Error("stray " + c);
             }
             token = -1;
         }
@@ -1362,9 +1362,9 @@ namespace AnySqlParser
 
         //Error functions return exception objects instead of throwing immediately
         //so 'throw Err(...)' can mark the end of a case block
-        Exception ErrToken(string message)
+        Exception ErrorToken(string message)
         {
-            return Err($"{Echo()}: {message}");
+            return Error($"{Echo()}: {message}");
         }
 
         string Echo()
@@ -1387,12 +1387,12 @@ namespace AnySqlParser
             return tokenString;
         }
 
-        Exception Err(string message)
+        Exception Error(string message)
         {
-            return Err(message, line);
+            return Error(message, line);
         }
 
-        Exception Err(string message, int line)
+        Exception Error(string message, int line)
         {
             return new FormatException($"{file}:{line}: {message}");
         }
