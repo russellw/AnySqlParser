@@ -236,7 +236,6 @@ public sealed class Parser {
 							Eat('=');
 							a.OptimizeForSequentialKey = OnOff();
 							break;
-
 						case "fillfactor":
 							Lex();
 							Eat('=');
@@ -431,6 +430,9 @@ public sealed class Parser {
 
 		// Constraints etc
 		while (token == kWord) {
+			string? constraintName = null;
+			if (Eat("constraint"))
+				constraintName = Name();
 			switch (Keyword()) {
 			case "default":
 				Lex();
