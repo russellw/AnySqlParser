@@ -114,6 +114,14 @@ public sealed class SetParameter: Statement {
 	}
 }
 
+public sealed class View: Statement {
+	public QualifiedName Name = null!;
+	public Select Query = null!;
+
+	public View(Location location): base(location) {
+	}
+}
+
 public sealed class Index: Statement {
 	public bool Unique;
 	public bool? Clustered;

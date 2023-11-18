@@ -260,6 +260,14 @@ public sealed class Parser {
 				}
 				return a;
 			}
+			case "view": {
+				Lex();
+				var a = new View(location);
+				a.Name = QualifiedName();
+				Expect("as");
+				a.Query = Select();
+				return a;
+			}
 			case "table": {
 				Lex();
 				var a = new Table(location, QualifiedName());
