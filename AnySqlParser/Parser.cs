@@ -380,9 +380,12 @@ public sealed class Parser {
 
 		// Select list
 		if (!Eat('*'))
-			do
-				a.SelectList.Add(Expression());
-			while (Eat(','));
+			do {
+				var c = new SelectColumn(new Location(file, line), Expression());
+				if (Eat("as"))
+					c.ColumnAlias = Expression();
+				a.SelectList.Add(c);
+			} while (Eat(','));
 
 		// Any keyword after the select list, must be a clause
 		while (token == kWord)

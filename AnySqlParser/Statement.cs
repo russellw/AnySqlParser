@@ -52,29 +52,6 @@ public sealed class If: Statement {
 	}
 }
 
-public sealed class Select: Statement {
-	public bool All;
-	public bool Distinct;
-
-	public Expression? Top;
-	public bool Percent;
-	public bool WithTies;
-
-	public List<Expression> SelectList = new();
-
-	public List<Expression> From = new();
-	public Expression? Where;
-	public Expression? GroupBy;
-	public Expression? Having;
-	public Expression? Window;
-
-	public Expression? OrderBy;
-	public bool Desc;
-
-	public Select(Location location): base(location) {
-	}
-}
-
 public sealed class Insert: Statement {
 	public QualifiedName TableName = null!;
 	public List<string> Columns = new();
