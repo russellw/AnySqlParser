@@ -37,11 +37,6 @@ public sealed class QueryBinaryExpression: QueryExpression {
 }
 
 public sealed class QuerySpecification: QueryExpression {
-	public QuerySpecification(Location location): base(location) {
-	}
-}
-
-public sealed class Select: Statement {
 	public bool All;
 	public bool Distinct;
 
@@ -56,6 +51,13 @@ public sealed class Select: Statement {
 	public Expression? GroupBy;
 	public Expression? Having;
 	public Expression? Window;
+
+	public QuerySpecification(Location location): base(location) {
+	}
+}
+
+public sealed class Select: Statement {
+	public QueryExpression QueryExpression;
 
 	public Expression? OrderBy;
 	public bool Desc;

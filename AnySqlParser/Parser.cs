@@ -1249,7 +1249,7 @@ public sealed class Parser {
 	}
 
 	// Error functions return exception objects instead of throwing immediately
-	// so 'throw Err(...)' can mark the end of a case block
+	// so 'throw Error(...)' can mark the end of a case block
 	Exception ErrorToken(string message) {
 		return Error($"{Echo()}: {message}");
 	}
