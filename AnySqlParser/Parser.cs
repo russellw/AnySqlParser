@@ -552,7 +552,7 @@ public sealed class Parser {
 				a.Desc = Desc();
 				break;
 			default:
-				throw ErrorToken("expected clause");
+				return a;
 			}
 		return a;
 	}
