@@ -625,7 +625,7 @@ public sealed class Parser {
 				while (Eat(','));
 				break;
 			default:
-				throw ErrorToken("expected clause");
+				return a;
 			}
 		return a;
 	}
