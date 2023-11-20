@@ -78,17 +78,17 @@ public class UnitTest1 {
 	[Fact]
 	public void Select() {
 		var statements = Parser.ParseText("select 1");
-		var a = ((Select)statements[0]).SelectList[0].Expression;
+		var a = Selected(statements);
 		Assert.True(a is Number);
 
 		statements = Parser.ParseText("select ~1");
-		a = ((Select)statements[0]).SelectList[0].Expression;
+		a = Selected(statements);
 		Assert.True(a is UnaryExpression);
 		var L = new Location("", 0);
 		Assert.True(a.Eq(new UnaryExpression(L, UnaryOp.BitNot, new Number(L, "1"))));
 
 		statements = Parser.ParseText("select -1");
-		a = ((Select)statements[0]).SelectList[0].Expression;
+		a = Selected(statements);
 		Assert.True(a is UnaryExpression);
 		Assert.True(a.Eq(new UnaryExpression(L, UnaryOp.Minus, new Number(L, "1"))));
 
@@ -141,7 +141,9 @@ public class UnitTest1 {
 	}
 
 	static Expression Selected(List<Statement> statements) {
-		return ((Select)statements[0]).SelectList[0].Expression;
+		var select = (Select)statements[0];
+		var querySpecification = (QuerySpecification)select.QueryExpression;
+		return querySpecification.SelectList[0].Expression;
 	}
 
 	[Fact]

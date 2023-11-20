@@ -542,8 +542,25 @@ public sealed class Parser {
 	// Queries
 	Select Select() {
 		var location = new Location(file, line);
+		var a = new Select(location, QuerySpecification());
+		while (token == kWord)
+			switch (Keyword()) {
+			case "order":
+				Lex();
+				Expect("by");
+				a.OrderBy = Expression();
+				a.Desc = Desc();
+				break;
+			default:
+				throw ErrorToken("expected clause");
+			}
+		return a;
+	}
+
+	QuerySpecification QuerySpecification() {
+		var location = new Location(file, line);
 		Expect("select");
-		var a = new Select(location);
+		var a = new QuerySpecification(location);
 
 		// Some clauses are written before the select list
 		// but unknown keywords must be left alone
@@ -592,12 +609,6 @@ public sealed class Parser {
 				Lex();
 				Expect("by");
 				a.GroupBy = Expression();
-				break;
-			case "order":
-				Lex();
-				Expect("by");
-				a.OrderBy = Expression();
-				a.Desc = Desc();
 				break;
 			case "having":
 				Lex();
