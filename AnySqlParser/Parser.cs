@@ -346,85 +346,6 @@ public sealed class Parser {
 		throw ErrorToken("expected statement");
 	}
 
-	Select Select() {
-		var location = new Location(file, line);
-		Expect("select");
-		var a = new Select(location);
-
-		// Some clauses are written before the select list
-		// but unknown keywords must be left alone
-		// as they might be part of the select list
-		for (;;) {
-			switch (Keyword()) {
-			case "all":
-				Lex();
-				a.All = true;
-				continue;
-			case "distinct":
-				Lex();
-				a.Distinct = true;
-				continue;
-			case "top":
-				Lex();
-				a.Top = Expression();
-				if (Eat("percent"))
-					a.Percent = true;
-				if (Eat("with")) {
-					Expect("ties");
-					a.WithTies = true;
-				}
-				continue;
-			}
-			break;
-		}
-
-		// Select list
-		if (!Eat('*'))
-			do {
-				var c = new SelectColumn(new Location(file, line), Expression());
-				if (Eat("as"))
-					c.ColumnAlias = Expression();
-				a.SelectList.Add(c);
-			} while (Eat(','));
-
-		// Any keyword after the select list, must be a clause
-		while (token == kWord)
-			switch (Keyword()) {
-			case "where":
-				Lex();
-				a.Where = Expression();
-				break;
-			case "group":
-				Lex();
-				Expect("by");
-				a.GroupBy = Expression();
-				break;
-			case "order":
-				Lex();
-				Expect("by");
-				a.OrderBy = Expression();
-				a.Desc = Desc();
-				break;
-			case "having":
-				Lex();
-				a.Having = Expression();
-				break;
-			case "window":
-				Lex();
-				a.Window = Expression();
-				break;
-			case "from":
-				Lex();
-				do
-					a.From.Add(Expression());
-				while (Eat(','));
-				break;
-			default:
-				throw ErrorToken("expected clause");
-			}
-		return a;
-	}
-
 	// Tables
 	Column Column() {
 		var location = new Location(file, line);
@@ -615,6 +536,86 @@ public sealed class Parser {
 			a.ForReplication = false;
 		}
 		a.Expression = Expression();
+		return a;
+	}
+
+	// Queries
+	Select Select() {
+		var location = new Location(file, line);
+		Expect("select");
+		var a = new Select(location);
+
+		// Some clauses are written before the select list
+		// but unknown keywords must be left alone
+		// as they might be part of the select list
+		for (;;) {
+			switch (Keyword()) {
+			case "all":
+				Lex();
+				a.All = true;
+				continue;
+			case "distinct":
+				Lex();
+				a.Distinct = true;
+				continue;
+			case "top":
+				Lex();
+				a.Top = Expression();
+				if (Eat("percent"))
+					a.Percent = true;
+				if (Eat("with")) {
+					Expect("ties");
+					a.WithTies = true;
+				}
+				continue;
+			}
+			break;
+		}
+
+		// Select list
+		if (!Eat('*'))
+			do {
+				var c = new SelectColumn(new Location(file, line), Expression());
+				if (Eat("as"))
+					c.ColumnAlias = Expression();
+				a.SelectList.Add(c);
+			} while (Eat(','));
+
+		// Any keyword after the select list, must be a clause
+		while (token == kWord)
+			switch (Keyword()) {
+			case "where":
+				Lex();
+				a.Where = Expression();
+				break;
+			case "group":
+				Lex();
+				Expect("by");
+				a.GroupBy = Expression();
+				break;
+			case "order":
+				Lex();
+				Expect("by");
+				a.OrderBy = Expression();
+				a.Desc = Desc();
+				break;
+			case "having":
+				Lex();
+				a.Having = Expression();
+				break;
+			case "window":
+				Lex();
+				a.Window = Expression();
+				break;
+			case "from":
+				Lex();
+				do
+					a.From.Add(Expression());
+				while (Eat(','));
+				break;
+			default:
+				throw ErrorToken("expected clause");
+			}
 		return a;
 	}
 
