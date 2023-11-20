@@ -542,7 +542,7 @@ public sealed class Parser {
 	// Queries
 	Select Select() {
 		var location = new Location(file, line);
-		var a = new Select(location, QuerySpecification());
+		var a = new Select(location, Union());
 		while (token == kWord)
 			switch (Keyword()) {
 			case "order":
@@ -555,6 +555,41 @@ public sealed class Parser {
 				throw ErrorToken("expected clause");
 			}
 		return a;
+	}
+
+	QueryExpression Union() {
+		var a = Intersect();
+		for (;;) {
+			QueryOp op;
+			switch (Keyword()) {
+			case "union":
+				if (Eat("all")) {
+					op = QueryOp.UnionAll;
+					break;
+				}
+				op = QueryOp.Union;
+				break;
+			case "except":
+				op = QueryOp.Except;
+				break;
+			default:
+				return a;
+			}
+			var location = new Location(file, line);
+			Lex();
+			a = new QueryBinaryExpression(location, op, a, Intersect());
+		}
+	}
+
+	QueryExpression Intersect() {
+		// https://stackoverflow.com/questions/56224171/does-intersect-have-a-higher-precedence-compared-to-union
+		QueryExpression a = QuerySpecification();
+		for (;;) {
+			var location = new Location(file, line);
+			if (!Eat("intersect"))
+				return a;
+			a = new QueryBinaryExpression(location, QueryOp.Intersect, a, QuerySpecification());
+		}
 	}
 
 	QuerySpecification QuerySpecification() {
