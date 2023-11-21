@@ -29,9 +29,9 @@ public sealed class BinaryExpression: Expression {
 		Right = right;
 	}
 
-	public override bool Eq(Expression b) {
-		if (b is BinaryExpression b1)
-			return Op == b1.Op && Left.Eq(b1.Left) && Right.Eq(b1.Right);
+	public override bool Eq(Expression b0) {
+		if (b0 is BinaryExpression b)
+			return Op == b.Op && Left.Eq(b.Left) && Right.Eq(b.Right);
 		return false;
 	}
 }

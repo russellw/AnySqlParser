@@ -782,15 +782,28 @@ public sealed class Parser {
 	Expression Expression() {
 		var a = And();
 		for (;;) {
+			var location = new Location(file, line);
 			BinaryOp op;
 			switch (Keyword()) {
+			case "not": {
+				Lex();
+				Expect("between");
+				var b = Addition();
+				Expect("and");
+				return new TernaryExpression(location, TernaryOp.NotBetween, a, b, Addition());
+			}
+			case "between": {
+				Lex();
+				var b = Addition();
+				Expect("and");
+				return new TernaryExpression(location, TernaryOp.Between, a, b, Addition());
+			}
 			case "or":
 				op = BinaryOp.Or;
 				break;
 			default:
 				return a;
 			}
-			var location = new Location(file, line);
 			Lex();
 			a = new BinaryExpression(location, op, a, And());
 		}

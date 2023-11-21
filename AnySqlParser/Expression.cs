@@ -39,9 +39,9 @@ public sealed class StringLiteral: Expression {
 		Value = value;
 	}
 
-	public override bool Eq(Expression b) {
-		if (b is StringLiteral b1)
-			return Value == b1.Value;
+	public override bool Eq(Expression b0) {
+		if (b0 is StringLiteral b)
+			return Value == b.Value;
 		return false;
 	}
 }
@@ -65,9 +65,9 @@ public sealed class QualifiedName: Expression {
 		Names.Add(name);
 	}
 
-	public override bool Eq(Expression b) {
-		if (b is QualifiedName b1)
-			return Names == b1.Names;
+	public override bool Eq(Expression b0) {
+		if (b0 is QualifiedName b)
+			return Names == b.Names;
 		return false;
 	}
 }
@@ -79,9 +79,9 @@ public sealed class Number: Expression {
 		Value = value;
 	}
 
-	public override bool Eq(Expression b) {
-		if (b is Number b1)
-			return Value == b1.Value;
+	public override bool Eq(Expression b0) {
+		if (b0 is Number b)
+			return Value == b.Value;
 		return false;
 	}
 }

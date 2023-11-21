@@ -15,9 +15,9 @@ public sealed class UnaryExpression: Expression {
 		Operand = operand;
 	}
 
-	public override bool Eq(Expression b) {
-		if (b is UnaryExpression b1)
-			return Op == b1.Op && Operand.Eq(b1.Operand);
+	public override bool Eq(Expression b0) {
+		if (b0 is UnaryExpression b)
+			return Op == b.Op && Operand.Eq(b.Operand);
 		return false;
 	}
 }
