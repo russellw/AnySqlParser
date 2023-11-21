@@ -723,12 +723,15 @@ public sealed class Parser {
 
 	TableSource PrimaryTableSource() {
 		if (Eat('(')) {
-			var a = TableSource();
+			var b = TableSource();
 			Expect(')');
-			return a;
+			return b;
 		}
 		var location = new Location(file, line);
-		return new PrimaryTableSource(location, QualifiedName());
+		var a = new PrimaryTableSource(location, QualifiedName());
+		if (Eat("as"))
+			a.TableAlias = Name();
+		return a;
 	}
 
 	// Etc
