@@ -832,8 +832,25 @@ public sealed class Parser {
 
 	Expression Comparison() {
 		var a = Addition();
+		var location = new Location(file, line);
 		BinaryOp op;
 		switch (token) {
+		case kWord:
+			switch (tokenString.ToLowerInvariant()) {
+			case "is":
+				Lex();
+				switch (Keyword()) {
+				case "null":
+					Lex();
+					return new UnaryExpression(location, UnaryOp.IsNull, a);
+				case "not":
+					Lex();
+					Expect("null");
+					return new UnaryExpression(location, UnaryOp.IsNull, a);
+				}
+				throw ErrorToken("expected NOT or NULL");
+			}
+			return a;
 		case '=':
 			op = BinaryOp.Equal;
 			break;
@@ -855,7 +872,6 @@ public sealed class Parser {
 		default:
 			return a;
 		}
-		var location = new Location(file, line);
 		Lex();
 		return new BinaryExpression(location, op, a, Addition());
 	}

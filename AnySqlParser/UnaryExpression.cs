@@ -4,6 +4,8 @@ public enum UnaryOp {
 	BitNot,
 	Minus,
 	Exists,
+	IsNull,
+	IsNotNull,
 }
 
 public sealed class UnaryExpression: Expression {
