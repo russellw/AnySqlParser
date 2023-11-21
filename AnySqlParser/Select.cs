@@ -48,7 +48,7 @@ public sealed class QuerySpecification: QueryExpression {
 
 	public List<TableSource> From = new();
 	public Expression? Where;
-	public Expression? GroupBy;
+	public List<Expression> GroupBy = new();
 	public Expression? Having;
 	public Expression? Window;
 

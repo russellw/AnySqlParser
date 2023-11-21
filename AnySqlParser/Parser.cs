@@ -642,7 +642,9 @@ public sealed class Parser {
 			case "group":
 				Lex();
 				Expect("by");
-				a.GroupBy = Expression();
+				do
+					a.GroupBy.Add(Expression());
+				while (Eat(','));
 				break;
 			case "having":
 				Lex();
