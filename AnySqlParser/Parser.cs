@@ -542,7 +542,7 @@ public sealed class Parser {
 	// Queries
 	Select Select() {
 		var location = new Location(file, line);
-		var a = new Select(location, Union());
+		var a = new Select(location, QueryExpression());
 		while (token == kWord)
 			switch (Keyword()) {
 			case "order":
@@ -557,7 +557,7 @@ public sealed class Parser {
 		return a;
 	}
 
-	QueryExpression Union() {
+	QueryExpression QueryExpression() {
 		var a = Intersect();
 		for (;;) {
 			QueryOp op;
@@ -665,8 +665,70 @@ public sealed class Parser {
 	}
 
 	TableSource TableSource() {
+		return Join();
+	}
+
+	TableSource Join() {
+		var a = PrimaryTableSource();
+		for (;;) {
+			var location = new Location(file, line);
+			switch (Keyword()) {
+			case "inner": {
+				Lex();
+				Expect("join");
+				var b = PrimaryTableSource();
+				Expect("on");
+				a = new Join(location, JoinType.Inner, a, b, Expression());
+				break;
+			}
+			case "join": {
+				Lex();
+				var b = PrimaryTableSource();
+				Expect("on");
+				a = new Join(location, JoinType.Inner, a, b, Expression());
+				break;
+			}
+			case "left": {
+				Lex();
+				Eat("outer");
+				Expect("join");
+				var b = PrimaryTableSource();
+				Expect("on");
+				a = new Join(location, JoinType.Left, a, b, Expression());
+				break;
+			}
+			case "right": {
+				Lex();
+				Eat("outer");
+				Expect("join");
+				var b = PrimaryTableSource();
+				Expect("on");
+				a = new Join(location, JoinType.Right, a, b, Expression());
+				break;
+			}
+			case "full": {
+				Lex();
+				Eat("outer");
+				Expect("join");
+				var b = PrimaryTableSource();
+				Expect("on");
+				a = new Join(location, JoinType.Full, a, b, Expression());
+				break;
+			}
+			default:
+				return a;
+			}
+		}
+	}
+
+	TableSource PrimaryTableSource() {
+		if (Eat('(')) {
+			var a = TableSource();
+			Expect(')');
+			return a;
+		}
 		var location = new Location(file, line);
-		return new TableSource(location, QualifiedName());
+		return new PrimaryTableSource(location, QualifiedName());
 	}
 
 	// Etc
