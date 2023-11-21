@@ -655,13 +655,18 @@ public sealed class Parser {
 			case "from":
 				Lex();
 				do
-					a.From.Add(Expression());
+					a.From.Add(TableSource());
 				while (Eat(','));
 				break;
 			default:
 				return a;
 			}
 		return a;
+	}
+
+	TableSource TableSource() {
+		var location = new Location(file, line);
+		return new TableSource(location, QualifiedName());
 	}
 
 	// Etc

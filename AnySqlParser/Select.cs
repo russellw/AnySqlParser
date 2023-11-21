@@ -46,7 +46,7 @@ public sealed class QuerySpecification: QueryExpression {
 
 	public List<SelectColumn> SelectList = new();
 
-	public List<Expression> From = new();
+	public List<TableSource> From = new();
 	public Expression? Where;
 	public Expression? GroupBy;
 	public Expression? Having;
