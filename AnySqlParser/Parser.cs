@@ -780,15 +780,32 @@ public sealed class Parser {
 
 	// Expressions
 	Expression Expression() {
-		return And();
+		var a = And();
+		for (;;) {
+			BinaryOp op;
+			switch (Keyword()) {
+			case "or":
+				op = BinaryOp.Or;
+				break;
+			default:
+				return a;
+			}
+			var location = new Location(file, line);
+			Lex();
+			a = new BinaryExpression(location, op, a, And());
+		}
 	}
 
 	Expression And() {
 		var a = Not();
-		var location = new Location(file, line);
-		if (Eat("and"))
-			return new BinaryExpression(location, BinaryOp.And, a, Not());
-		return a;
+		for (;;) {
+			var location = new Location(file, line);
+			if (Eat("and")) {
+				a = new BinaryExpression(location, BinaryOp.And, a, Not());
+				continue;
+			}
+			return a;
+		}
 	}
 
 	Expression Not() {
