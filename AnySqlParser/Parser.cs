@@ -888,6 +888,8 @@ public sealed class Parser {
 		switch (token) {
 		case kWord:
 			switch (tokenString.ToLowerInvariant()) {
+			case "select":
+				return new Subquery(location, QueryExpression());
 			case "exists": {
 				Lex();
 				Expect('(');

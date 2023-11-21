@@ -46,6 +46,14 @@ public sealed class StringLiteral: Expression {
 	}
 }
 
+public sealed class Subquery: Expression {
+	public QueryExpression Query;
+
+	public Subquery(Location location, QueryExpression query): base(location) {
+		Query = query;
+	}
+}
+
 public sealed class QualifiedName: Expression {
 	public List<string> Names = new();
 	public bool Star;
