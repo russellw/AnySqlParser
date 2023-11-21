@@ -48,6 +48,7 @@ public sealed class StringLiteral: Expression {
 
 public sealed class QualifiedName: Expression {
 	public List<string> Names = new();
+	public bool Star;
 
 	public QualifiedName(Location location): base(location) {
 	}

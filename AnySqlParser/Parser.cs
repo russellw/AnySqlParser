@@ -625,13 +625,12 @@ public sealed class Parser {
 		}
 
 		// Select list
-		if (!Eat('*'))
-			do {
-				var c = new SelectColumn(new Location(file, line), Expression());
-				if (Eat("as"))
-					c.ColumnAlias = Expression();
-				a.SelectList.Add(c);
-			} while (Eat(','));
+		do {
+			var c = new SelectColumn(new Location(file, line), Expression());
+			if (Eat("as"))
+				c.ColumnAlias = Expression();
+			a.SelectList.Add(c);
+		} while (Eat(','));
 
 		// Any keyword after the select list, must be a clause
 		while (token == kWord)
@@ -876,6 +875,7 @@ public sealed class Parser {
 			}
 			return QualifiedName();
 		case kQuotedName:
+		case '*':
 			return QualifiedName();
 		case '(': {
 			Lex();
@@ -890,9 +890,13 @@ public sealed class Parser {
 	QualifiedName QualifiedName() {
 		var location = new Location(file, line);
 		var a = new QualifiedName(location);
-		do
+		do {
+			if (Eat('*')) {
+				a.Star = true;
+				break;
+			}
 			a.Names.Add(Name());
-		while (Eat('.'));
+		} while (Eat('.'));
 		return a;
 	}
 
