@@ -1439,6 +1439,16 @@ public sealed class Parser {
 		case ' ':
 			Read();
 			goto loop;
+		case 'N':
+			if (reader.Peek() == '\'') {
+				// We are reading everything as Unicode anyway
+				// so the prefix has no special meaning
+				Read();
+				// Clang-format can't handle 'goto case'
+				goto loop;
+			}
+			Word();
+			return;
 		case 'A':
 		case 'B':
 		case 'C':
@@ -1452,7 +1462,6 @@ public sealed class Parser {
 		case 'K':
 		case 'L':
 		case 'M':
-		case 'N':
 		case 'O':
 		case 'P':
 		case 'Q':
