@@ -324,32 +324,37 @@ public sealed class Parser {
 				Lex();
 				var tableName = QualifiedName();
 				switch (Keyword()) {
+				case "with":
+					Lex();
+					switch (Keyword()) {
+					case "check":
+						Lex();
+						switch (Keyword()) {
+						case "constraint":
+							return AlterTableCheckConstraints(tableName, true);
+						}
+						break;
+					case "nocheck":
+						Lex();
+						switch (Keyword()) {
+						case "constraint":
+							return AlterTableCheckConstraints(tableName, false);
+						}
+						break;
+					}
+					break;
 				case "check":
 					Lex();
 					switch (Keyword()) {
-					case "constraint": {
-						Lex();
-						var a = new AlterTableCheckConstraints(location, tableName, true);
-						if (!Eat("all"))
-							do
-								a.ConstraintNames.Add(Name());
-							while (Eat(','));
-						return a;
-					}
+					case "constraint":
+						return AlterTableCheckConstraints(tableName, true);
 					}
 					break;
 				case "nocheck":
 					Lex();
 					switch (Keyword()) {
-					case "constraint": {
-						Lex();
-						var a = new AlterTableCheckConstraints(location, tableName, false);
-						if (!Eat("all"))
-							do
-								a.ConstraintNames.Add(Name());
-							while (Eat(','));
-						return a;
-					}
+					case "constraint":
+						return AlterTableCheckConstraints(tableName, false);
 					}
 					break;
 				}
@@ -650,6 +655,19 @@ public sealed class Parser {
 			a.ForReplication = false;
 		}
 		a.Expression = Expression();
+		return a;
+	}
+
+	// ALTER
+	AlterTableCheckConstraints AlterTableCheckConstraints(QualifiedName tableName, bool check) {
+		Debug.Assert(Keyword() == "constraint");
+		var location = new Location(file, line);
+		Lex();
+		var a = new AlterTableCheckConstraints(location, tableName, check);
+		if (!Eat("all"))
+			do
+				a.ConstraintNames.Add(Name());
+			while (Eat(','));
 		return a;
 	}
 
