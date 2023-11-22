@@ -3,12 +3,12 @@ using System.Text;
 
 namespace AnySqlParser {
 public sealed class Parser {
-	public static List<Statement> ParseFile(string file) {
+	public static IEnumerable<Statement> ParseFile(string file) {
 		using var reader = new StreamReader(file);
 		return ParseText(reader, file);
 	}
 
-	public static List<Statement> ParseText(TextReader reader, string file = "SQL", int line = 1) {
+	public static IEnumerable<Statement> ParseText(TextReader reader, string file = "SQL", int line = 1) {
 		var parser = new Parser(reader, file, line);
 		return parser.statements;
 	}

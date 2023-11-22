@@ -54,7 +54,7 @@ public class UnitTest1 {
 
 	[Fact]
 	public void SampleDB1() {
-		var statements = Parser.ParseFile("sql-server-samples/sampleDB1.sql");
+		var statements = ParseFile("sql-server-samples/sampleDB1.sql");
 		Assert.True(statements[0] is Table);
 	}
 
@@ -151,12 +151,16 @@ public class UnitTest1 {
 
 	[Fact]
 	public void Northwind() {
-		var statements = Parser.ParseFile("sql-server-samples/instnwnd.sql");
+		var statements = ParseFile("sql-server-samples/instnwnd.sql");
 		// Assert.True(statements.Count > 0);
 	}
 
+	static List<Statement> ParseFile(string file) {
+		return new List<Statement>(Parser.ParseFile(file));
+	}
+
 	static List<Statement> ParseText(string sql, string file = "SQL", int line = 1) {
-		return Parser.ParseText(new StringReader(sql), file, line);
+		return new List<Statement>(Parser.ParseText(new StringReader(sql), file, line));
 	}
 }
 }
