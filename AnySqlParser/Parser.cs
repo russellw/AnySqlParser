@@ -64,15 +64,12 @@ public sealed class Parser {
 		}
 		case "set":
 			Lex();
-			switch (token) {
-			case kWord: {
-				var a = new SetParameter(location);
-				a.Name = Name();
-				a.Value = Expression();
-				return a;
+			switch (Keyword()) {
+			case "identity_insert":
+				Lex();
+				return new SetIdentityInsert(location, QualifiedName(), OnOff());
 			}
-			}
-			throw ErrorToken("expected parameter");
+			return new SetGlobal(location, Name(), Expression());
 		case "begin":
 			Lex();
 			switch (Keyword()) {

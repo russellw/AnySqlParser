@@ -76,11 +76,23 @@ public sealed class Block: Statement {
 	}
 }
 
-public sealed class SetParameter: Statement {
-	public string Name = null!;
-	public Expression Value = null!;
+public sealed class SetGlobal: Statement {
+	public string Name;
+	public Expression Value;
 
-	public SetParameter(Location location): base(location) {
+	public SetGlobal(Location location, string name, Expression value): base(location) {
+		Name = name;
+		Value = value;
+	}
+}
+
+public sealed class SetIdentityInsert: Statement {
+	public QualifiedName Name;
+	public bool Value;
+
+	public SetIdentityInsert(Location location, QualifiedName name, bool value): base(location) {
+		Name = name;
+		Value = value;
 	}
 }
 
