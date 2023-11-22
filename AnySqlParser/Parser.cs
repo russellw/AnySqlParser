@@ -1556,6 +1556,7 @@ public sealed class Parser {
 			do
 				AppendRead(sb);
 			while (IsWordPart());
+		Debug.Assert(sb.Length > 0);
 		token = kNumber;
 		tokenString = sb.ToString();
 	}
