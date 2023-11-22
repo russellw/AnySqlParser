@@ -1196,26 +1196,30 @@ public sealed class Parser {
 		}
 		case '[': {
 			var line1 = line;
+			Read();
 			var sb = new StringBuilder();
-			for (var i = textIndex + 1; i < text.Length;) {
-				switch (text[i]) {
+			for (;;) {
+				switch (ch) {
+				case -1:
+					throw Error("unclosed [", line1);
 				case '\n':
 					line++;
 					break;
 				case ']':
-					if (text[i + 1] == ']') {
-						i += 2;
-						sb.Append(']');
-						continue;
+					Read();
+					switch (ch) {
+					case ']':
+						break;
+					default:
+						token = kQuotedName;
+						tokenString = sb.ToString();
+						return;
 					}
-					textIndex = i + 1;
-					token = kQuotedName;
-					tokenString = sb.ToString();
-					return;
+					break;
 				}
-				sb.Append(text[i++]);
+				sb.Append((char)ch);
+				Read();
 			}
-			throw Error("unclosed [", line1);
 		}
 		case '!':
 			Read();
