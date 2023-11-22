@@ -320,15 +320,16 @@ public sealed class Parser {
 		case "alter": {
 			Lex();
 			switch (Keyword()) {
-			case "table":
+			case "table": {
 				Lex();
+				var tableName = QualifiedName();
 				switch (Keyword()) {
 				case "check":
 					Lex();
 					switch (Keyword()) {
 					case "constraint": {
 						Lex();
-						var a = new AlterTableCheckConstraints(location, true);
+						var a = new AlterTableCheckConstraints(location, tableName, true);
 						if (!Eat("all"))
 							do
 								a.ConstraintNames.Add(Name());
@@ -342,7 +343,7 @@ public sealed class Parser {
 					switch (Keyword()) {
 					case "constraint": {
 						Lex();
-						var a = new AlterTableCheckConstraints(location, false);
+						var a = new AlterTableCheckConstraints(location, tableName, false);
 						if (!Eat("all"))
 							do
 								a.ConstraintNames.Add(Name());
@@ -353,6 +354,7 @@ public sealed class Parser {
 					break;
 				}
 				throw ErrorToken("unknown syntax");
+			}
 			}
 			throw ErrorToken("expected noun");
 		}
