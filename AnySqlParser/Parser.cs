@@ -271,35 +271,8 @@ public sealed class Parser {
 				a.Query = Select();
 				return a;
 			}
-			case "table": {
-				Lex();
-				var a = new Table(location, QualifiedName());
-				Expect('(');
-				do {
-					string? constraintName = null;
-					if (Eat("constraint"))
-						constraintName = Name();
-					switch (Keyword()) {
-					case "foreign":
-						a.ForeignKeys.Add(ForeignKey(constraintName));
-						break;
-					case "check":
-						a.Checks.Add(Check(constraintName));
-						break;
-					case "primary":
-					case "unique":
-						a.Keys.Add(Key(constraintName));
-						break;
-					default:
-						if (constraintName != null)
-							throw ErrorToken("expected constraint");
-						a.Columns.Add(Column());
-						break;
-					}
-				} while (Eat(','));
-				Expect(')');
-				return a;
-			}
+			case "table":
+				return Table();
 			}
 			throw ErrorToken("expected noun");
 		}
@@ -354,11 +327,44 @@ public sealed class Parser {
 	Procedure Procedure() {
 		Debug.Assert(Keyword() == "proc" || Keyword() == "procedure");
 		var location = new Location(file, line);
+		Lex();
 		var a = new Procedure(location);
 		return a;
 	}
 
 	// Table
+	Table Table() {
+		Debug.Assert(Keyword() == "table");
+		var location = new Location(file, line);
+		Lex();
+		var a = new Table(location, QualifiedName());
+		Expect('(');
+		do {
+			string? constraintName = null;
+			if (Eat("constraint"))
+				constraintName = Name();
+			switch (Keyword()) {
+			case "foreign":
+				a.ForeignKeys.Add(ForeignKey(constraintName));
+				break;
+			case "check":
+				a.Checks.Add(Check(constraintName));
+				break;
+			case "primary":
+			case "unique":
+				a.Keys.Add(Key(constraintName));
+				break;
+			default:
+				if (constraintName != null)
+					throw ErrorToken("expected constraint");
+				a.Columns.Add(Column());
+				break;
+			}
+		} while (Eat(','));
+		Expect(')');
+		return a;
+	}
+
 	Column Column() {
 		var location = new Location(file, line);
 		var a = new Column(location, Name());
