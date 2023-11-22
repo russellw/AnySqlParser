@@ -1294,14 +1294,12 @@ public sealed class Parser {
 			Read();
 			return;
 		case '-':
-			if (textIndex + 1 < text.Length && text[textIndex + 1] == '-') {
-				textIndex = text.IndexOf('\n', textIndex + 2);
-				if (textIndex < 0)
-					textIndex = text.Length;
+			Read();
+			switch (ch) {
+			case '-':
+				reader.ReadLine();
 				goto loop;
 			}
-			textIndex++;
-			token = ch;
 			return;
 		case '\n':
 			Read();
