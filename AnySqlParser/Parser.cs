@@ -34,6 +34,7 @@ public sealed class Parser {
 		this.reader = reader;
 		this.file = file;
 		this.line = line;
+		Read();
 		Lex();
 		while (token != -1) {
 			if (Eat("go"))
