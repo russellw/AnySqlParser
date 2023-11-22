@@ -1261,23 +1261,29 @@ public sealed class Parser {
 			}
 			return;
 		case '/':
-			if (textIndex + 1 < text.Length && text[textIndex + 1] == '*') {
+			Read();
+			switch (ch) {
+			case '*': {
 				var line1 = line;
-				var i = textIndex + 2;
 				for (;;) {
-					if (text.Length <= i + 1)
+					Read();
+					switch (ch) {
+					case -1:
 						throw Error("unclosed /*", line1);
-					if (text[i] == '\n')
+					case '\n':
 						line++;
-					else if (text[i] == '*' && text[i + 1] == '/')
 						break;
-					i++;
+					case '*':
+						if (reader.Peek() == '/') {
+							Read();
+							Read();
+							goto loop;
+						}
+						break;
+					}
 				}
-				textIndex = i + 2;
-				goto loop;
 			}
-			textIndex++;
-			token = ch;
+			}
 			return;
 		case ',':
 		case '=':
