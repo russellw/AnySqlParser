@@ -1097,9 +1097,6 @@ public sealed class Parser {
 				switch (ch) {
 				case -1:
 					throw Error("unclosed '", line1);
-				case '\n':
-					line++;
-					break;
 				case '\\':
 					switch (reader.Peek()) {
 					case '\'':
@@ -1132,9 +1129,6 @@ public sealed class Parser {
 				switch (ch) {
 				case -1:
 					throw Error("unclosed \"", line1);
-				case '\n':
-					line++;
-					break;
 				case '\\':
 					switch (reader.Peek()) {
 					case '"':
@@ -1167,9 +1161,6 @@ public sealed class Parser {
 				switch (ch) {
 				case -1:
 					throw Error("unclosed `", line1);
-				case '\n':
-					line++;
-					break;
 				case '\\':
 					switch (reader.Peek()) {
 					case '`':
@@ -1202,9 +1193,6 @@ public sealed class Parser {
 				switch (ch) {
 				case -1:
 					throw Error("unclosed [", line1);
-				case '\n':
-					line++;
-					break;
 				case ']':
 					Read();
 					switch (ch) {
@@ -1280,9 +1268,6 @@ public sealed class Parser {
 					switch (ch) {
 					case -1:
 						throw Error("unclosed /*", line1);
-					case '\n':
-						line++;
-						break;
 					case '*':
 						if (reader.Peek() == '/') {
 							Read();
@@ -1314,13 +1299,11 @@ public sealed class Parser {
 			switch (ch) {
 			case '-':
 				reader.ReadLine();
+				Read();
 				goto loop;
 			}
 			return;
 		case '\n':
-			Read();
-			line++;
-			goto loop;
 		case '\r':
 		case '\t':
 		case '\f':
@@ -1446,6 +1429,8 @@ public sealed class Parser {
 	}
 
 	void Read() {
+		if (ch == '\n')
+			line++;
 		ch = reader.Read();
 	}
 
