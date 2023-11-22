@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 
 namespace AnySqlParser {
@@ -733,6 +734,14 @@ public sealed class Parser {
 		var a = new PrimaryTableSource(location, QualifiedName());
 		if (Eat("as"))
 			a.TableAlias = Name();
+		return a;
+	}
+
+	// Procedures
+	Procedure Procedure() {
+		Debug.Assert(Keyword() == "proc" || Keyword() == "procedure");
+		var location = new Location(file, line);
+		var a = new Procedure(location);
 		return a;
 	}
 
