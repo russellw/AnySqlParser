@@ -66,10 +66,9 @@ public sealed class Parser {
 			Lex();
 			switch (token) {
 			case kWord: {
-				Lex();
 				var a = new SetParameter(location);
 				a.Name = Name();
-				a.Value = Name();
+				a.Value = Expression();
 				return a;
 			}
 			}

@@ -78,7 +78,7 @@ public sealed class Block: Statement {
 
 public sealed class SetParameter: Statement {
 	public string Name = null!;
-	public string Value = null!;
+	public Expression Value = null!;
 
 	public SetParameter(Location location): base(location) {
 	}
