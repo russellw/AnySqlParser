@@ -1087,6 +1087,7 @@ public sealed class Parser {
 	// Tokenizer
 	void Lex() {
 	loop:
+		token = ch;
 		switch (ch) {
 		case '\'': {
 			var line1 = line;
@@ -1211,53 +1212,53 @@ public sealed class Parser {
 			throw Error("unclosed [", line1);
 		}
 		case '!':
-			if (textIndex + 1 < text.Length)
-				switch (text[textIndex + 1]) {
-				case '=':
-					textIndex += 2;
-					token = kNotEqual;
-					return;
-				case '<':
-					// https://stackoverflow.com/questions/77475517/what-are-the-t-sql-and-operators-for
-					textIndex += 2;
-					token = kGreaterEqual;
-					return;
-				case '>':
-					textIndex += 2;
-					token = kLessEqual;
-					return;
-				}
+			Read();
+			switch (ch) {
+			case '=':
+				Read();
+				token = kNotEqual;
+				return;
+			case '<':
+				// https://stackoverflow.com/questions/77475517/what-are-the-t-sql-and-operators-for
+				Read();
+				token = kGreaterEqual;
+				return;
+			case '>':
+				Read();
+				token = kLessEqual;
+				return;
+			}
 			break;
 		case '|':
-			if (textIndex + 1 < text.Length && text[textIndex + 1] == '|') {
-				textIndex += 2;
+			Read();
+			switch (ch) {
+			case '|':
+				Read();
 				token = kDoublePipe;
 				return;
 			}
 			break;
 		case '>':
-			if (textIndex + 1 < text.Length && text[textIndex + 1] == '=') {
-				textIndex += 2;
+			Read();
+			switch (ch) {
+			case '=':
+				Read();
 				token = kGreaterEqual;
 				return;
 			}
-			textIndex++;
-			token = ch;
 			return;
 		case '<':
-			if (textIndex + 1 < text.Length)
-				switch (text[textIndex + 1]) {
-				case '=':
-					textIndex += 2;
-					token = kLessEqual;
-					return;
-				case '>':
-					textIndex += 2;
-					token = kNotEqual;
-					return;
-				}
-			textIndex++;
-			token = ch;
+			Read();
+			switch (ch) {
+			case '=':
+				Read();
+				token = kLessEqual;
+				return;
+			case '>':
+				Read();
+				token = kNotEqual;
+				return;
+			}
 			return;
 		case '/':
 			if (textIndex + 1 < text.Length && text[textIndex + 1] == '*') {
@@ -1290,7 +1291,6 @@ public sealed class Parser {
 		case '~':
 		case '*':
 		case -1:
-			token = ch;
 			Read();
 			return;
 		case '-':
