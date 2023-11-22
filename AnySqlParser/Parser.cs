@@ -1054,6 +1054,9 @@ public sealed class Parser {
 	Expression Primary() {
 		var location = new Location(file, line);
 		switch (token) {
+		case '@':
+			Lex();
+			return new ParameterRef(location, Name());
 		case kStringLiteral: {
 			var a = new StringLiteral(location, tokenString);
 			Lex();
