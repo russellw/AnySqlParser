@@ -333,6 +333,14 @@ public sealed class Parser {
 		var a = new Procedure(location, QualifiedName());
 		if (Eat(';'))
 			a.Number = Int();
+
+		// Parameters
+		if (token == '@')
+			do
+				a.Parameters.Add(Parameter());
+			while (Eat(','));
+
+		// Options
 		if (Eat("with"))
 			do
 				switch (Keyword()) {
@@ -359,6 +367,26 @@ public sealed class Parser {
 		else
 			while (!Eat("go"))
 				a.Body.Add(StatementSemicolon());
+		return a;
+	}
+
+	Parameter Parameter() {
+		var location = new Location(file, line);
+		Expect('@');
+		var a = new Parameter(location, Name(), QualifiedName());
+		if (Eat("varying"))
+			a.Varying = true;
+		if (Eat("null"))
+			a.Nullable = true;
+		if (Eat('='))
+			a.Default = Expression();
+		switch (Keyword()) {
+		case "out":
+		case "output":
+			Lex();
+			a.Out = true;
+			break;
+		}
 		return a;
 	}
 
@@ -1328,6 +1356,7 @@ public sealed class Parser {
 		case ')':
 		case '~':
 		case '*':
+		case '@':
 		case -1:
 			Read();
 			return;
