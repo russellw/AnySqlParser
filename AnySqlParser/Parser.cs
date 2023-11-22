@@ -317,6 +317,45 @@ public sealed class Parser {
 			}
 			}
 			throw ErrorToken("expected noun");
+		case "alter": {
+			Lex();
+			switch (Keyword()) {
+			case "table":
+				Lex();
+				switch (Keyword()) {
+				case "check":
+					Lex();
+					switch (Keyword()) {
+					case "constraint": {
+						Lex();
+						var a = new AlterTableCheckConstraints(location, true);
+						if (!Eat("all"))
+							do
+								a.ConstraintNames.Add(Name());
+							while (Eat(','));
+						return a;
+					}
+					}
+					break;
+				case "nocheck":
+					Lex();
+					switch (Keyword()) {
+					case "constraint": {
+						Lex();
+						var a = new AlterTableCheckConstraints(location, false);
+						if (!Eat("all"))
+							do
+								a.ConstraintNames.Add(Name());
+							while (Eat(','));
+						return a;
+					}
+					}
+					break;
+				}
+				throw ErrorToken("unknown syntax");
+			}
+			throw ErrorToken("expected noun");
+		}
 		}
 		throw ErrorToken("expected statement");
 	}

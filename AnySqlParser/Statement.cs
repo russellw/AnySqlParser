@@ -104,6 +104,15 @@ public sealed class View: Statement {
 	}
 }
 
+public sealed class AlterTableCheckConstraints: Statement {
+	public bool Check;
+	public List<string> ConstraintNames = new();
+
+	public AlterTableCheckConstraints(Location location, bool check): base(location) {
+		Check = check;
+	}
+}
+
 public sealed class Index: Statement {
 	public bool Unique;
 	public bool? Clustered;
