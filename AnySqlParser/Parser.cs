@@ -347,7 +347,16 @@ public sealed class Parser {
 		throw ErrorToken("expected statement");
 	}
 
-	// Tables
+	// CREATE
+	// Procedure
+	Procedure Procedure() {
+		Debug.Assert(Keyword() == "proc" || Keyword() == "procedure");
+		var location = new Location(file, line);
+		var a = new Procedure(location);
+		return a;
+	}
+
+	// Table
 	Column Column() {
 		var location = new Location(file, line);
 		var a = new Column(location, Name());
@@ -540,7 +549,7 @@ public sealed class Parser {
 		return a;
 	}
 
-	// Queries
+	// SELECT
 	Select Select() {
 		var location = new Location(file, line);
 		var a = new Select(location, QueryExpression());
@@ -734,14 +743,6 @@ public sealed class Parser {
 		var a = new PrimaryTableSource(location, QualifiedName());
 		if (Eat("as"))
 			a.TableAlias = Name();
-		return a;
-	}
-
-	// Procedures
-	Procedure Procedure() {
-		Debug.Assert(Keyword() == "proc" || Keyword() == "procedure");
-		var location = new Location(file, line);
-		var a = new Procedure(location);
 		return a;
 	}
 
