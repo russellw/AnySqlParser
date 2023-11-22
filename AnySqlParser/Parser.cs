@@ -271,6 +271,9 @@ public sealed class Parser {
 				a.Query = Select();
 				return a;
 			}
+			case "proc":
+			case "procedure":
+				return Procedure();
 			case "table":
 				return Table();
 			}
@@ -328,7 +331,35 @@ public sealed class Parser {
 		Debug.Assert(Keyword() == "proc" || Keyword() == "procedure");
 		var location = new Location(file, line);
 		Lex();
-		var a = new Procedure(location);
+		var a = new Procedure(location, QualifiedName());
+		if (Eat(';'))
+			a.Number = Int();
+		if (Eat("with"))
+			do
+				switch (Keyword()) {
+				case "encryption":
+					a.Encryption = true;
+					break;
+				case "recompile":
+					a.Recompile = true;
+					break;
+				default:
+					throw ErrorToken("expected procedure option");
+				}
+			while (Eat(','));
+		if (Eat("for")) {
+			Expect("replication");
+			a.ForReplication = true;
+		}
+
+		// Body
+		Expect("as");
+		if (Eat("begin"))
+			while (!Eat("end"))
+				a.Body.Add(StatementSemicolon());
+		else
+			while (!Eat("go"))
+				a.Body.Add(StatementSemicolon());
 		return a;
 	}
 
