@@ -12,6 +12,9 @@ public class UnitTest1 {
 	public void LineComment() {
 		Assert.Empty(ParseText("--"));
 		Assert.Empty(ParseText("--\n--\n"));
+
+		var e = Assert.Throws<FormatException>(() => ParseText("--\n--\n!"));
+		Assert.Matches(".*:3: ", e.Message);
 	}
 
 	[Fact]

@@ -1300,6 +1300,7 @@ public sealed class Parser {
 			switch (ch) {
 			case '-':
 				reader.ReadLine();
+				line++;
 				Read();
 				goto loop;
 			}
