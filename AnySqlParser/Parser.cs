@@ -1101,24 +1101,24 @@ public sealed class Parser {
 					line++;
 					break;
 				case '\\':
-					switch (text[i + 1]) {
+					switch (reader.Peek()) {
 					case '\'':
 					case '\\':
-						sb.Append(text[i + 1]);
-						i += 2;
-						continue;
+						Read();
+						break;
 					}
 					break;
 				case '\'':
-					if (text[i + 1] == '\'') {
-						i += 2;
-						sb.Append('\'');
-						continue;
+					Read();
+					switch (ch) {
+					case '\'':
+						break;
+					default:
+						token = kStringLiteral;
+						tokenString = sb.ToString();
+						return;
 					}
-					textIndex = i + 1;
-					token = kStringLiteral;
-					tokenString = sb.ToString();
-					return;
+					break;
 				}
 				sb.Append((char)ch);
 				Read();
