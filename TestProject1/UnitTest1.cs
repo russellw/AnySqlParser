@@ -4,49 +4,49 @@ namespace AnySqlParserTest {
 public class UnitTest1 {
 	[Fact]
 	public void Blank() {
-		Assert.Empty(Parser.ParseText(""));
-		Assert.Empty(Parser.ParseText("\t\n"));
+		Assert.Empty(ParseText(""));
+		Assert.Empty(ParseText("\t\n"));
 	}
 
 	[Fact]
 	public void LineComment() {
-		Assert.Empty(Parser.ParseText("--"));
-		Assert.Empty(Parser.ParseText("--\n--\n"));
+		Assert.Empty(ParseText("--"));
+		Assert.Empty(ParseText("--\n--\n"));
 	}
 
 	[Fact]
 	public void BlockComment() {
-		Assert.Empty(Parser.ParseText("/**/"));
-		Assert.Empty(Parser.ParseText(" /*.*/ "));
-		Assert.Empty(Parser.ParseText("/**************/"));
-		Assert.Empty(Parser.ParseText("/*////////////*/"));
+		Assert.Empty(ParseText("/**/"));
+		Assert.Empty(ParseText(" /*.*/ "));
+		Assert.Empty(ParseText("/**************/"));
+		Assert.Empty(ParseText("/*////////////*/"));
 
-		var e = Assert.Throws<FormatException>(() => Parser.ParseText("/*/"));
+		var e = Assert.Throws<FormatException>(() => ParseText("/*/"));
 		Assert.Matches(".*:1: ", e.Message);
 
-		e = Assert.Throws<FormatException>(() => Parser.ParseText("/*/", "foo", 5));
+		e = Assert.Throws<FormatException>(() => ParseText("/*/", "foo", 5));
 		Assert.Matches("foo:5: ", e.Message);
 
-		e = Assert.Throws<FormatException>(() => Parser.ParseText("\n\n/*/", "foo", 5));
+		e = Assert.Throws<FormatException>(() => ParseText("\n\n/*/", "foo", 5));
 		Assert.Matches("foo:7: ", e.Message);
 	}
 
 	[Fact]
 	public void StrayCharacter() {
-		Assert.Throws<FormatException>(() => Parser.ParseText("!"));
-		Assert.Throws<FormatException>(() => Parser.ParseText("|"));
+		Assert.Throws<FormatException>(() => ParseText("!"));
+		Assert.Throws<FormatException>(() => ParseText("|"));
 	}
 
 	[Fact]
 	public void StringLiteral() {
-		Assert.Throws<FormatException>(() => Parser.ParseText("'"));
+		Assert.Throws<FormatException>(() => ParseText("'"));
 	}
 
 	[Fact]
 	public void QuotedName() {
-		Assert.Throws<FormatException>(() => Parser.ParseText("\"..."));
-		Assert.Throws<FormatException>(() => Parser.ParseText("`"));
-		Assert.Throws<FormatException>(() => Parser.ParseText("["));
+		Assert.Throws<FormatException>(() => ParseText("\"..."));
+		Assert.Throws<FormatException>(() => ParseText("`"));
+		Assert.Throws<FormatException>(() => ParseText("["));
 	}
 
 	[Fact]
@@ -77,62 +77,62 @@ public class UnitTest1 {
 
 	[Fact]
 	public void Select() {
-		var statements = Parser.ParseText("select 1");
+		var statements = ParseText("select 1");
 		var a = Selected(statements);
 		Assert.True(a is Number);
 
-		statements = Parser.ParseText("select ~1");
+		statements = ParseText("select ~1");
 		a = Selected(statements);
 		Assert.True(a is UnaryExpression);
 		var L = new Location("", 0);
 		Assert.True(a.Eq(new UnaryExpression(L, UnaryOp.BitNot, new Number(L, "1"))));
 
-		statements = Parser.ParseText("select -1");
+		statements = ParseText("select -1");
 		a = Selected(statements);
 		Assert.True(a is UnaryExpression);
 		Assert.True(a.Eq(new UnaryExpression(L, UnaryOp.Minus, new Number(L, "1"))));
 
-		a = Selected(Parser.ParseText("select 1*2"));
+		a = Selected(ParseText("select 1*2"));
 		Expression b;
 		b = new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "1"), new Number(L, "2"));
 		Assert.True(a.Eq(b));
 
-		a = Selected(Parser.ParseText("select 1*2*3"));
+		a = Selected(ParseText("select 1*2*3"));
 		b = new BinaryExpression(L,
 								 BinaryOp.Multiply,
 								 new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "1"), new Number(L, "2")),
 								 new Number(L, "3"));
 		Assert.True(a.Eq(b));
 
-		a = Selected(Parser.ParseText("select (1*2)*3"));
+		a = Selected(ParseText("select (1*2)*3"));
 		b = new BinaryExpression(L,
 								 BinaryOp.Multiply,
 								 new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "1"), new Number(L, "2")),
 								 new Number(L, "3"));
 		Assert.True(a.Eq(b));
 
-		a = Selected(Parser.ParseText("select 1*(2*3)"));
+		a = Selected(ParseText("select 1*(2*3)"));
 		b = new BinaryExpression(L,
 								 BinaryOp.Multiply,
 								 new Number(L, "1"),
 								 new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "2"), new Number(L, "3")));
 		Assert.True(a.Eq(b));
 
-		a = Selected(Parser.ParseText("select 1*2+3"));
+		a = Selected(ParseText("select 1*2+3"));
 		b = new BinaryExpression(L,
 								 BinaryOp.Add,
 								 new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "1"), new Number(L, "2")),
 								 new Number(L, "3"));
 		Assert.True(a.Eq(b));
 
-		a = Selected(Parser.ParseText("select 1+2*3"));
+		a = Selected(ParseText("select 1+2*3"));
 		b = new BinaryExpression(L,
 								 BinaryOp.Add,
 								 new Number(L, "1"),
 								 new BinaryExpression(L, BinaryOp.Multiply, new Number(L, "2"), new Number(L, "3")));
 		Assert.True(a.Eq(b));
 
-		a = Selected(Parser.ParseText("select 1=2*3"));
+		a = Selected(ParseText("select 1=2*3"));
 		b = new BinaryExpression(L,
 								 BinaryOp.Equal,
 								 new Number(L, "1"),
@@ -150,6 +150,10 @@ public class UnitTest1 {
 	public void Northwind() {
 		var statements = Parser.ParseFile("sql-server-samples/instnwnd.sql");
 		// Assert.True(statements.Count > 0);
+	}
+
+	static List<Statement> ParseText(string sql, string file = "SQL", int line = 1) {
+		return Parser.ParseText(new StringReader(sql), file, line);
 	}
 }
 }
