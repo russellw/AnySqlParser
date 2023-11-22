@@ -156,11 +156,11 @@ public class UnitTest1 {
 	}
 
 	static List<Statement> ParseFile(string file) {
-		return new List<Statement>(Parser.ParseFile(file));
+		return new List<Statement>(Parser.Parse(file));
 	}
 
 	static List<Statement> ParseText(string sql, string file = "SQL", int line = 1) {
-		return new List<Statement>(Parser.ParseText(new StringReader(sql), file, line));
+		return new List<Statement>(Parser.Parse(new StringReader(sql), file, line));
 	}
 }
 }

@@ -3,14 +3,14 @@ using System.Text;
 
 namespace AnySqlParser {
 public sealed class Parser {
-	public static IEnumerable<Statement> ParseFile(string file) {
+	public static IEnumerable<Statement> Parse(string file) {
 		using var reader = new StreamReader(file);
 		var parser = new Parser(reader, file, 1);
 		while (parser.token != -1)
 			yield return parser.StatementSemicolon();
 	}
 
-	public static IEnumerable<Statement> ParseText(TextReader reader, string file = "SQL", int line = 1) {
+	public static IEnumerable<Statement> Parse(TextReader reader, string file = "SQL", int line = 1) {
 		var parser = new Parser(reader, file, line);
 		while (parser.token != -1)
 			yield return parser.StatementSemicolon();
