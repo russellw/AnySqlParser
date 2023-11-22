@@ -5,12 +5,15 @@ namespace AnySqlParser {
 public sealed class Parser {
 	public static IEnumerable<Statement> ParseFile(string file) {
 		using var reader = new StreamReader(file);
-		return ParseText(reader, file);
+		var parser = new Parser(reader, file, 1);
+		while (parser.token != -1)
+			yield return parser.StatementSemicolon();
 	}
 
 	public static IEnumerable<Statement> ParseText(TextReader reader, string file = "SQL", int line = 1) {
 		var parser = new Parser(reader, file, line);
-		return parser.statements;
+		while (parser.token != -1)
+			yield return parser.StatementSemicolon();
 	}
 
 	const int kDoublePipe = -2;
@@ -28,7 +31,6 @@ public sealed class Parser {
 	int ch;
 	int token;
 	string tokenString = null!;
-	readonly List<Statement> statements = new();
 
 	Parser(TextReader reader, string file, int line) {
 		this.reader = reader;
@@ -36,8 +38,6 @@ public sealed class Parser {
 		this.line = line;
 		Read();
 		Lex();
-		while (token != -1)
-			statements.Add(StatementSemicolon());
 	}
 
 	// Statements
