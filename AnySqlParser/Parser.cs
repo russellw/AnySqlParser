@@ -1086,324 +1086,323 @@ public sealed class Parser {
 
 	// Tokenizer
 	void Lex() {
-		for (;;) {
-			switch (ch) {
-			case '\'': {
-				var line1 = line;
-				Read();
-				var sb = new StringBuilder();
-				for (;;) {
-					switch (ch) {
-					case -1:
-						throw Error("unclosed '", line1);
-					case '\n':
-						line++;
-						break;
-					case '\\':
-						switch (text[i + 1]) {
-						case '\'':
-						case '\\':
-							sb.Append(text[i + 1]);
-							i += 2;
-							continue;
-						}
-						break;
+	loop:
+		switch (ch) {
+		case '\'': {
+			var line1 = line;
+			Read();
+			var sb = new StringBuilder();
+			for (;;) {
+				switch (ch) {
+				case -1:
+					throw Error("unclosed '", line1);
+				case '\n':
+					line++;
+					break;
+				case '\\':
+					switch (text[i + 1]) {
 					case '\'':
-						if (text[i + 1] == '\'') {
-							i += 2;
-							sb.Append('\'');
-							continue;
-						}
-						textIndex = i + 1;
-						token = kStringLiteral;
-						tokenString = sb.ToString();
-						return;
-					}
-					sb.Append((char)ch);
-					Read();
-				}
-			}
-			case '"': {
-				var line1 = line;
-				var sb = new StringBuilder();
-				for (var i = textIndex + 1; i < text.Length;) {
-					switch (text[i]) {
-					case '\n':
-						line++;
-						break;
 					case '\\':
-						switch (text[i + 1]) {
-						case '"':
-						case '\\':
-							sb.Append(text[i + 1]);
-							i += 2;
-							continue;
-						}
-						break;
-					case '"':
-						if (text[i + 1] == '"') {
-							i += 2;
-							sb.Append('"');
-							continue;
-						}
-						textIndex = i + 1;
-						token = kQuotedName;
-						tokenString = sb.ToString();
-						return;
+						sb.Append(text[i + 1]);
+						i += 2;
+						continue;
 					}
-					sb.Append(text[i++]);
-				}
-				throw Error("unclosed \"", line1);
-			}
-			case '`': {
-				var line1 = line;
-				var sb = new StringBuilder();
-				for (var i = textIndex + 1; i < text.Length;) {
-					switch (text[i]) {
-					case '\n':
-						line++;
-						break;
-					case '\\':
-						switch (text[i + 1]) {
-						case '`':
-						case '\\':
-							sb.Append(text[i + 1]);
-							i += 2;
-							continue;
-						}
-						break;
-					case '`':
-						if (text[i + 1] == '`') {
-							i += 2;
-							sb.Append('`');
-							continue;
-						}
-						textIndex = i + 1;
-						token = kQuotedName;
-						tokenString = sb.ToString();
-						return;
+					break;
+				case '\'':
+					if (text[i + 1] == '\'') {
+						i += 2;
+						sb.Append('\'');
+						continue;
 					}
-					sb.Append(text[i++]);
-				}
-				throw Error("unclosed `", line1);
-			}
-			case '[': {
-				var line1 = line;
-				var sb = new StringBuilder();
-				for (var i = textIndex + 1; i < text.Length;) {
-					switch (text[i]) {
-					case '\n':
-						line++;
-						break;
-					case ']':
-						if (text[i + 1] == ']') {
-							i += 2;
-							sb.Append(']');
-							continue;
-						}
-						textIndex = i + 1;
-						token = kQuotedName;
-						tokenString = sb.ToString();
-						return;
-					}
-					sb.Append(text[i++]);
-				}
-				throw Error("unclosed [", line1);
-			}
-			case '!':
-				if (textIndex + 1 < text.Length)
-					switch (text[textIndex + 1]) {
-					case '=':
-						textIndex += 2;
-						token = kNotEqual;
-						return;
-					case '<':
-						// https://stackoverflow.com/questions/77475517/what-are-the-t-sql-and-operators-for
-						textIndex += 2;
-						token = kGreaterEqual;
-						return;
-					case '>':
-						textIndex += 2;
-						token = kLessEqual;
-						return;
-					}
-				break;
-			case '|':
-				if (textIndex + 1 < text.Length && text[textIndex + 1] == '|') {
-					textIndex += 2;
-					token = kDoublePipe;
+					textIndex = i + 1;
+					token = kStringLiteral;
+					tokenString = sb.ToString();
 					return;
 				}
-				break;
-			case '>':
-				if (textIndex + 1 < text.Length && text[textIndex + 1] == '=') {
+				sb.Append((char)ch);
+				Read();
+			}
+		}
+		case '"': {
+			var line1 = line;
+			var sb = new StringBuilder();
+			for (var i = textIndex + 1; i < text.Length;) {
+				switch (text[i]) {
+				case '\n':
+					line++;
+					break;
+				case '\\':
+					switch (text[i + 1]) {
+					case '"':
+					case '\\':
+						sb.Append(text[i + 1]);
+						i += 2;
+						continue;
+					}
+					break;
+				case '"':
+					if (text[i + 1] == '"') {
+						i += 2;
+						sb.Append('"');
+						continue;
+					}
+					textIndex = i + 1;
+					token = kQuotedName;
+					tokenString = sb.ToString();
+					return;
+				}
+				sb.Append(text[i++]);
+			}
+			throw Error("unclosed \"", line1);
+		}
+		case '`': {
+			var line1 = line;
+			var sb = new StringBuilder();
+			for (var i = textIndex + 1; i < text.Length;) {
+				switch (text[i]) {
+				case '\n':
+					line++;
+					break;
+				case '\\':
+					switch (text[i + 1]) {
+					case '`':
+					case '\\':
+						sb.Append(text[i + 1]);
+						i += 2;
+						continue;
+					}
+					break;
+				case '`':
+					if (text[i + 1] == '`') {
+						i += 2;
+						sb.Append('`');
+						continue;
+					}
+					textIndex = i + 1;
+					token = kQuotedName;
+					tokenString = sb.ToString();
+					return;
+				}
+				sb.Append(text[i++]);
+			}
+			throw Error("unclosed `", line1);
+		}
+		case '[': {
+			var line1 = line;
+			var sb = new StringBuilder();
+			for (var i = textIndex + 1; i < text.Length;) {
+				switch (text[i]) {
+				case '\n':
+					line++;
+					break;
+				case ']':
+					if (text[i + 1] == ']') {
+						i += 2;
+						sb.Append(']');
+						continue;
+					}
+					textIndex = i + 1;
+					token = kQuotedName;
+					tokenString = sb.ToString();
+					return;
+				}
+				sb.Append(text[i++]);
+			}
+			throw Error("unclosed [", line1);
+		}
+		case '!':
+			if (textIndex + 1 < text.Length)
+				switch (text[textIndex + 1]) {
+				case '=':
+					textIndex += 2;
+					token = kNotEqual;
+					return;
+				case '<':
+					// https://stackoverflow.com/questions/77475517/what-are-the-t-sql-and-operators-for
 					textIndex += 2;
 					token = kGreaterEqual;
 					return;
+				case '>':
+					textIndex += 2;
+					token = kLessEqual;
+					return;
 				}
-				textIndex++;
-				token = ch;
+			break;
+		case '|':
+			if (textIndex + 1 < text.Length && text[textIndex + 1] == '|') {
+				textIndex += 2;
+				token = kDoublePipe;
 				return;
-			case '<':
-				if (textIndex + 1 < text.Length)
-					switch (text[textIndex + 1]) {
-					case '=':
-						textIndex += 2;
-						token = kLessEqual;
-						return;
-					case '>':
-						textIndex += 2;
-						token = kNotEqual;
-						return;
-					}
-				textIndex++;
-				token = ch;
+			}
+			break;
+		case '>':
+			if (textIndex + 1 < text.Length && text[textIndex + 1] == '=') {
+				textIndex += 2;
+				token = kGreaterEqual;
 				return;
-			case '/':
-				if (textIndex + 1 < text.Length && text[textIndex + 1] == '*') {
-					var line1 = line;
-					var i = textIndex + 2;
-					for (;;) {
-						if (text.Length <= i + 1)
-							throw Error("unclosed /*", line1);
-						if (text[i] == '\n')
-							line++;
-						else if (text[i] == '*' && text[i + 1] == '/')
-							break;
-						i++;
-					}
-					textIndex = i + 2;
-					continue;
+			}
+			textIndex++;
+			token = ch;
+			return;
+		case '<':
+			if (textIndex + 1 < text.Length)
+				switch (text[textIndex + 1]) {
+				case '=':
+					textIndex += 2;
+					token = kLessEqual;
+					return;
+				case '>':
+					textIndex += 2;
+					token = kNotEqual;
+					return;
 				}
-				textIndex++;
-				token = ch;
-				return;
-			case ',':
-			case '=':
-			case '&':
-			case ';':
-			case '.':
-			case '+':
-			case '%':
-			case '(':
-			case ')':
-			case '~':
-			case '*':
-			case -1:
-				token = ch;
-				Read();
-				return;
-			case '-':
-				if (textIndex + 1 < text.Length && text[textIndex + 1] == '-') {
-					textIndex = text.IndexOf('\n', textIndex + 2);
-					if (textIndex < 0)
-						textIndex = text.Length;
-					continue;
+			textIndex++;
+			token = ch;
+			return;
+		case '/':
+			if (textIndex + 1 < text.Length && text[textIndex + 1] == '*') {
+				var line1 = line;
+				var i = textIndex + 2;
+				for (;;) {
+					if (text.Length <= i + 1)
+						throw Error("unclosed /*", line1);
+					if (text[i] == '\n')
+						line++;
+					else if (text[i] == '*' && text[i + 1] == '/')
+						break;
+					i++;
 				}
-				textIndex++;
-				token = ch;
-				return;
-			case '\n':
-				textIndex++;
-				line++;
-				continue;
-			case '\r':
-			case '\t':
-			case '\f':
-			case '\v':
-			case ' ':
-				textIndex++;
-				continue;
-			case 'A':
-			case 'B':
-			case 'C':
-			case 'D':
-			case 'E':
-			case 'F':
-			case 'G':
-			case 'H':
-			case 'I':
-			case 'J':
-			case 'K':
-			case 'L':
-			case 'M':
-			case 'N':
-			case 'O':
-			case 'P':
-			case 'Q':
-			case 'R':
-			case 'S':
-			case 'T':
-			case 'U':
-			case 'V':
-			case 'W':
-			case 'X':
-			case 'Y':
-			case 'Z':
-			case '_':
-			case 'a':
-			case 'b':
-			case 'c':
-			case 'd':
-			case 'e':
-			case 'f':
-			case 'g':
-			case 'h':
-			case 'i':
-			case 'j':
-			case 'k':
-			case 'l':
-			case 'm':
-			case 'n':
-			case 'o':
-			case 'p':
-			case 'q':
-			case 'r':
-			case 's':
-			case 't':
-			case 'u':
-			case 'v':
-			case 'w':
-			case 'x':
-			case 'y':
-			case 'z':
+				textIndex = i + 2;
+				goto loop;
+			}
+			textIndex++;
+			token = ch;
+			return;
+		case ',':
+		case '=':
+		case '&':
+		case ';':
+		case '.':
+		case '+':
+		case '%':
+		case '(':
+		case ')':
+		case '~':
+		case '*':
+		case -1:
+			token = ch;
+			Read();
+			return;
+		case '-':
+			if (textIndex + 1 < text.Length && text[textIndex + 1] == '-') {
+				textIndex = text.IndexOf('\n', textIndex + 2);
+				if (textIndex < 0)
+					textIndex = text.Length;
+				goto loop;
+			}
+			textIndex++;
+			token = ch;
+			return;
+		case '\n':
+			Read();
+			line++;
+			goto loop;
+		case '\r':
+		case '\t':
+		case '\f':
+		case '\v':
+		case ' ':
+			Read();
+			goto loop;
+		case 'A':
+		case 'B':
+		case 'C':
+		case 'D':
+		case 'E':
+		case 'F':
+		case 'G':
+		case 'H':
+		case 'I':
+		case 'J':
+		case 'K':
+		case 'L':
+		case 'M':
+		case 'N':
+		case 'O':
+		case 'P':
+		case 'Q':
+		case 'R':
+		case 'S':
+		case 'T':
+		case 'U':
+		case 'V':
+		case 'W':
+		case 'X':
+		case 'Y':
+		case 'Z':
+		case '_':
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+		case 'f':
+		case 'g':
+		case 'h':
+		case 'i':
+		case 'j':
+		case 'k':
+		case 'l':
+		case 'm':
+		case 'n':
+		case 'o':
+		case 'p':
+		case 'q':
+		case 'r':
+		case 's':
+		case 't':
+		case 'u':
+		case 'v':
+		case 'w':
+		case 'x':
+		case 'y':
+		case 'z':
+			Word();
+			return;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			Number();
+			return;
+		default:
+			// Common letters are handled in the switch for speed
+			// but there are other letters in Unicode
+			if (char.IsLetter((char)ch)) {
 				Word();
 				return;
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9':
+			}
+
+			// Likewise digits
+			if (char.IsDigit((char)ch)) {
 				Number();
 				return;
-			default:
-				// Common letters are handled in the switch for speed
-				// but there are other letters in Unicode
-				if (char.IsLetter(ch)) {
-					Word();
-					return;
-				}
-
-				// Likewise digits
-				if (char.IsDigit(ch)) {
-					Number();
-					return;
-				}
-
-				// And whitespace
-				if (char.IsWhiteSpace(ch)) {
-					Read();
-					continue;
-				}
-				break;
 			}
-			throw Error("stray " + (char)ch);
+
+			// And whitespace
+			if (char.IsWhiteSpace((char)ch)) {
+				Read();
+				goto loop;
+			}
+			break;
 		}
+		throw Error("stray " + (char)ch);
 	}
 
 	void Word() {
