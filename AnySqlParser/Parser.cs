@@ -4,11 +4,12 @@ using System.Text;
 namespace AnySqlParser {
 public sealed class Parser {
 	public static List<Statement> ParseFile(string file) {
-		return ParseText(File.ReadAllText(file), file);
+		using var reader = new StreamReader(file);
+		return ParseText(reader, file);
 	}
 
-	public static List<Statement> ParseText(string text, string file = "SQL", int line = 1) {
-		var parser = new Parser(text, file, line);
+	public static List<Statement> ParseText(TextReader reader, string file = "SQL", int line = 1) {
+		var parser = new Parser(reader, file, line);
 		return parser.statements;
 	}
 
@@ -21,16 +22,16 @@ public sealed class Parser {
 	const int kStringLiteral = -8;
 	const int kWord = -9;
 
-	readonly string text;
+	readonly TextReader reader;
 	readonly string file;
 	int line;
-	int textIndex;
+	int ch;
 	int token;
 	string tokenString = null!;
 	readonly List<Statement> statements = new();
 
-	Parser(string text, string file, int line) {
-		this.text = text;
+	Parser(TextReader reader, string file, int line) {
+		this.reader = reader;
 		this.file = file;
 		this.line = line;
 		Lex();
@@ -1085,14 +1086,16 @@ public sealed class Parser {
 
 	// Tokenizer
 	void Lex() {
-		while (textIndex < text.Length) {
-			var c = text[textIndex];
-			switch (c) {
+		for (;;) {
+			switch (ch) {
 			case '\'': {
 				var line1 = line;
+				Read();
 				var sb = new StringBuilder();
-				for (var i = textIndex + 1; i < text.Length;) {
-					switch (text[i]) {
+				for (;;) {
+					switch (ch) {
+					case -1:
+						throw Error("unclosed '", line1);
 					case '\n':
 						line++;
 						break;
@@ -1116,9 +1119,9 @@ public sealed class Parser {
 						tokenString = sb.ToString();
 						return;
 					}
-					sb.Append(text[i++]);
+					sb.Append((char)ch);
+					Read();
 				}
-				throw Error("unclosed '", line1);
 			}
 			case '"': {
 				var line1 = line;
@@ -1239,7 +1242,7 @@ public sealed class Parser {
 					return;
 				}
 				textIndex++;
-				token = c;
+				token = ch;
 				return;
 			case '<':
 				if (textIndex + 1 < text.Length)
@@ -1254,7 +1257,7 @@ public sealed class Parser {
 						return;
 					}
 				textIndex++;
-				token = c;
+				token = ch;
 				return;
 			case '/':
 				if (textIndex + 1 < text.Length && text[textIndex + 1] == '*') {
@@ -1273,7 +1276,7 @@ public sealed class Parser {
 					continue;
 				}
 				textIndex++;
-				token = c;
+				token = ch;
 				return;
 			case ',':
 			case '=':
@@ -1286,8 +1289,9 @@ public sealed class Parser {
 			case ')':
 			case '~':
 			case '*':
-				textIndex++;
-				token = c;
+			case -1:
+				token = ch;
+				Read();
 				return;
 			case '-':
 				if (textIndex + 1 < text.Length && text[textIndex + 1] == '-') {
@@ -1297,7 +1301,7 @@ public sealed class Parser {
 					continue;
 				}
 				textIndex++;
-				token = c;
+				token = ch;
 				return;
 			case '\n':
 				textIndex++;
@@ -1380,53 +1384,56 @@ public sealed class Parser {
 			default:
 				// Common letters are handled in the switch for speed
 				// but there are other letters in Unicode
-				if (char.IsLetter(c)) {
+				if (char.IsLetter(ch)) {
 					Word();
 					return;
 				}
 
 				// Likewise digits
-				if (char.IsDigit(c)) {
+				if (char.IsDigit(ch)) {
 					Number();
 					return;
 				}
 
 				// And whitespace
-				if (char.IsWhiteSpace(c)) {
-					textIndex++;
+				if (char.IsWhiteSpace(ch)) {
+					Read();
 					continue;
 				}
 				break;
 			}
-			throw Error("stray " + c);
+			throw Error("stray " + (char)ch);
 		}
-		token = -1;
 	}
 
 	void Word() {
-		var i = textIndex;
-		do
-			i++;
-		while (i < text.Length && IsWordPart(text[i]));
+		var sb = new StringBuilder();
+		do {
+			sb.Append((char)ch);
+			Read();
+		} while (IsWordPart());
 		token = kWord;
-		tokenString = text[textIndex..i];
-		textIndex = i;
+		tokenString = sb.ToString();
 	}
 
 	void Number() {
-		var i = textIndex;
-		do
-			i++;
-		while (i < text.Length && IsWordPart(text[i]));
+		var sb = new StringBuilder();
+		do {
+			sb.Append((char)ch);
+			Read();
+		} while (IsWordPart());
 		token = kNumber;
-		tokenString = text[textIndex..i];
-		textIndex = i;
+		tokenString = sb.ToString();
 	}
 
-	static bool IsWordPart(char c) {
-		if (char.IsLetterOrDigit(c))
+	bool IsWordPart() {
+		if (char.IsLetterOrDigit((char)ch))
 			return true;
-		return c == '_';
+		return ch == '_';
+	}
+
+	void Read() {
+		ch = reader.Read();
 	}
 
 	// Error functions return exception objects instead of throwing immediately
