@@ -36,11 +36,8 @@ public sealed class Parser {
 		this.line = line;
 		Read();
 		Lex();
-		while (token != -1) {
-			if (Eat("go"))
-				continue;
+		while (token != -1)
 			statements.Add(StatementSemicolon());
-		}
 	}
 
 	// Statements
@@ -53,6 +50,9 @@ public sealed class Parser {
 	Statement Statement() {
 		var location = new Location(file, line);
 		switch (Keyword()) {
+		case "go":
+			Lex();
+			return new Go(location);
 		case "if": {
 			Lex();
 			var a = new If(location);

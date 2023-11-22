@@ -15,6 +15,11 @@ public sealed class DropProcedure: Statement {
 	}
 }
 
+public sealed class Go: Statement {
+	public Go(Location location): base(location) {
+	}
+}
+
 public sealed class DropView: Statement {
 	public bool IfExists;
 	public List<QualifiedName> Names = new();
