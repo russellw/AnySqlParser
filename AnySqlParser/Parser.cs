@@ -1241,8 +1241,7 @@ public sealed class Parser {
 					}
 					break;
 				}
-				sb.Append((char)ch);
-				Read();
+				AppendRead(sb);
 			}
 		}
 		case '"': {
@@ -1273,8 +1272,7 @@ public sealed class Parser {
 					}
 					break;
 				}
-				sb.Append((char)ch);
-				Read();
+				AppendRead(sb);
 			}
 		}
 		case '`': {
@@ -1305,8 +1303,7 @@ public sealed class Parser {
 					}
 					break;
 				}
-				sb.Append((char)ch);
-				Read();
+				AppendRead(sb);
 			}
 		}
 		case '[': {
@@ -1329,8 +1326,7 @@ public sealed class Parser {
 					}
 					break;
 				}
-				sb.Append((char)ch);
-				Read();
+				AppendRead(sb);
 			}
 		}
 		case '!':
@@ -1404,11 +1400,17 @@ public sealed class Parser {
 			}
 			}
 			return;
+		case '.':
+			if (char.IsDigit((char)reader.Peek())) {
+				Number();
+				return;
+			}
+			Read();
+			return;
 		case ',':
 		case '=':
 		case '&':
 		case ';':
-		case '.':
 		case '+':
 		case '%':
 		case '(':
@@ -1530,20 +1532,21 @@ public sealed class Parser {
 
 	void Word() {
 		var sb = new StringBuilder();
-		do {
-			sb.Append((char)ch);
-			Read();
-		} while (IsWordPart());
+		do
+			AppendRead(sb);
+		while (IsWordPart());
 		token = kWord;
 		tokenString = sb.ToString();
 	}
 
 	void Number() {
 		var sb = new StringBuilder();
-		do {
-			sb.Append((char)ch);
-			Read();
-		} while (IsWordPart());
+		while (IsWordPart())
+			AppendRead(sb);
+		if (ch == '.')
+			do
+				AppendRead(sb);
+			while (IsWordPart());
 		token = kNumber;
 		tokenString = sb.ToString();
 	}
@@ -1552,6 +1555,11 @@ public sealed class Parser {
 		if (char.IsLetterOrDigit((char)ch))
 			return true;
 		return ch == '_';
+	}
+
+	void AppendRead(StringBuilder sb) {
+		sb.Append((char)ch);
+		Read();
 	}
 
 	void Read() {
