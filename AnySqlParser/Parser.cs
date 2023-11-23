@@ -1214,93 +1214,17 @@ public sealed class Parser {
 		token = ch;
 		switch (ch) {
 		case '\'':
-			StringLiteral();
+			SingleQuote();
 			return;
-		case '"': {
-			var line1 = line;
-			Read();
-			var sb = new StringBuilder();
-			for (;;) {
-				switch (ch) {
-				case -1:
-					throw Error("unclosed \"", line1);
-				case '\\':
-					switch (reader.Peek()) {
-					case '"':
-					case '\\':
-						Read();
-						break;
-					}
-					break;
-				case '"':
-					Read();
-					switch (ch) {
-					case '"':
-						break;
-					default:
-						token = kQuotedName;
-						tokenString = sb.ToString();
-						return;
-					}
-					break;
-				}
-				AppendRead(sb);
-			}
-		}
-		case '`': {
-			var line1 = line;
-			Read();
-			var sb = new StringBuilder();
-			for (;;) {
-				switch (ch) {
-				case -1:
-					throw Error("unclosed `", line1);
-				case '\\':
-					switch (reader.Peek()) {
-					case '`':
-					case '\\':
-						Read();
-						break;
-					}
-					break;
-				case '`':
-					Read();
-					switch (ch) {
-					case '`':
-						break;
-					default:
-						token = kQuotedName;
-						tokenString = sb.ToString();
-						return;
-					}
-					break;
-				}
-				AppendRead(sb);
-			}
-		}
-		case '[': {
-			var line1 = line;
-			Read();
-			var sb = new StringBuilder();
-			for (;;) {
-				switch (ch) {
-				case -1:
-					throw Error("unclosed [", line1);
-				case ']':
-					Read();
-					switch (ch) {
-					case ']':
-						break;
-					default:
-						token = kQuotedName;
-						tokenString = sb.ToString();
-						return;
-					}
-					break;
-				}
-				AppendRead(sb);
-			}
-		}
+		case '"':
+			DoubleQuote();
+			return;
+		case '`':
+			Backquote();
+			return;
+		case '[':
+			Square();
+			return;
 		case '!':
 			Read();
 			switch (ch) {
@@ -1403,7 +1327,7 @@ public sealed class Parser {
 				// We are reading everything as Unicode anyway
 				// so the prefix has no special meaning
 				Read();
-				StringLiteral();
+				SingleQuote();
 				return;
 			}
 			Word();
@@ -1545,7 +1469,8 @@ public sealed class Parser {
 		return ch == '_';
 	}
 
-	void StringLiteral() {
+	// For string literals, single quote is reliably portable across dialects
+	void SingleQuote() {
 		Debug.Assert(ch == '\'');
 		var line1 = line;
 		Read();
@@ -1569,6 +1494,100 @@ public sealed class Parser {
 					break;
 				default:
 					token = kStringLiteral;
+					tokenString = sb.ToString();
+					return;
+				}
+				break;
+			}
+			AppendRead(sb);
+		}
+	}
+
+	// For unusual identifiers, standard SQL uses double quotes
+	void DoubleQuote() {
+		Debug.Assert(ch == '"');
+		var line1 = line;
+		Read();
+		var sb = new StringBuilder();
+		for (;;) {
+			switch (ch) {
+			case -1:
+				throw Error("unclosed \"", line1);
+			case '\\':
+				switch (reader.Peek()) {
+				case '"':
+				case '\\':
+					Read();
+					break;
+				}
+				break;
+			case '"':
+				Read();
+				switch (ch) {
+				case '"':
+					break;
+				default:
+					token = kQuotedName;
+					tokenString = sb.ToString();
+					return;
+				}
+				break;
+			}
+			AppendRead(sb);
+		}
+	}
+
+	// MySQL uses backquotes
+	void Backquote() {
+		Debug.Assert(ch == '`');
+		var line1 = line;
+		Read();
+		var sb = new StringBuilder();
+		for (;;) {
+			switch (ch) {
+			case -1:
+				throw Error("unclosed `", line1);
+			case '\\':
+				switch (reader.Peek()) {
+				case '`':
+				case '\\':
+					Read();
+					break;
+				}
+				break;
+			case '`':
+				Read();
+				switch (ch) {
+				case '`':
+					break;
+				default:
+					token = kQuotedName;
+					tokenString = sb.ToString();
+					return;
+				}
+				break;
+			}
+			AppendRead(sb);
+		}
+	}
+
+	// SQL Server uses square brackets
+	void Square() {
+		Debug.Assert(ch == '[');
+		var line1 = line;
+		Read();
+		var sb = new StringBuilder();
+		for (;;) {
+			switch (ch) {
+			case -1:
+				throw Error("unclosed [", line1);
+			case ']':
+				Read();
+				switch (ch) {
+				case ']':
+					break;
+				default:
+					token = kQuotedName;
 					tokenString = sb.ToString();
 					return;
 				}
