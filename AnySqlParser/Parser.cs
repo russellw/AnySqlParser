@@ -413,7 +413,7 @@ public sealed class Parser {
 	Parameter Parameter() {
 		var location = new Location(file, line);
 		Expect('@');
-		var a = new Parameter(location, Name(), QualifiedName());
+		var a = new Parameter(location, Name(), DataType());
 		if (Eat("varying"))
 			a.Varying = true;
 		if (Eat("null"))
