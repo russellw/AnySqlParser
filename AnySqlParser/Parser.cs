@@ -1210,216 +1210,217 @@ public sealed class Parser {
 
 	// Tokenizer
 	void Lex() {
-	loop:
-		token = ch;
-		switch (ch) {
-		case '\'':
-			SingleQuote();
-			return;
-		case '"':
-			DoubleQuote();
-			return;
-		case '`':
-			Backquote();
-			return;
-		case '[':
-			Square();
-			return;
-		case '!':
-			Read();
+		for (;;) {
+			token = ch;
 			switch (ch) {
-			case '=':
-				Read();
-				token = kNotEqual;
-				return;
-			case '<':
-				// https://stackoverflow.com/questions/77475517/what-are-the-t-sql-and-operators-for
-				Read();
-				token = kGreaterEqual;
-				return;
-			case '>':
-				Read();
-				token = kLessEqual;
-				return;
-			}
-			break;
-		case '|':
-			Read();
-			switch (ch) {
-			case '|':
-				Read();
-				token = kDoublePipe;
-				return;
-			}
-			break;
-		case '>':
-			Read();
-			switch (ch) {
-			case '=':
-				Read();
-				token = kGreaterEqual;
-				return;
-			}
-			return;
-		case '<':
-			Read();
-			switch (ch) {
-			case '=':
-				Read();
-				token = kLessEqual;
-				return;
-			case '>':
-				Read();
-				token = kNotEqual;
-				return;
-			}
-			return;
-		case '/':
-			Read();
-			switch (ch) {
-			case '*':
-				BlockComment();
-				goto loop;
-			}
-			return;
-		case '.':
-			if (char.IsDigit((char)reader.Peek())) {
-				// Clang-format can't handle 'goto case'
-				Number();
-				return;
-			}
-			Read();
-			return;
-		case ',':
-		case '=':
-		case '&':
-		case ';':
-		case '+':
-		case '%':
-		case '(':
-		case ')':
-		case '~':
-		case '*':
-		case '@':
-		case -1:
-			Read();
-			return;
-		case '-':
-			Read();
-			switch (ch) {
-			case '-':
-				reader.ReadLine();
-				line++;
-				Read();
-				goto loop;
-			}
-			return;
-		case '\n':
-		case '\r':
-		case '\t':
-		case '\f':
-		case '\v':
-		case ' ':
-			Read();
-			goto loop;
-		case 'N':
-			if (reader.Peek() == '\'') {
-				// We are reading everything as Unicode anyway
-				// so the prefix has no special meaning
-				Read();
+			case '\'':
 				SingleQuote();
 				return;
-			}
-			Word();
-			return;
-		case 'A':
-		case 'B':
-		case 'C':
-		case 'D':
-		case 'E':
-		case 'F':
-		case 'G':
-		case 'H':
-		case 'I':
-		case 'J':
-		case 'K':
-		case 'L':
-		case 'M':
-		case 'O':
-		case 'P':
-		case 'Q':
-		case 'R':
-		case 'S':
-		case 'T':
-		case 'U':
-		case 'V':
-		case 'W':
-		case 'X':
-		case 'Y':
-		case 'Z':
-		case '_':
-		case 'a':
-		case 'b':
-		case 'c':
-		case 'd':
-		case 'e':
-		case 'f':
-		case 'g':
-		case 'h':
-		case 'i':
-		case 'j':
-		case 'k':
-		case 'l':
-		case 'm':
-		case 'n':
-		case 'o':
-		case 'p':
-		case 'q':
-		case 'r':
-		case 's':
-		case 't':
-		case 'u':
-		case 'v':
-		case 'w':
-		case 'x':
-		case 'y':
-		case 'z':
-			Word();
-			return;
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-			Number();
-			return;
-		default:
-			// Common letters are handled in the switch for speed
-			// but there are other letters in Unicode
-			if (char.IsLetter((char)ch)) {
+			case '"':
+				DoubleQuote();
+				return;
+			case '`':
+				Backquote();
+				return;
+			case '[':
+				Square();
+				return;
+			case '!':
+				Read();
+				switch (ch) {
+				case '=':
+					Read();
+					token = kNotEqual;
+					return;
+				case '<':
+					// https://stackoverflow.com/questions/77475517/what-are-the-t-sql-and-operators-for
+					Read();
+					token = kGreaterEqual;
+					return;
+				case '>':
+					Read();
+					token = kLessEqual;
+					return;
+				}
+				break;
+			case '|':
+				Read();
+				switch (ch) {
+				case '|':
+					Read();
+					token = kDoublePipe;
+					return;
+				}
+				break;
+			case '>':
+				Read();
+				switch (ch) {
+				case '=':
+					Read();
+					token = kGreaterEqual;
+					return;
+				}
+				return;
+			case '<':
+				Read();
+				switch (ch) {
+				case '=':
+					Read();
+					token = kLessEqual;
+					return;
+				case '>':
+					Read();
+					token = kNotEqual;
+					return;
+				}
+				return;
+			case '/':
+				Read();
+				switch (ch) {
+				case '*':
+					BlockComment();
+					continue;
+				}
+				return;
+			case '.':
+				if (char.IsDigit((char)reader.Peek())) {
+					// Clang-format can't handle 'goto case'
+					Number();
+					return;
+				}
+				Read();
+				return;
+			case ',':
+			case '=':
+			case '&':
+			case ';':
+			case '+':
+			case '%':
+			case '(':
+			case ')':
+			case '~':
+			case '*':
+			case '@':
+			case -1:
+				Read();
+				return;
+			case '-':
+				Read();
+				switch (ch) {
+				case '-':
+					reader.ReadLine();
+					line++;
+					Read();
+					continue;
+				}
+				return;
+			case '\n':
+			case '\r':
+			case '\t':
+			case '\f':
+			case '\v':
+			case ' ':
+				Read();
+				continue;
+			case 'N':
+				if (reader.Peek() == '\'') {
+					// We are reading everything as Unicode anyway
+					// so the prefix has no special meaning
+					Read();
+					SingleQuote();
+					return;
+				}
 				Word();
 				return;
-			}
-
-			// Likewise digits
-			if (char.IsDigit((char)ch)) {
+			case 'A':
+			case 'B':
+			case 'C':
+			case 'D':
+			case 'E':
+			case 'F':
+			case 'G':
+			case 'H':
+			case 'I':
+			case 'J':
+			case 'K':
+			case 'L':
+			case 'M':
+			case 'O':
+			case 'P':
+			case 'Q':
+			case 'R':
+			case 'S':
+			case 'T':
+			case 'U':
+			case 'V':
+			case 'W':
+			case 'X':
+			case 'Y':
+			case 'Z':
+			case '_':
+			case 'a':
+			case 'b':
+			case 'c':
+			case 'd':
+			case 'e':
+			case 'f':
+			case 'g':
+			case 'h':
+			case 'i':
+			case 'j':
+			case 'k':
+			case 'l':
+			case 'm':
+			case 'n':
+			case 'o':
+			case 'p':
+			case 'q':
+			case 'r':
+			case 's':
+			case 't':
+			case 'u':
+			case 'v':
+			case 'w':
+			case 'x':
+			case 'y':
+			case 'z':
+				Word();
+				return;
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
 				Number();
 				return;
-			}
+			default:
+				// Common letters are handled in the switch for speed
+				// but there are other letters in Unicode
+				if (char.IsLetter((char)ch)) {
+					Word();
+					return;
+				}
 
-			// And whitespace
-			if (char.IsWhiteSpace((char)ch)) {
-				Read();
-				goto loop;
+				// Likewise digits
+				if (char.IsDigit((char)ch)) {
+					Number();
+					return;
+				}
+
+				// And whitespace
+				if (char.IsWhiteSpace((char)ch)) {
+					Read();
+					continue;
+				}
+				break;
 			}
-			break;
+			throw Error("stray " + (char)ch);
 		}
-		throw Error("stray " + (char)ch);
 	}
 
 	void BlockComment() {
