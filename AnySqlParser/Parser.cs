@@ -463,18 +463,20 @@ public sealed class Parser {
 		return a;
 	}
 
-	Column Column() {
-		var location = new Location(file, line);
-		var a = new Column(location, Name());
-
-		// Data type
-		a.TypeName = QualifiedName();
+	DataType DataType() {
+		var a = new DataType(QualifiedName());
 		if (Eat('(')) {
 			a.Size = Int();
 			if (Eat(','))
 				a.Scale = Int();
 			Expect(')');
 		}
+		return a;
+	}
+
+	Column Column() {
+		var location = new Location(file, line);
+		var a = new Column(location, Name(), DataType());
 
 		// Constraints etc
 		while (token == kWord) {

@@ -1,12 +1,18 @@
 namespace AnySqlParser {
+public struct DataType {
+	public QualifiedName TypeName;
+	public int Size = -1;
+	public int Scale = -1;
+
+	public DataType(QualifiedName typeName) {
+		TypeName = typeName;
+	}
+}
+
 public sealed class Column {
 	public readonly Location Location;
 	public string Name;
-
-	// Data type
-	public QualifiedName TypeName = null!;
-	public int Size = -1;
-	public int Scale = -1;
+	public DataType DataType;
 
 	// Etc
 	public bool Filestream;
@@ -24,9 +30,10 @@ public sealed class Column {
 	// Constraints
 	public bool PrimaryKey;
 
-	public Column(Location location, string name) {
+	public Column(Location location, string name, DataType dataType) {
 		Location = location;
 		Name = name;
+		DataType = dataType;
 	}
 }
 
