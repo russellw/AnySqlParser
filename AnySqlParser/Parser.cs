@@ -404,12 +404,9 @@ public sealed class Parser {
 
 		// Body
 		Expect("as");
-		if (Eat("begin"))
-			while (!Eat("end"))
-				a.Body.Add(StatementSemicolon());
-		else
-			while (!Eat("go"))
-				a.Body.Add(StatementSemicolon());
+		// https://stackoverflow.com/questions/41802057/the-end-of-the-body-of-the-sql-stored-procecdure-where-is-it
+		while (!Eat("go"))
+			a.Body.Add(StatementSemicolon());
 		return a;
 	}
 
