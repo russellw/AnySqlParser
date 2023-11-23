@@ -862,8 +862,30 @@ public sealed class Parser {
 		}
 		var location = new Location(file, line);
 		var a = new PrimaryTableSource(location, QualifiedName());
-		if (Eat("as"))
-			a.TableAlias = Name();
+		switch (token) {
+		case kQuotedName:
+			break;
+		case kWord:
+			switch (Keyword()) {
+			case "as":
+				Lex();
+				break;
+			case "where":
+			case "inner":
+			case "join":
+			case "left":
+			case "right":
+			case "full":
+			case "on":
+			case "group":
+			case "order":
+				return a;
+			}
+			break;
+		default:
+			return a;
+		}
+		a.TableAlias = Name();
 		return a;
 	}
 
