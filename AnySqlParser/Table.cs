@@ -90,6 +90,32 @@ public sealed class Check {
 	}
 }
 
+public abstract class StorageOption {
+	public readonly Location Location;
+
+	protected StorageOption(Location location) {
+		Location = location;
+	}
+}
+
+public sealed class PartitionSchemeRef: StorageOption {
+	public string PartitionSchemeName;
+	public string PartitionColumnName;
+
+	public PartitionSchemeRef(Location location, string partitionSchemeName, string partitionColumnName): base(location) {
+		PartitionSchemeName = partitionSchemeName;
+		PartitionColumnName = partitionColumnName;
+	}
+}
+
+public sealed class FilegroupRef: StorageOption {
+	public string FilegroupName;
+
+	public FilegroupRef(Location location, string filegroupName): base(location) {
+		FilegroupName = filegroupName;
+	}
+}
+
 public sealed class Table: Statement {
 	public QualifiedName Name;
 	public List<Column> Columns = new();
@@ -98,6 +124,9 @@ public sealed class Table: Statement {
 	public List<Key> Keys = new();
 	public List<ForeignKey> ForeignKeys = new();
 	public List<Check> Checks = new();
+	public StorageOption? On;
+	public StorageOption? TextimageOn;
+	public StorageOption? FilestreamOn;
 
 	public Table(Location location, QualifiedName name): base(location) {
 		Name = name;

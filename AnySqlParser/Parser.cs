@@ -460,7 +460,26 @@ public sealed class Parser {
 			}
 		} while (Eat(','));
 		Expect(')');
+		if (Eat("on"))
+			a.On = StorageOption();
+		if (Eat("textimage_on"))
+			a.TextimageOn = StorageOption();
+		if (Eat("filestream_on"))
+			a.FilestreamOn = StorageOption();
 		return a;
+	}
+
+	StorageOption? StorageOption() {
+		if (Eat("default"))
+			return null;
+		var location = new Location(file, line);
+		var name = Name();
+		if (Eat('(')) {
+			var a = new PartitionSchemeRef(location, name, Name());
+			Expect(')');
+			return a;
+		}
+		return new FilegroupRef(location, name);
 	}
 
 	DataType DataType() {
