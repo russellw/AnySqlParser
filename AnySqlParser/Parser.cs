@@ -1213,37 +1213,9 @@ public sealed class Parser {
 	loop:
 		token = ch;
 		switch (ch) {
-		case '\'': {
-			var line1 = line;
-			Read();
-			var sb = new StringBuilder();
-			for (;;) {
-				switch (ch) {
-				case -1:
-					throw Error("unclosed '", line1);
-				case '\\':
-					switch (reader.Peek()) {
-					case '\'':
-					case '\\':
-						Read();
-						break;
-					}
-					break;
-				case '\'':
-					Read();
-					switch (ch) {
-					case '\'':
-						break;
-					default:
-						token = kStringLiteral;
-						tokenString = sb.ToString();
-						return;
-					}
-					break;
-				}
-				AppendRead(sb);
-			}
-		}
+		case '\'':
+			StringLiteral();
+			return;
 		case '"': {
 			var line1 = line;
 			Read();
@@ -1388,6 +1360,7 @@ public sealed class Parser {
 			return;
 		case '.':
 			if (char.IsDigit((char)reader.Peek())) {
+				// Clang-format can't handle 'goto case'
 				Number();
 				return;
 			}
@@ -1430,8 +1403,8 @@ public sealed class Parser {
 				// We are reading everything as Unicode anyway
 				// so the prefix has no special meaning
 				Read();
-				// Clang-format can't handle 'goto case'
-				goto loop;
+				StringLiteral();
+				return;
 			}
 			Word();
 			return;
@@ -1570,6 +1543,39 @@ public sealed class Parser {
 		if (char.IsLetterOrDigit((char)ch))
 			return true;
 		return ch == '_';
+	}
+
+	void StringLiteral() {
+		Debug.Assert(ch == '\'');
+		var line1 = line;
+		Read();
+		var sb = new StringBuilder();
+		for (;;) {
+			switch (ch) {
+			case -1:
+				throw Error("unclosed '", line1);
+			case '\\':
+				switch (reader.Peek()) {
+				case '\'':
+				case '\\':
+					Read();
+					break;
+				}
+				break;
+			case '\'':
+				Read();
+				switch (ch) {
+				case '\'':
+					break;
+				default:
+					token = kStringLiteral;
+					tokenString = sb.ToString();
+					return;
+				}
+				break;
+			}
+			AppendRead(sb);
+		}
 	}
 
 	void AppendRead(StringBuilder sb) {
