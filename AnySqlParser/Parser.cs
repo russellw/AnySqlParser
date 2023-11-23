@@ -1381,23 +1381,9 @@ public sealed class Parser {
 		case '/':
 			Read();
 			switch (ch) {
-			case '*': {
-				var line1 = line;
-				for (;;) {
-					Read();
-					switch (ch) {
-					case -1:
-						throw Error("unclosed /*", line1);
-					case '*':
-						if (reader.Peek() == '/') {
-							Read();
-							Read();
-							goto loop;
-						}
-						break;
-					}
-				}
-			}
+			case '*':
+				BlockComment();
+				goto loop;
 			}
 			return;
 		case '.':
@@ -1537,6 +1523,25 @@ public sealed class Parser {
 			break;
 		}
 		throw Error("stray " + (char)ch);
+	}
+
+	void BlockComment() {
+		Debug.Assert(ch == '*');
+		var line1 = line;
+		for (;;) {
+			Read();
+			switch (ch) {
+			case -1:
+				throw Error("unclosed /*", line1);
+			case '*':
+				if (reader.Peek() == '/') {
+					Read();
+					Read();
+					return;
+				}
+				break;
+			}
+		}
 	}
 
 	void Word() {
