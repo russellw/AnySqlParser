@@ -427,6 +427,7 @@ public sealed class Parser {
 					databaseName = Name();
 				switch (Keyword()) {
 				case "set": {
+					Lex();
 					var a = new AlterDatabaseSet(location, databaseName);
 					do
 						switch (Keyword()) {
