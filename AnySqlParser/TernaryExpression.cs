@@ -1,9 +1,4 @@
 ﻿namespace AnySqlParser;
-public enum TernaryOp {
-	Between,
-	NotBetween,
-}
-
 public sealed class TernaryExpression: Expression {
 	public TernaryOp Op;
 	public Expression First, Second, Third;

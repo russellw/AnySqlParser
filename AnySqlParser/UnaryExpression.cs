@@ -1,13 +1,4 @@
 namespace AnySqlParser;
-public enum UnaryOp {
-	Not,
-	BitNot,
-	Minus,
-	Exists,
-	IsNull,
-	IsNotNull,
-}
-
 public sealed class UnaryExpression: Expression {
 	public UnaryOp Op;
 	public Expression Operand;
