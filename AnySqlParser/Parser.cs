@@ -324,6 +324,33 @@ public sealed class Parser {
 				Lex();
 				var tableName = QualifiedName();
 				switch (Keyword()) {
+				case "add": {
+					Lex();
+					var a = new AlterTableAdd(location, tableName);
+					do {
+						string? constraintName = null;
+						if (Eat("constraint"))
+							constraintName = Name();
+						switch (Keyword()) {
+						case "foreign":
+							a.ForeignKeys.Add(ForeignKey(constraintName));
+							break;
+						case "check":
+							a.Checks.Add(Check(constraintName));
+							break;
+						case "primary":
+						case "unique":
+							a.Keys.Add(Key(constraintName));
+							break;
+						default:
+							if (constraintName != null)
+								throw ErrorToken("expected constraint");
+							a.Columns.Add(Column());
+							break;
+						}
+					} while (Eat(','));
+					return a;
+				}
 				case "with":
 					Lex();
 					switch (Keyword()) {
@@ -587,6 +614,9 @@ public sealed class Parser {
 			a.Columns.Add(ColumnOrder());
 		while (Eat(','));
 		Expect(')');
+
+		if (Eat("on"))
+			a.On = StorageOption();
 		return a;
 	}
 

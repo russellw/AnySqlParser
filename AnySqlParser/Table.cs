@@ -44,6 +44,7 @@ public sealed class Key {
 	public bool Primary;
 	public bool? Clustered;
 	public List<ColumnOrder> Columns = new();
+	public StorageOption? On;
 
 	public Key(Location location, string? constraintName) {
 		Location = location;
@@ -119,8 +120,6 @@ public sealed class FilegroupRef: StorageOption {
 public sealed class Table: Statement {
 	public QualifiedName Name;
 	public List<Column> Columns = new();
-
-	// Table constraints
 	public List<Key> Keys = new();
 	public List<ForeignKey> ForeignKeys = new();
 	public List<Check> Checks = new();
