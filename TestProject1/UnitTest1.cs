@@ -152,7 +152,13 @@ public class UnitTest1 {
 	[Fact]
 	public void Northwind() {
 		var statements = ParseFile("sql-server-samples/instnwnd.sql");
-		// Assert.True(statements.Count > 0);
+		Assert.True(statements.Count > 0);
+	}
+
+	[Fact]
+	public void NorthwindAzure() {
+		var statements = ParseFile("sql-server-samples/instnwnd (Azure SQL Database).sql");
+		Assert.True(statements.Count > 0);
 	}
 
 	static List<Statement> ParseFile(string file) {
