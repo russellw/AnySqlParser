@@ -428,9 +428,79 @@ public sealed class Parser {
 				switch (Keyword()) {
 				case "set": {
 					var a = new AlterDatabaseSet(location, databaseName);
+					do
+						switch (Keyword()) {
+						case "torn_page_detection":
+							Lex();
+							a.Options.Add(new TornPageDetection(OnOff()));
+							break;
+						case "page_verify":
+							Lex();
+							switch (Keyword()) {
+							case "checksum":
+								Lex();
+								a.Options.Add(new PageVerifyChecksum());
+								break;
+							case "none":
+								Lex();
+								a.Options.Add(new PageVerifyNone());
+								break;
+							case "torn_page_detection":
+								Lex();
+								a.Options.Add(new PageVerifyTornPageDetection());
+								break;
+							default:
+								throw ErrorToken("expected recovery option");
+							}
+							break;
+						case "recovery":
+							Lex();
+							switch (Keyword()) {
+							case "full":
+								Lex();
+								a.Options.Add(new RecoveryFull());
+								break;
+							case "bulk_logged":
+								Lex();
+								a.Options.Add(new RecoveryBulkLogged());
+								break;
+							case "simple":
+								Lex();
+								a.Options.Add(new RecoverySimple());
+								break;
+							default:
+								throw ErrorToken("expected recovery option");
+							}
+							break;
+						}
+					while (Eat(','));
+					if (Eat("with"))
+						switch (Keyword()) {
+						case "no_wait":
+							Lex();
+							a.Termination = new NoWait();
+							break;
+						case "rollback":
+							Lex();
+							switch (Keyword()) {
+							case "after":
+								Lex();
+								a.Termination = new RollbackAfter(Int());
+								Eat("seconds");
+								break;
+							case "immediate":
+								Lex();
+								a.Termination = new RollbackImmediate();
+								break;
+							default:
+								throw ErrorToken("expected termination option");
+							}
+							break;
+						}
 					return a;
 				}
 				}
+				throw ErrorToken("unknown syntax");
 			}
 			case "table": {
 				Lex();
