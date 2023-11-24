@@ -358,6 +358,18 @@ public sealed class Parser {
 				while (Eat(','));
 				return a;
 			}
+			case "database": {
+				Lex();
+				var a = new DropDatabase(location);
+				if (Eat("if")) {
+					Expect("exists");
+					a.IfExists = true;
+				}
+				do
+					a.Names.Add(Name());
+				while (Eat(','));
+				return a;
+			}
 			case "table": {
 				Lex();
 				var a = new DropTable(location);
