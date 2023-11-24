@@ -50,6 +50,35 @@ public sealed class Parser {
 	Statement Statement() {
 		var location = new Location(file, line);
 		switch (Keyword()) {
+		case "raiserror": {
+			Lex();
+			var a = new Raiserror(location);
+			Expect('(');
+			do
+				a.Arguments.Add(Expression());
+			while (Eat(','));
+			Expect(')');
+			if (Eat("with"))
+				do
+					switch (Keyword()) {
+					case "log":
+						Lex();
+						a.Log = true;
+						break;
+					case "nowait":
+						Lex();
+						a.Nowait = true;
+						break;
+					case "seterror":
+						Lex();
+						a.Seterror = true;
+						break;
+					default:
+						throw ErrorToken("expected option");
+					}
+				while (Eat(','));
+			return a;
+		}
 		case "declare": {
 			Lex();
 			Expect('@');
