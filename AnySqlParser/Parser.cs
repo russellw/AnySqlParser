@@ -1239,6 +1239,15 @@ public sealed class Parser {
 				Expect(')');
 				return a;
 			}
+			case "cast": {
+				Lex();
+				Expect('(');
+				var a = new Cast(location, Expression());
+				Expect("as");
+				a.DataType = DataType();
+				Expect(')');
+				return a;
+			}
 			}
 			break;
 		case '~':
