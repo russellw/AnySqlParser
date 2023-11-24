@@ -101,6 +101,15 @@ public sealed class Parser {
 			} while (Eat(','));
 			return a;
 		}
+		case "exec":
+		case "execute": {
+			Lex();
+			var a = new ExecuteProcedure(location, Name());
+			do
+				a.Arguments.Add(Expression());
+			while (Eat(','));
+			return a;
+		}
 		case "go":
 			Lex();
 			return new Go(location);
