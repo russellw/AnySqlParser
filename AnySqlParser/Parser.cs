@@ -40,7 +40,6 @@ public sealed class Parser {
 		Lex();
 	}
 
-	// Statements
 	Statement StatementSemicolon() {
 		var a = Statement();
 		Eat(';');
@@ -486,8 +485,6 @@ public sealed class Parser {
 		throw ErrorToken("expected statement");
 	}
 
-	// CREATE
-	// Procedure
 	Procedure Procedure() {
 		Debug.Assert(Keyword() == "proc" || Keyword() == "procedure");
 		var location = new Location(file, line);
@@ -549,7 +546,6 @@ public sealed class Parser {
 		return a;
 	}
 
-	// Table
 	Table Table() {
 		Debug.Assert(Keyword() == "table");
 		var location = new Location(file, line);
@@ -798,7 +794,6 @@ public sealed class Parser {
 		return a;
 	}
 
-	// ALTER
 	AlterTableCheckConstraints AlterTableCheckConstraints(QualifiedName tableName, bool check) {
 		Debug.Assert(Keyword() == "constraint");
 		var location = new Location(file, line);
@@ -811,7 +806,6 @@ public sealed class Parser {
 		return a;
 	}
 
-	// SELECT
 	Select Select() {
 		var location = new Location(file, line);
 		var a = new Select(location, QueryExpression());
@@ -1030,7 +1024,6 @@ public sealed class Parser {
 		return a;
 	}
 
-	// Etc
 	bool? Clustered() {
 		switch (Keyword()) {
 		case "clustered":
@@ -1074,7 +1067,6 @@ public sealed class Parser {
 		throw ErrorToken("expected ON or OFF");
 	}
 
-	// Expressions
 	Expression Expression() {
 		var a = And();
 		for (;;) {
@@ -1326,7 +1318,6 @@ public sealed class Parser {
 		return a;
 	}
 
-	// Etc
 	int Int() {
 		if (token != kNumber)
 			throw ErrorToken("expected integer");
@@ -1379,7 +1370,6 @@ public sealed class Parser {
 		return false;
 	}
 
-	// Tokenizer
 	void Lex() {
 		for (;;) {
 			token = ch;
@@ -1641,8 +1631,8 @@ public sealed class Parser {
 		return ch == '_';
 	}
 
-	// For string literals, single quote is reliably portable across dialects
 	void SingleQuote() {
+		// For string literals, single quote is reliably portable across dialects
 		Debug.Assert(ch == '\'');
 		var line1 = line;
 		Read();
@@ -1675,8 +1665,8 @@ public sealed class Parser {
 		}
 	}
 
-	// For unusual identifiers, standard SQL uses double quotes
 	void DoubleQuote() {
+		// For unusual identifiers, standard SQL uses double quotes
 		Debug.Assert(ch == '"');
 		var line1 = line;
 		Read();
@@ -1709,8 +1699,8 @@ public sealed class Parser {
 		}
 	}
 
-	// MySQL uses backquotes
 	void Backquote() {
+		// For unusual identifiers, MySQL uses backquotes
 		Debug.Assert(ch == '`');
 		var line1 = line;
 		Read();
@@ -1743,8 +1733,8 @@ public sealed class Parser {
 		}
 	}
 
-	// SQL Server uses square brackets
 	void Square() {
+		// For unusual identifiers, SQL Server uses square brackets
 		Debug.Assert(ch == '[');
 		var line1 = line;
 		Read();
@@ -1780,9 +1770,9 @@ public sealed class Parser {
 		ch = reader.Read();
 	}
 
-	// Error functions return exception objects instead of throwing immediately
-	// so 'throw Error(...)' can mark the end of a case block
 	Exception ErrorToken(string message) {
+		// Error functions return exception objects instead of throwing immediately
+		// so 'throw Error(...)' can mark the end of a case block
 		return Error($"{Echo()}: {message}");
 	}
 
