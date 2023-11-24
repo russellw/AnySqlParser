@@ -7,68 +7,6 @@ public abstract class Statement {
 	}
 }
 
-public sealed class DropProcedure: Statement {
-	public bool IfExists;
-	public List<QualifiedName> Names = new();
-
-	public DropProcedure(Location location): base(location) {
-	}
-}
-
-public sealed class Go: Statement {
-	public Go(Location location): base(location) {
-	}
-}
-
-public sealed class DropView: Statement {
-	public bool IfExists;
-	public List<QualifiedName> Names = new();
-
-	public DropView(Location location): base(location) {
-	}
-}
-
-public sealed class DropTable: Statement {
-	public bool IfExists;
-	public List<QualifiedName> Names = new();
-
-	public DropTable(Location location): base(location) {
-	}
-}
-
-public sealed class If: Statement {
-	public Expression condition = null!;
-	public Statement then = null!;
-	public Statement? @else;
-
-	public If(Location location): base(location) {
-	}
-}
-
-public sealed class Insert: Statement {
-	public QualifiedName TableName = null!;
-	public List<string> Columns = new();
-	public List<Expression> Values = new();
-
-	public Insert(Location location): base(location) {
-	}
-}
-
-public sealed class Start: Statement {
-	public Start(Location location): base(location) {
-	}
-}
-
-public sealed class Commit: Statement {
-	public Commit(Location location): base(location) {
-	}
-}
-
-public sealed class Rollback: Statement {
-	public Rollback(Location location): base(location) {
-	}
-}
-
 public sealed class Block: Statement {
 	public List<Statement> Body = new();
 
