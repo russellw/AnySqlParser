@@ -27,7 +27,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="sql-server-samples\instnwnd %28Azure SQL Database%29.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="sql-server-samples\instnwnd.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="sql-server-samples\instpubs.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="sql-server-samples\sampleDB1.sql">
