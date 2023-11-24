@@ -330,6 +330,13 @@ public sealed class Parser {
 			}
 			throw ErrorToken("expected noun");
 		}
+		case "checkpoint": {
+			Lex();
+			var a = new Checkpoint(location);
+			if (token == kNumber)
+				a.Duration = Int();
+			return a;
+		}
 		case "drop":
 			Lex();
 			switch (Keyword()) {
