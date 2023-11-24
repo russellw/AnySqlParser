@@ -420,6 +420,18 @@ public sealed class Parser {
 		case "alter": {
 			Lex();
 			switch (Keyword()) {
+			case "database": {
+				Lex();
+				string? databaseName = null;
+				if (!Eat("current"))
+					databaseName = Name();
+				switch (Keyword()) {
+				case "set": {
+					var a = new AlterDatabaseSet(location, databaseName);
+					return a;
+				}
+				}
+			}
 			case "table": {
 				Lex();
 				var tableName = QualifiedName();
