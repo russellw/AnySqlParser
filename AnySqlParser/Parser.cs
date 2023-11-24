@@ -50,6 +50,29 @@ public sealed class Parser {
 	Statement Statement() {
 		var location = new Location(file, line);
 		switch (Keyword()) {
+		case "declare": {
+			Lex();
+			Expect('@');
+			var a = new Declare(location);
+			do {
+				location = new Location(file, line);
+				var name = Name();
+				switch (Keyword()) {
+				case "cursor":
+					Lex();
+					a.CursorVariables.Add(new CursorVariable(location, name));
+					continue;
+				case "as":
+					Lex();
+					break;
+				}
+				var b = new LocalVariable(location, name, DataType());
+				if (Eat('='))
+					b.Value = Expression();
+				a.LocalVariables.Add(b);
+			} while (Eat(','));
+			return a;
+		}
 		case "go":
 			Lex();
 			return new Go(location);
