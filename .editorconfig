@@ -2,3 +2,6 @@
 
 # IDE0055: Fix formatting
 dotnet_diagnostic.IDE0055.severity = none
+
+# https://blog.jdriven.com/2022/12/changing_visual_studio_cs_templates/
+csharp_style_namespace_declarations=file_scoped:suggestion
