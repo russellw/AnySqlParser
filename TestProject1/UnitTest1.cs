@@ -161,6 +161,12 @@ public class UnitTest1 {
 		Assert.True(statements.Count > 0);
 	}
 
+	[Fact]
+	public void InstPubs() {
+		var statements = ParseFile("sql-server-samples/instpubs.sql");
+		Assert.True(statements.Count > 0);
+	}
+
 	static List<Statement> ParseFile(string file) {
 		return new List<Statement>(Parser.Parse(file));
 	}

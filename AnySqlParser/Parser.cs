@@ -53,6 +53,9 @@ public sealed class Parser {
 		case "go":
 			Lex();
 			return new Go(location);
+		case "use":
+			Lex();
+			return new Use(location, Name());
 		case "if": {
 			Lex();
 			var a = new If(location);
