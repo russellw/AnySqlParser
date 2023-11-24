@@ -9,7 +9,7 @@ public sealed class Cast: Expression {
 
 	public override bool Eq(Expression b0) {
 		if (b0 is Cast b)
-			return Operand.Eq(b.Operand);
+			return Operand.Eq(b.Operand) && DataType == b.DataType;
 		return false;
 	}
 }

@@ -1,5 +1,5 @@
 namespace AnySqlParser;
-public struct DataType {
+public record struct DataType {
 	public QualifiedName TypeName;
 	public int Size = -1;
 	public int Scale = -1;
