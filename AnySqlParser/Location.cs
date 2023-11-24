@@ -1,4 +1,4 @@
-namespace AnySqlParser {
+namespace AnySqlParser;
 public readonly struct Location {
 	public readonly string File;
 	public readonly int Line;
@@ -7,5 +7,4 @@ public readonly struct Location {
 		File = file;
 		Line = line;
 	}
-}
 }

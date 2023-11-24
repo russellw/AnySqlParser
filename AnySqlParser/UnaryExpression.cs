@@ -1,4 +1,4 @@
-namespace AnySqlParser {
+namespace AnySqlParser;
 public enum UnaryOp {
 	Not,
 	BitNot,
@@ -22,5 +22,4 @@ public sealed class UnaryExpression: Expression {
 			return Op == b.Op && Operand.Eq(b.Operand);
 		return false;
 	}
-}
 }

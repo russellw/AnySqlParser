@@ -1,4 +1,4 @@
-namespace AnySqlParser {
+namespace AnySqlParser;
 public abstract class Statement {
 	public readonly Location Location;
 
@@ -157,5 +157,4 @@ public sealed class Index: Statement {
 
 	public Index(Location location): base(location) {
 	}
-}
 }

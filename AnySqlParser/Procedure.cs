@@ -1,4 +1,4 @@
-﻿namespace AnySqlParser {
+﻿namespace AnySqlParser;
 public sealed class Parameter {
 	public readonly Location Location;
 	public string Name;
@@ -28,5 +28,4 @@ public sealed class Procedure: Statement {
 	public Procedure(Location location, QualifiedName name): base(location) {
 		Name = name;
 	}
-}
 }

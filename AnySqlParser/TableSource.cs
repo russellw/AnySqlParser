@@ -1,4 +1,4 @@
-﻿namespace AnySqlParser {
+﻿namespace AnySqlParser;
 public enum JoinType {
 	Inner,
 	Left,
@@ -40,5 +40,4 @@ public sealed class PrimaryTableSource: TableSource {
 	public PrimaryTableSource(Location location, QualifiedName tableOrViewName): base(location) {
 		TableOrViewName = tableOrViewName;
 	}
-}
 }

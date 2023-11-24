@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text;
 
-namespace AnySqlParser {
+namespace AnySqlParser;
 public sealed class Parser {
 	public static IEnumerable<Statement> Parse(string file) {
 		using var reader = new StreamReader(file);
@@ -1710,5 +1710,4 @@ public sealed class Parser {
 	Exception Error(string message, int line) {
 		return new FormatException($"{file}:{line}: {message}");
 	}
-}
 }

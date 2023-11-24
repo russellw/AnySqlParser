@@ -1,4 +1,4 @@
-namespace AnySqlParser {
+namespace AnySqlParser;
 public enum QueryOp {
 	Union,
 	UnionAll,
@@ -65,5 +65,4 @@ public sealed class Select: Statement {
 	public Select(Location location, QueryExpression queryExpression): base(location) {
 		QueryExpression = queryExpression;
 	}
-}
 }

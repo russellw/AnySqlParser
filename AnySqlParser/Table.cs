@@ -1,4 +1,4 @@
-namespace AnySqlParser {
+namespace AnySqlParser;
 public struct DataType {
 	public QualifiedName TypeName;
 	public int Size = -1;
@@ -130,5 +130,4 @@ public sealed class Table: Statement {
 	public Table(Location location, QualifiedName name): base(location) {
 		Name = name;
 	}
-}
 }

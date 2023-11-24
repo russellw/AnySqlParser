@@ -1,4 +1,4 @@
-namespace AnySqlParser {
+namespace AnySqlParser;
 public enum BinaryOp {
 	Add,
 	Subtract,
@@ -34,5 +34,4 @@ public sealed class BinaryExpression: Expression {
 			return Op == b.Op && Left.Eq(b.Left) && Right.Eq(b.Right);
 		return false;
 	}
-}
 }
