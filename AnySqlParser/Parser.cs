@@ -1863,8 +1863,6 @@ public sealed class Parser {
 	}
 
 	Exception ErrorToken(string message) {
-		// Error functions return exception objects instead of throwing immediately
-		// so 'throw Error(...)' can mark the end of a case block
 		return Error($"{Echo()}: {message}");
 	}
 
@@ -1887,6 +1885,8 @@ public sealed class Parser {
 	}
 
 	Exception Error(string message) {
+		// Error functions return exception objects instead of throwing immediately
+		// so 'throw Error(...)' can mark the end of a case block
 		return Error(message, line);
 	}
 
