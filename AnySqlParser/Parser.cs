@@ -706,9 +706,8 @@ public sealed class Parser {
 
 		// Constraints etc
 		while (token == kWord) {
-			string? constraintName = null;
 			if (Eat("constraint"))
-				constraintName = Name();
+				Name();
 			switch (Keyword()) {
 			case "default":
 				Lex();
