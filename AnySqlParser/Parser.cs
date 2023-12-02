@@ -127,53 +127,7 @@ public sealed class Parser {
 		}
 		case "set":
 			Lex();
-			switch (Keyword()) {
-			case "identity_insert":
-				Lex();
-				return new SetIdentityInsert(location, QualifiedName(), OnOff());
-			}
 			return new SetGlobal(location, Name(), Expression());
-		case "begin":
-			Lex();
-			switch (Keyword()) {
-			case "transaction":
-			case "tran":
-				Lex();
-				return new Start(location);
-			default: {
-				var a = new Block(location);
-				while (!Eat("end"))
-					a.Body.Add(StatementSemicolon());
-				return a;
-			}
-			}
-		case "start":
-			Lex();
-			switch (Keyword()) {
-			case "transaction":
-			case "tran":
-				Lex();
-				break;
-			}
-			return new Start(location);
-		case "commit":
-			Lex();
-			switch (Keyword()) {
-			case "transaction":
-			case "tran":
-				Lex();
-				break;
-			}
-			return new Commit(location);
-		case "rollback":
-			Lex();
-			switch (Keyword()) {
-			case "transaction":
-			case "tran":
-				Lex();
-				break;
-			}
-			return new Rollback(location);
 		case "select":
 			return Select();
 		case "insert": {
@@ -251,93 +205,6 @@ public sealed class Parser {
 					while (Eat(','));
 					Expect(')');
 				}
-
-				// Where
-				if (Eat("where"))
-					a.Where = Expression();
-
-				// Relational index options
-				if (Eat("with")) {
-					Expect('(');
-					do
-						switch (Keyword()) {
-						case "pad_index":
-							Lex();
-							Eat('=');
-							a.PadIndex = OnOff();
-							break;
-						case "sort_in_tempdb":
-							Lex();
-							Eat('=');
-							a.SortInTempdb = OnOff();
-							break;
-						case "ignore_dup_key":
-							Lex();
-							Eat('=');
-							a.IgnoreDupKey = OnOff();
-							break;
-						case "statistics_norecompute":
-							Lex();
-							Eat('=');
-							a.StatisticsNorecompute = OnOff();
-							break;
-						case "statistics_incremental":
-							Lex();
-							Eat('=');
-							a.StatisticsIncremental = OnOff();
-							break;
-						case "drop_existing":
-							Lex();
-							Eat('=');
-							a.DropExisting = OnOff();
-							break;
-						case "online":
-							Lex();
-							Eat('=');
-							a.Online = OnOff();
-							break;
-						case "resumable":
-							Lex();
-							Eat('=');
-							a.Resumable = OnOff();
-							break;
-						case "allow_row_locks":
-							Lex();
-							Eat('=');
-							a.AllowRowLocks = OnOff();
-							break;
-						case "allow_page_locks":
-							Lex();
-							Eat('=');
-							a.AllowPageLocks = OnOff();
-							break;
-						case "optimize_for_sequential_key":
-							Lex();
-							Eat('=');
-							a.OptimizeForSequentialKey = OnOff();
-							break;
-						case "fillfactor":
-							Lex();
-							Eat('=');
-							a.FillFactor = Int();
-							break;
-						case "maxdop":
-							Lex();
-							Eat('=');
-							a.Maxdop = Int();
-							break;
-						case "max_duration":
-							Lex();
-							Eat('=');
-							a.MaxDuration = Int();
-							a.MaxDurationMinutes = Eat("minutes");
-							break;
-						default:
-							throw ErrorToken("expected relational index option");
-						}
-					while (Eat(','));
-					Expect(')');
-				}
 				return a;
 			}
 			case "view": {
@@ -356,153 +223,9 @@ public sealed class Parser {
 			}
 			throw ErrorToken("expected noun");
 		}
-		case "checkpoint": {
-			Lex();
-			var a = new Checkpoint(location);
-			if (token == kNumber)
-				a.Duration = Int();
-			return a;
-		}
-		case "drop":
-			Lex();
-			switch (Keyword()) {
-			case "proc":
-			case "procedure": {
-				Lex();
-				var a = new DropProcedure(location);
-				if (Eat("if")) {
-					Expect("exists");
-					a.IfExists = true;
-				}
-				do
-					a.Names.Add(QualifiedName());
-				while (Eat(','));
-				return a;
-			}
-			case "view": {
-				Lex();
-				var a = new DropView(location);
-				if (Eat("if")) {
-					Expect("exists");
-					a.IfExists = true;
-				}
-				do
-					a.Names.Add(QualifiedName());
-				while (Eat(','));
-				return a;
-			}
-			case "database": {
-				Lex();
-				var a = new DropDatabase(location);
-				if (Eat("if")) {
-					Expect("exists");
-					a.IfExists = true;
-				}
-				do
-					a.Names.Add(Name());
-				while (Eat(','));
-				return a;
-			}
-			case "table": {
-				Lex();
-				var a = new DropTable(location);
-				if (Eat("if")) {
-					Expect("exists");
-					a.IfExists = true;
-				}
-				do
-					a.Names.Add(QualifiedName());
-				while (Eat(','));
-				return a;
-			}
-			}
-			throw ErrorToken("expected noun");
 		case "alter": {
 			Lex();
 			switch (Keyword()) {
-			case "database": {
-				Lex();
-				string? databaseName = null;
-				if (!Eat("current"))
-					databaseName = Name();
-				switch (Keyword()) {
-				case "set": {
-					Lex();
-					var a = new AlterDatabaseSet(location, databaseName);
-					do
-						switch (Keyword()) {
-						case "torn_page_detection":
-							Lex();
-							a.Options.Add(new TornPageDetection(OnOff()));
-							break;
-						case "page_verify":
-							Lex();
-							switch (Keyword()) {
-							case "checksum":
-								Lex();
-								a.Options.Add(new PageVerifyChecksum());
-								break;
-							case "none":
-								Lex();
-								a.Options.Add(new PageVerifyNone());
-								break;
-							case "torn_page_detection":
-								Lex();
-								a.Options.Add(new PageVerifyTornPageDetection());
-								break;
-							default:
-								throw ErrorToken("expected recovery option");
-							}
-							break;
-						case "recovery":
-							Lex();
-							switch (Keyword()) {
-							case "full":
-								Lex();
-								a.Options.Add(new RecoveryFull());
-								break;
-							case "bulk_logged":
-								Lex();
-								a.Options.Add(new RecoveryBulkLogged());
-								break;
-							case "simple":
-								Lex();
-								a.Options.Add(new RecoverySimple());
-								break;
-							default:
-								throw ErrorToken("expected recovery option");
-							}
-							break;
-						}
-					while (Eat(','));
-					if (Eat("with"))
-						switch (Keyword()) {
-						case "no_wait":
-							Lex();
-							a.Termination = new NoWait();
-							break;
-						case "rollback":
-							Lex();
-							switch (Keyword()) {
-							case "after":
-								Lex();
-								a.Termination = new RollbackAfter(Int());
-								Eat("seconds");
-								break;
-							case "immediate":
-								Lex();
-								a.Termination = new RollbackImmediate();
-								break;
-							default:
-								throw ErrorToken("expected termination option");
-							}
-							break;
-						}
-					return a;
-				}
-				}
-				throw ErrorToken("unknown syntax");
-			}
 			case "table": {
 				Lex();
 				var tableName = QualifiedName();
@@ -523,7 +246,7 @@ public sealed class Parser {
 							break;
 						case "primary":
 						case "unique":
-							a.Keys.Add(Key(constraintName));
+							a.Keys.Add(Key());
 							break;
 						default:
 							if (constraintName != null)
@@ -657,7 +380,7 @@ public sealed class Parser {
 				break;
 			case "primary":
 			case "unique":
-				a.Keys.Add(Key(constraintName));
+				a.Keys.Add(Key());
 				break;
 			default:
 				if (constraintName != null)
@@ -667,26 +390,7 @@ public sealed class Parser {
 			}
 		} while (Eat(','));
 		Expect(')');
-		if (Eat("on"))
-			a.On = StorageOption();
-		if (Eat("textimage_on"))
-			a.TextimageOn = StorageOption();
-		if (Eat("filestream_on"))
-			a.FilestreamOn = StorageOption();
 		return a;
-	}
-
-	StorageOption? StorageOption() {
-		if (Eat("default"))
-			return null;
-		var location = new Location(file, line);
-		var name = Name();
-		if (Eat('(')) {
-			var a = new PartitionSchemeRef(location, name, Name());
-			Expect(')');
-			return a;
-		}
-		return new FilegroupRef(location, name);
 	}
 
 	DataType DataType() {
@@ -766,9 +470,9 @@ public sealed class Parser {
 		return a;
 	}
 
-	Key Key(string? constraintName) {
+	Key Key() {
 		var location = new Location(file, line);
-		var a = new Key(location, constraintName);
+		var a = new Key(location);
 
 		// Primary?
 		switch (Keyword()) {
@@ -793,9 +497,6 @@ public sealed class Parser {
 			a.Columns.Add(ColumnOrder());
 		while (Eat(','));
 		Expect(')');
-
-		if (Eat("on"))
-			a.On = StorageOption();
 		return a;
 	}
 
