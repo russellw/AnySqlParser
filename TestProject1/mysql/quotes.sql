@@ -8,10 +8,16 @@ create table `test``table`(
 );
 
 insert into `test``table` values('number''1');
+
 -- \ does escape '
 insert into `test``table` values('number\'2');
+
 -- but not itself
 -- this produces \\
 insert into `test``table` values('number\\3');
+
+-- string literal can contain newline
+insert into `test``table` values('number
+4');
 
 select * from `test``table`;
