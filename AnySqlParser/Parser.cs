@@ -979,9 +979,7 @@ public sealed class Parser {
 	}
 
 	int Int() {
-		if (token != kNumber)
-			throw ErrorToken("expected integer");
-		var n = int.Parse(tokenString, System.Globalization.CultureInfo.InvariantCulture);
+		var n = int.Parse(token.Value, System.Globalization.CultureInfo.InvariantCulture);
 		Lex();
 		return n;
 	}
@@ -1293,8 +1291,7 @@ public sealed class Parser {
 		do
 			AppendRead(sb);
 		while (IsWordPart());
-		token = kWord;
-		tokenString = sb.ToString();
+		token.Value = sb.ToString().ToLowerInvariant();
 	}
 
 	void Number() {
@@ -1305,9 +1302,8 @@ public sealed class Parser {
 			do
 				AppendRead(sb);
 			while (IsWordPart());
-		Debug.Assert(sb.Length > 0);
-		token = kNumber;
-		tokenString = sb.ToString();
+		Debug.Assert(sb.Length != 0);
+		token.Value = sb.ToString();
 	}
 
 	bool IsWordPart() {
