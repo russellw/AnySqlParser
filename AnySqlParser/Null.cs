@@ -1,6 +1,6 @@
 ﻿namespace AnySqlParser;
 public sealed class Null: Expression {
-	public Null(Location location): base(location) {
+	public Null() {
 	}
 
 	public override bool Eq(Expression b) {

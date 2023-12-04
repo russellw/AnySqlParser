@@ -2,7 +2,7 @@
 public sealed class StringLiteral: Expression {
 	public string Value;
 
-	public StringLiteral(Location location, string value): base(location) {
+	public StringLiteral(string value) {
 		Value = value;
 	}
 

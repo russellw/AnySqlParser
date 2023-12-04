@@ -2,7 +2,7 @@
 public sealed class Subquery: Expression {
 	public QueryExpression Query;
 
-	public Subquery(Location location, QueryExpression query): base(location) {
+	public Subquery(QueryExpression query) {
 		Query = query;
 	}
 }

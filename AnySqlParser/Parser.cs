@@ -49,13 +49,13 @@ public sealed class Parser {
 				switch (Keyword()) {
 				case "cursor":
 					Lex();
-					a.CursorVariables.Add(new CursorVariable(location, name));
+					a.CursorVariables.Add(new CursorVariable(name));
 					continue;
 				case "as":
 					Lex();
 					break;
 				}
-				var b = new LocalVariable(location, name, DataType());
+				var b = new LocalVariable(name, DataType());
 				if (Eat("="))
 					b.Value = Expression();
 				a.LocalVariables.Add(b);
@@ -67,7 +67,7 @@ public sealed class Parser {
 			return new Go(location);
 		case "use":
 			Lex();
-			return new Use(location, Name());
+			return new Use(Name());
 		case "if": {
 			Lex();
 			var a = new If(location);
@@ -79,7 +79,7 @@ public sealed class Parser {
 		}
 		case "set":
 			Lex();
-			return new SetGlobal(location, Name(), Expression());
+			return new SetGlobal(Name(), Expression());
 		case "select":
 			return Select();
 		case "insert": {
@@ -163,7 +163,7 @@ public sealed class Parser {
 				switch (Keyword()) {
 				case "add": {
 					Lex();
-					var a = new AlterTableAdd(location, tableName);
+					var a = new AlterTableAdd(tableName);
 					do {
 						string? constraintName = null;
 						if (Eat("constraint"))
@@ -235,7 +235,7 @@ public sealed class Parser {
 		Debug.Assert(Keyword() == "table");
 		var location = new Location(file, line);
 		Lex();
-		var a = new Table(location, QualifiedName());
+		var a = new Table(QualifiedName());
 		Expect("(");
 		do {
 			string? constraintName = null;
@@ -276,7 +276,7 @@ public sealed class Parser {
 
 	Column Column() {
 		var location = new Location(file, line);
-		var a = new Column(location, Name(), DataType());
+		var a = new Column(Name(), DataType());
 
 		// Constraints etc
 		while (token == kWord) {
@@ -362,7 +362,7 @@ public sealed class Parser {
 		var location = new Location(file, line);
 		Expect("foreign");
 		Expect("key");
-		var a = new ForeignKey(location, constraintName);
+		var a = new ForeignKey(constraintName);
 
 		// Columns
 		Expect("(");
@@ -434,7 +434,7 @@ public sealed class Parser {
 
 	Check Check(string? constraintName) {
 		var location = new Location(file, line);
-		var a = new Check(location, constraintName);
+		var a = new Check(constraintName);
 		if (Eat("not")) {
 			Expect("for");
 			Expect("replication");
@@ -448,7 +448,7 @@ public sealed class Parser {
 		Debug.Assert(Keyword() == "constraint");
 		var location = new Location(file, line);
 		Lex();
-		var a = new AlterTableCheckConstraints(location, tableName, check);
+		var a = new AlterTableCheckConstraints(tableName, check);
 		if (!Eat("all"))
 			do
 				a.ConstraintNames.Add(Name());
@@ -458,7 +458,7 @@ public sealed class Parser {
 
 	Select Select() {
 		var location = new Location(file, line);
-		var a = new Select(location, QueryExpression());
+		var a = new Select(QueryExpression());
 		while (token == kWord)
 			switch (Keyword()) {
 			case "order":
@@ -493,7 +493,7 @@ public sealed class Parser {
 			}
 			var location = new Location(file, line);
 			Lex();
-			a = new QueryBinaryExpression(location, op, a, Intersect());
+			a = new QueryBinaryExpression(op, a, Intersect());
 		}
 	}
 
@@ -504,7 +504,7 @@ public sealed class Parser {
 			var location = new Location(file, line);
 			if (!Eat("intersect"))
 				return a;
-			a = new QueryBinaryExpression(location, QueryOp.Intersect, a, QuerySpecification());
+			a = new QueryBinaryExpression(QueryOp.Intersect, a, QuerySpecification());
 		}
 	}
 
@@ -596,14 +596,14 @@ public sealed class Parser {
 				Expect("join");
 				var b = PrimaryTableSource();
 				Expect("on");
-				a = new Join(location, JoinType.Inner, a, b, Expression());
+				a = new Join(JoinType.Inner, a, b, Expression());
 				break;
 			}
 			case "join": {
 				Lex();
 				var b = PrimaryTableSource();
 				Expect("on");
-				a = new Join(location, JoinType.Inner, a, b, Expression());
+				a = new Join(JoinType.Inner, a, b, Expression());
 				break;
 			}
 			case "left": {
@@ -612,7 +612,7 @@ public sealed class Parser {
 				Expect("join");
 				var b = PrimaryTableSource();
 				Expect("on");
-				a = new Join(location, JoinType.Left, a, b, Expression());
+				a = new Join(JoinType.Left, a, b, Expression());
 				break;
 			}
 			case "right": {
@@ -621,7 +621,7 @@ public sealed class Parser {
 				Expect("join");
 				var b = PrimaryTableSource();
 				Expect("on");
-				a = new Join(location, JoinType.Right, a, b, Expression());
+				a = new Join(JoinType.Right, a, b, Expression());
 				break;
 			}
 			case "full": {
@@ -630,7 +630,7 @@ public sealed class Parser {
 				Expect("join");
 				var b = PrimaryTableSource();
 				Expect("on");
-				a = new Join(location, JoinType.Full, a, b, Expression());
+				a = new Join(JoinType.Full, a, b, Expression());
 				break;
 			}
 			default:
@@ -646,7 +646,7 @@ public sealed class Parser {
 			return b;
 		}
 		var location = new Location(file, line);
-		var a = new PrimaryTableSource(location, QualifiedName());
+		var a = new PrimaryTableSource(QualifiedName());
 		switch (token) {
 		case kQuotedName:
 			break;
@@ -687,8 +687,7 @@ public sealed class Parser {
 	}
 
 	ColumnOrder ColumnOrder() {
-		var location = new Location(file, line);
-		var a = new ColumnOrder(location, Name());
+		var a = new ColumnOrder(Name());
 		a.Desc = Desc();
 		return a;
 	}
@@ -720,7 +719,6 @@ public sealed class Parser {
 	Expression Expression() {
 		var a = And();
 		for (;;) {
-			var location = new Location(file, line);
 			BinaryOp op;
 			switch (Keyword()) {
 			case "not": {
@@ -728,13 +726,13 @@ public sealed class Parser {
 				Expect("between");
 				var b = Addition();
 				Expect("and");
-				return new TernaryExpression(location, TernaryOp.NotBetween, a, b, Addition());
+				return new TernaryExpression(TernaryOp.NotBetween, a, b, Addition());
 			}
 			case "between": {
 				Lex();
 				var b = Addition();
 				Expect("and");
-				return new TernaryExpression(location, TernaryOp.Between, a, b, Addition());
+				return new TernaryExpression(TernaryOp.Between, a, b, Addition());
 			}
 			case "or":
 				op = BinaryOp.Or;
@@ -743,16 +741,15 @@ public sealed class Parser {
 				return a;
 			}
 			Lex();
-			a = new BinaryExpression(location, op, a, And());
+			a = new BinaryExpression(op, a, And());
 		}
 	}
 
 	Expression And() {
 		var a = Not();
 		for (;;) {
-			var location = new Location(file, line);
 			if (Eat("and")) {
-				a = new BinaryExpression(location, BinaryOp.And, a, Not());
+				a = new BinaryExpression(BinaryOp.And, a, Not());
 				continue;
 			}
 			return a;
@@ -760,15 +757,13 @@ public sealed class Parser {
 	}
 
 	Expression Not() {
-		var location = new Location(file, line);
 		if (Eat("not"))
-			return new UnaryExpression(location, UnaryOp.Not, Not());
+			return new UnaryExpression(UnaryOp.Not, Not());
 		return Comparison();
 	}
 
 	Expression Comparison() {
 		var a = Addition();
-		var location = new Location(file, line);
 		BinaryOp op;
 		switch (token.Value) {
 		case "is":
@@ -776,11 +771,11 @@ public sealed class Parser {
 			switch (Keyword()) {
 			case "null":
 				Lex();
-				return new UnaryExpression(location, UnaryOp.IsNull, a);
+				return new UnaryExpression(UnaryOp.IsNull, a);
 			case "not":
 				Lex();
 				Expect("null");
-				return new UnaryExpression(location, UnaryOp.IsNull, a);
+				return new UnaryExpression(UnaryOp.IsNull, a);
 			}
 			throw ErrorToken("expected NOT or NULL");
 		case "=":
@@ -805,7 +800,7 @@ public sealed class Parser {
 			return a;
 		}
 		Lex();
-		return new BinaryExpression(location, op, a, Addition());
+		return new BinaryExpression(op, a, Addition());
 	}
 
 	Expression Addition() {
@@ -834,9 +829,8 @@ public sealed class Parser {
 			default:
 				return a;
 			}
-			var location = new Location(file, line);
 			Lex();
-			a = new BinaryExpression(location, op, a, Multiplication());
+			a = new BinaryExpression(op, a, Multiplication());
 		}
 	}
 
@@ -857,28 +851,26 @@ public sealed class Parser {
 			default:
 				return a;
 			}
-			var location = new Location(file, line);
 			Lex();
-			a = new BinaryExpression(location, op, a, Prefix());
+			a = new BinaryExpression(op, a, Prefix());
 		}
 	}
 
 	Expression Prefix() {
-		var location = new Location(file, line);
 		switch (token.Value) {
 		case "select":
-			return new Subquery(location, QueryExpression());
+			return new Subquery(QueryExpression());
 		case "exists": {
 			Lex();
 			Expect("(");
-			var a = new Exists(location, Select());
+			var a = new Exists(Select());
 			Expect(")");
 			return a;
 		}
 		case "cast": {
 			Lex();
 			Expect("(");
-			var a = new Cast(location, Expression());
+			var a = new Cast(Expression());
 			Expect("as");
 			a.DataType = DataType();
 			Expect(")");
@@ -886,20 +878,19 @@ public sealed class Parser {
 		}
 		case "~":
 			Lex();
-			return new UnaryExpression(location, UnaryOp.BitNot, Prefix());
+			return new UnaryExpression(UnaryOp.BitNot, Prefix());
 		case "-":
 			Lex();
-			return new UnaryExpression(location, UnaryOp.Minus, Prefix());
+			return new UnaryExpression(UnaryOp.Minus, Prefix());
 		}
 		return Postfix();
 	}
 
 	Expression Postfix() {
 		var a = Primary();
-		var location = new Location(file, line);
 		if (Eat("(")) {
 			if (a is QualifiedName a1) {
-				var call = new Call(location, a1);
+				var call = new Call(a1);
 				if (token.Value != ")")
 					do
 						call.Arguments.Add(Expression());
@@ -907,24 +898,23 @@ public sealed class Parser {
 				Expect(")");
 				return call;
 			}
-			throw Error("call of non-function", location.Line);
+			throw Error("call of non-function");
 		}
 		return a;
 	}
 
 	Expression Primary() {
-		var location = new Location(file, line);
 		switch (token.Value) {
 		case "@":
 			Lex();
-			return new ParameterRef(location, Name());
+			return new ParameterRef(Name());
 		case kStringLiteral: {
-			var a = new StringLiteral(location, tokenString);
+			var a = new StringLiteral(tokenString);
 			Lex();
 			return a;
 		}
 		case kNumber: {
-			var a = new Number(location, tokenString);
+			var a = new Number(tokenString);
 			Lex();
 			return a;
 		}
@@ -948,7 +938,6 @@ public sealed class Parser {
 	}
 
 	QualifiedName QualifiedName() {
-		var location = new Location(file, line);
 		var a = new QualifiedName(location);
 		do {
 			if (Eat("*")) {

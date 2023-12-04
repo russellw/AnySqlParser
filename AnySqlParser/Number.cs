@@ -2,7 +2,7 @@
 public sealed class Number: Expression {
 	public string Value;
 
-	public Number(Location location, string value): base(location) {
+	public Number(string value) {
 		Value = value;
 	}
 

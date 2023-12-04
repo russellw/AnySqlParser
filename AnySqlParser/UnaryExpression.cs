@@ -3,7 +3,7 @@ public sealed class UnaryExpression: Expression {
 	public UnaryOp Op;
 	public Expression Operand;
 
-	public UnaryExpression(Location location, UnaryOp op, Expression operand): base(location) {
+	public UnaryExpression(UnaryOp op, Expression operand) {
 		Op = op;
 		Operand = operand;
 	}

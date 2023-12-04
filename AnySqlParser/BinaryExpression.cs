@@ -3,7 +3,7 @@ public sealed class BinaryExpression: Expression {
 	public BinaryOp Op;
 	public Expression Left, Right;
 
-	public BinaryExpression(Location location, BinaryOp op, Expression left, Expression right): base(location) {
+	public BinaryExpression(BinaryOp op, Expression left, Expression right) {
 		Op = op;
 		Left = left;
 		Right = right;

@@ -3,7 +3,7 @@ public sealed class Cast: Expression {
 	public Expression Operand;
 	public DataType DataType;
 
-	public Cast(Location location, Expression operand): base(location) {
+	public Cast(Expression operand) {
 		Operand = operand;
 	}
 

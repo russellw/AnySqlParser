@@ -2,7 +2,7 @@
 public sealed class Exists: Expression {
 	public Select Query;
 
-	public Exists(Location location, Select query): base(location) {
+	public Exists(Select query) {
 		Query = query;
 	}
 }

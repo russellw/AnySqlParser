@@ -3,8 +3,7 @@ public sealed class TernaryExpression: Expression {
 	public TernaryOp Op;
 	public Expression First, Second, Third;
 
-	public TernaryExpression(Location location, TernaryOp op, Expression first, Expression second, Expression third)
-		: base(location) {
+	public TernaryExpression(TernaryOp op, Expression first, Expression second, Expression third) {
 		Op = op;
 		First = first;
 		Second = second;

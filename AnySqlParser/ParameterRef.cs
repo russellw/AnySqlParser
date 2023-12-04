@@ -2,7 +2,7 @@
 public sealed class ParameterRef: Expression {
 	public string Name;
 
-	public ParameterRef(Location location, string name): base(location) {
+	public ParameterRef(string name) {
 		Name = name;
 	}
 
