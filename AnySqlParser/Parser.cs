@@ -19,7 +19,7 @@ public sealed class Parser {
 	readonly TextReader reader;
 	readonly string file;
 	int line;
-	int ch;
+	int c;
 	Token token;
 
 	Parser(TextReader reader, string file, int line) {
@@ -111,13 +111,11 @@ public sealed class Parser {
 		case "create": {
 			Lex();
 			var unique = Eat("unique");
-			var clustered = Clustered();
 			switch (Keyword()) {
 			case "index": {
 				Lex();
 				var a = new Index(location);
 				a.Unique = unique;
-				a.Clustered = clustered;
 				a.Name = Name();
 
 				// Table
@@ -1024,7 +1022,7 @@ public sealed class Parser {
 	void Lex() {
 		for (;;) {
 			token.Location = new Location(file, line);
-			switch (ch) {
+			switch (c) {
 			case '\'':
 				SingleQuote();
 				return;
@@ -1039,7 +1037,7 @@ public sealed class Parser {
 				return;
 			case '!':
 				Read();
-				switch (ch) {
+				switch (c) {
 				case '=':
 					Read();
 					token.Value = "<>";
@@ -1057,7 +1055,7 @@ public sealed class Parser {
 				break;
 			case '|':
 				Read();
-				switch (ch) {
+				switch (c) {
 				case '|':
 					Read();
 					token.Value = "||";
@@ -1066,7 +1064,7 @@ public sealed class Parser {
 				break;
 			case '>':
 				Read();
-				switch (ch) {
+				switch (c) {
 				case '=':
 					Read();
 					token.Value = ">=";
@@ -1076,7 +1074,7 @@ public sealed class Parser {
 				return;
 			case '<':
 				Read();
-				switch (ch) {
+				switch (c) {
 				case '=':
 					Read();
 					token.Value = "<=";
@@ -1090,7 +1088,7 @@ public sealed class Parser {
 				return;
 			case '/':
 				Read();
-				switch (ch) {
+				switch (c) {
 				case '*':
 					BlockComment();
 					continue;
@@ -1155,7 +1153,7 @@ public sealed class Parser {
 				return;
 			case '-':
 				Read();
-				switch (ch) {
+				switch (c) {
 				case '-':
 					reader.ReadLine();
 					line++;
@@ -1251,34 +1249,34 @@ public sealed class Parser {
 			default:
 				// Common letters are handled in the switch for speed
 				// but there are other letters in Unicode
-				if (char.IsLetter((char)ch)) {
+				if (char.IsLetter((char)c)) {
 					Word();
 					return;
 				}
 
 				// Likewise digits
-				if (char.IsDigit((char)ch)) {
+				if (char.IsDigit((char)c)) {
 					Number();
 					return;
 				}
 
 				// And whitespace
-				if (char.IsWhiteSpace((char)ch)) {
+				if (char.IsWhiteSpace((char)c)) {
 					Read();
 					continue;
 				}
 				break;
 			}
-			throw Error("stray " + (char)ch);
+			throw Error("stray " + (char)c);
 		}
 	}
 
 	void BlockComment() {
-		Debug.Assert(ch == '*');
+		Debug.Assert(c == '*');
 		var line1 = line;
 		for (;;) {
 			Read();
-			switch (ch) {
+			switch (c) {
 			case -1:
 				throw Error("unclosed /*", line1);
 			case '*':
@@ -1296,30 +1294,30 @@ public sealed class Parser {
 		var sb = new StringBuilder();
 		do
 			AppendRead(sb);
-		while (Etc.IsWordPart(ch));
+		while (Etc.IsWordPart(c));
 		token.Value = sb.ToString().ToLowerInvariant();
 	}
 
 	void Number() {
 		var sb = new StringBuilder();
-		while (Etc.IsWordPart(ch))
+		while (Etc.IsWordPart(c))
 			AppendRead(sb);
-		if (ch == '.')
+		if (c == '.')
 			do
 				AppendRead(sb);
-			while (Etc.IsWordPart(ch));
+			while (Etc.IsWordPart(c));
 		Debug.Assert(sb.Length != 0);
 		token.Value = sb.ToString();
 	}
 
 	void SingleQuote() {
 		// For string literals, single quote is reliably portable across dialects
-		Debug.Assert(ch == '\'');
+		Debug.Assert(c == '\'');
 		var line1 = line;
 		Read();
 		var sb = new StringBuilder();
 		for (;;) {
-			switch (ch) {
+			switch (c) {
 			case -1:
 				throw Error("unclosed '", line1);
 			case '\\':
@@ -1332,7 +1330,7 @@ public sealed class Parser {
 				break;
 			case '\'':
 				Read();
-				switch (ch) {
+				switch (c) {
 				case '\'':
 					break;
 				default:
@@ -1348,12 +1346,12 @@ public sealed class Parser {
 
 	void DoubleQuote() {
 		// For unusual identifiers, standard SQL uses double quotes
-		Debug.Assert(ch == '"');
+		Debug.Assert(c == '"');
 		var line1 = line;
 		Read();
 		var sb = new StringBuilder();
 		for (;;) {
-			switch (ch) {
+			switch (c) {
 			case -1:
 				throw Error("unclosed \"", line1);
 			case '\\':
@@ -1366,7 +1364,7 @@ public sealed class Parser {
 				break;
 			case '"':
 				Read();
-				switch (ch) {
+				switch (c) {
 				case '"':
 					break;
 				default:
@@ -1382,12 +1380,12 @@ public sealed class Parser {
 
 	void Backquote() {
 		// For unusual identifiers, MySQL uses backquotes
-		Debug.Assert(ch == '`');
+		Debug.Assert(c == '`');
 		var line1 = line;
 		Read();
 		var sb = new StringBuilder();
 		for (;;) {
-			switch (ch) {
+			switch (c) {
 			case -1:
 				throw Error("unclosed `", line1);
 			case '\\':
@@ -1400,7 +1398,7 @@ public sealed class Parser {
 				break;
 			case '`':
 				Read();
-				switch (ch) {
+				switch (c) {
 				case '`':
 					break;
 				default:
@@ -1416,17 +1414,17 @@ public sealed class Parser {
 
 	void Square() {
 		// For unusual identifiers, SQL Server uses square brackets
-		Debug.Assert(ch == '[');
+		Debug.Assert(c == '[');
 		var line1 = line;
 		Read();
 		var sb = new StringBuilder();
 		for (;;) {
-			switch (ch) {
+			switch (c) {
 			case -1:
 				throw Error("unclosed [", line1);
 			case ']':
 				Read();
-				switch (ch) {
+				switch (c) {
 				case ']':
 					break;
 				default:
@@ -1441,14 +1439,14 @@ public sealed class Parser {
 	}
 
 	void AppendRead(StringBuilder sb) {
-		sb.Append((char)ch);
+		sb.Append((char)c);
 		Read();
 	}
 
 	void Read() {
-		if (ch == '\n')
+		if (c == '\n')
 			line++;
-		ch = reader.Read();
+		c = reader.Read();
 	}
 
 	Exception ErrorToken(string message) {

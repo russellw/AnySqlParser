@@ -2,10 +2,10 @@
 
 namespace AnySqlParser;
 public static class Etc {
-	public static bool IsWordPart(int ch) {
-		if (char.IsLetterOrDigit((char)ch))
+	public static bool IsWordPart(int c) {
+		if (char.IsLetterOrDigit((char)c))
 			return true;
-		return ch == '_';
+		return c == '_';
 	}
 
 	public static string Unquote(string s) {
