@@ -689,18 +689,6 @@ public sealed class Parser {
 		return false;
 	}
 
-	bool OnOff() {
-		switch (Keyword()) {
-		case "on":
-			Lex();
-			return true;
-		case "off":
-			Lex();
-			return false;
-		}
-		throw ErrorToken("expected ON or OFF");
-	}
-
 	Expression Expression() {
 		var a = And();
 		for (;;) {
