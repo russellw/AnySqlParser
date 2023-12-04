@@ -2,9 +2,12 @@ DROP DATABASE IF EXISTS test123987632022;
 CREATE DATABASE test123987632022;
 USE test123987632022;
 
+-- ` works, " doesn't
+-- \ doesn't escape `
+-- names can contain newline
 create table `test``table`(
-    -- \ doesn't escape `
-    `test``column` varchar(40) primary key
+    `test
+column` varchar(40) primary key
 );
 
 insert into `test``table` values('number''1');
