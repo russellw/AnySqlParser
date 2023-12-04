@@ -1290,26 +1290,20 @@ public sealed class Parser {
 		var sb = new StringBuilder();
 		do
 			AppendRead(sb);
-		while (IsWordPart());
+		while (Etc.IsWordPart(ch));
 		token.Value = sb.ToString().ToLowerInvariant();
 	}
 
 	void Number() {
 		var sb = new StringBuilder();
-		while (IsWordPart())
+		while (Etc.IsWordPart(ch))
 			AppendRead(sb);
 		if (ch == '.')
 			do
 				AppendRead(sb);
-			while (IsWordPart());
+			while (Etc.IsWordPart(ch));
 		Debug.Assert(sb.Length != 0);
 		token.Value = sb.ToString();
-	}
-
-	bool IsWordPart() {
-		if (char.IsLetterOrDigit((char)ch))
-			return true;
-		return ch == '_';
 	}
 
 	void SingleQuote() {
