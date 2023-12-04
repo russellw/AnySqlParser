@@ -1,1 +1,1 @@
-psql -U postgres -f cities.sql
+psql -U postgres -f %1
