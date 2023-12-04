@@ -935,13 +935,69 @@ public sealed class Parser {
 	}
 
 	string Name() {
-		switch (token) {
-		case kWord:
-		case kQuotedName: {
-			var s = tokenString;
+		switch (token.Value[0]) {
+		case 'N':
+		case 'A':
+		case 'B':
+		case 'C':
+		case 'D':
+		case 'E':
+		case 'F':
+		case 'G':
+		case 'H':
+		case 'I':
+		case 'J':
+		case 'K':
+		case 'L':
+		case 'M':
+		case 'O':
+		case 'P':
+		case 'Q':
+		case 'R':
+		case 'S':
+		case 'T':
+		case 'U':
+		case 'V':
+		case 'W':
+		case 'X':
+		case 'Y':
+		case 'Z':
+		case '_':
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+		case 'f':
+		case 'g':
+		case 'h':
+		case 'i':
+		case 'j':
+		case 'k':
+		case 'l':
+		case 'm':
+		case 'n':
+		case 'o':
+		case 'p':
+		case 'q':
+		case 'r':
+		case 's':
+		case 't':
+		case 'u':
+		case 'v':
+		case 'w':
+		case 'x':
+		case 'y':
+		case 'z': {
+			var s = token.Value;
 			Lex();
 			return s;
 		}
+		}
+		if (char.IsLetter(token.Value[0])) {
+			var s = token.Value;
+			Lex();
+			return s;
 		}
 		throw ErrorToken("expected name");
 	}
