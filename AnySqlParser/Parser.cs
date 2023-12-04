@@ -588,8 +588,7 @@ public sealed class Parser {
 
 	TableSource Join() {
 		var a = PrimaryTableSource();
-		for (;;) {
-			var location = new Location(file, line);
+		for (;;)
 			switch (Keyword()) {
 			case "inner": {
 				Lex();
@@ -636,7 +635,6 @@ public sealed class Parser {
 			default:
 				return a;
 			}
-		}
 	}
 
 	TableSource PrimaryTableSource() {
@@ -645,7 +643,6 @@ public sealed class Parser {
 			Expect(")");
 			return b;
 		}
-		var location = new Location(file, line);
 		var a = new PrimaryTableSource(QualifiedName());
 		switch (token) {
 		case kQuotedName:
@@ -672,18 +669,6 @@ public sealed class Parser {
 		}
 		a.TableAlias = Name();
 		return a;
-	}
-
-	bool? Clustered() {
-		switch (Keyword()) {
-		case "clustered":
-			Lex();
-			return true;
-		case "nonclustered":
-			Lex();
-			return false;
-		}
-		return null;
 	}
 
 	ColumnOrder ColumnOrder() {
@@ -938,7 +923,7 @@ public sealed class Parser {
 	}
 
 	QualifiedName QualifiedName() {
-		var a = new QualifiedName(location);
+		var a = new QualifiedName();
 		do {
 			if (Eat("*")) {
 				a.Star = true;
