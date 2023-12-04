@@ -344,9 +344,6 @@ public sealed class Parser {
 			throw ErrorToken("expected key type");
 		}
 
-		// Clustered?
-		a.Clustered = Clustered();
-
 		// Columns
 		Expect("(");
 		do
