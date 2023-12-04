@@ -113,24 +113,6 @@ public sealed class Parser {
 			var unique = Eat("unique");
 			var clustered = Clustered();
 			switch (Keyword()) {
-			case "database": {
-				Lex();
-				var a = new CreateDatabase(location, Name());
-				if (Eat("containment")) {
-					Expect("=");
-					switch (Keyword()) {
-					case "none":
-						a.Containment = Containment.None;
-						break;
-					case "partial":
-						a.Containment = Containment.Partial;
-						break;
-					default:
-						throw ErrorToken("expected containment");
-					}
-				}
-				return a;
-			}
 			case "index": {
 				Lex();
 				var a = new Index(location);
