@@ -993,6 +993,12 @@ public sealed class Parser {
 			Lex();
 			return s;
 		}
+		case '"':
+		case '`': {
+			var s = Etc.Unquote(token.Value);
+			Lex();
+			return s;
+		}
 		}
 		if (char.IsLetter(token.Value[0])) {
 			var s = token.Value;
