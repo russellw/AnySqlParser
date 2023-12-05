@@ -165,7 +165,7 @@ public sealed class Parser {
 				constraintName = Name();
 			switch (token.Value) {
 			case "foreign":
-				a.ForeignKeys.Add(ForeignKey(constraintName));
+				a.ForeignKeys.Add(ForeignKey());
 				break;
 			case "check":
 				a.Checks.Add(Check(constraintName));
@@ -349,42 +349,24 @@ public sealed class Parser {
 		throw ErrorToken("expected action");
 	}
 
-	Check Check(string? constraintName) {
-		var location = new Location(file, line);
-		var a = new Check(constraintName);
+	Expression Check() {
 		if (Eat("not")) {
 			Expect("for");
 			Expect("replication");
-			a.ForReplication = false;
 		}
-		a.Expression = Expression();
-		return a;
-	}
-
-	AlterTableCheckConstraints AlterTableCheckConstraints(QualifiedName tableName, bool check) {
-		Debug.Assert(token.Value == "constraint");
-		Lex();
-		var a = new AlterTableCheckConstraints(tableName, check);
-		if (!Eat("all"))
-			do
-				a.ConstraintNames.Add(Name());
-			while (Eat(","));
-		return a;
+		return Expression();
 	}
 
 	Select Select() {
 		var a = new Select(QueryExpression());
-		while (token == kWord)
-			switch (token.Value) {
-			case "order":
-				Lex();
-				Expect("by");
-				a.OrderBy = Expression();
-				a.Desc = Desc();
-				break;
-			default:
-				return a;
-			}
+		switch (token.Value) {
+		case "order":
+			Lex();
+			Expect("by");
+			a.OrderBy = Expression();
+			a.Desc = Desc();
+			break;
+		}
 		return a;
 	}
 
