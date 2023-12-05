@@ -38,15 +38,14 @@ public sealed class Parser {
 
 	Statement Statement() {
 		var location = new Location(file, line);
-		switch (Keyword()) {
+		switch (token.Value) {
 		case "declare": {
 			Lex();
 			Expect("@");
 			var a = new Declare(location);
 			do {
-				location = new Location(file, line);
 				var name = Name();
-				switch (Keyword()) {
+				switch (token.Value) {
 				case "cursor":
 					Lex();
 					a.CursorVariables.Add(new CursorVariable(name));
@@ -62,12 +61,6 @@ public sealed class Parser {
 			} while (Eat(","));
 			return a;
 		}
-		case "go":
-			Lex();
-			return new Go(location);
-		case "use":
-			Lex();
-			return new Use(Name());
 		case "if": {
 			Lex();
 			var a = new If(location);
@@ -111,7 +104,7 @@ public sealed class Parser {
 		case "create": {
 			Lex();
 			var unique = Eat("unique");
-			switch (Keyword()) {
+			switch (token.Value) {
 			case "index": {
 				Lex();
 				var a = new Index(location);
@@ -154,11 +147,11 @@ public sealed class Parser {
 		}
 		case "alter": {
 			Lex();
-			switch (Keyword()) {
+			switch (token.Value) {
 			case "table": {
 				Lex();
 				var tableName = QualifiedName();
-				switch (Keyword()) {
+				switch (token.Value) {
 				case "add": {
 					Lex();
 					var a = new AlterTableAdd(tableName);
@@ -166,7 +159,7 @@ public sealed class Parser {
 						string? constraintName = null;
 						if (Eat("constraint"))
 							constraintName = Name();
-						switch (Keyword()) {
+						switch (token.Value) {
 						case "foreign":
 							a.ForeignKeys.Add(ForeignKey(constraintName));
 							break;
@@ -188,17 +181,17 @@ public sealed class Parser {
 				}
 				case "with":
 					Lex();
-					switch (Keyword()) {
+					switch (token.Value) {
 					case "check":
 						Lex();
-						switch (Keyword()) {
+						switch (token.Value) {
 						case "constraint":
 							return AlterTableCheckConstraints(tableName, true);
 						}
 						break;
 					case "nocheck":
 						Lex();
-						switch (Keyword()) {
+						switch (token.Value) {
 						case "constraint":
 							return AlterTableCheckConstraints(tableName, false);
 						}
@@ -207,14 +200,14 @@ public sealed class Parser {
 					break;
 				case "check":
 					Lex();
-					switch (Keyword()) {
+					switch (token.Value) {
 					case "constraint":
 						return AlterTableCheckConstraints(tableName, true);
 					}
 					break;
 				case "nocheck":
 					Lex();
-					switch (Keyword()) {
+					switch (token.Value) {
 					case "constraint":
 						return AlterTableCheckConstraints(tableName, false);
 					}
@@ -230,7 +223,7 @@ public sealed class Parser {
 	}
 
 	Table Table() {
-		Debug.Assert(Keyword() == "table");
+		Debug.Assert(token.Value == "table");
 		var location = new Location(file, line);
 		Lex();
 		var a = new Table(QualifiedName());
@@ -239,7 +232,7 @@ public sealed class Parser {
 			string? constraintName = null;
 			if (Eat("constraint"))
 				constraintName = Name();
-			switch (Keyword()) {
+			switch (token.Value) {
 			case "foreign":
 				a.ForeignKeys.Add(ForeignKey(constraintName));
 				break;
@@ -280,7 +273,7 @@ public sealed class Parser {
 		while (token == kWord) {
 			if (Eat("constraint"))
 				Name();
-			switch (Keyword()) {
+			switch (token.Value) {
 			case "default":
 				Lex();
 				a.Default = Expression();
@@ -305,7 +298,7 @@ public sealed class Parser {
 				break;
 			case "not":
 				Lex();
-				switch (Keyword()) {
+				switch (token.Value) {
 				case "null":
 					Lex();
 					a.Nullable = false;
@@ -331,7 +324,7 @@ public sealed class Parser {
 		var a = new Key(location);
 
 		// Primary?
-		switch (Keyword()) {
+		switch (token.Value) {
 		case "primary":
 			Lex();
 			Expect("key");
@@ -378,7 +371,7 @@ public sealed class Parser {
 
 		// Actions
 		while (Eat("on"))
-			switch (Keyword()) {
+			switch (token.Value) {
 			case "delete":
 				Lex();
 				a.OnDelete = Action();
@@ -401,7 +394,7 @@ public sealed class Parser {
 	}
 
 	Action Action() {
-		switch (Keyword()) {
+		switch (token.Value) {
 		case "cascade":
 			Lex();
 			return AnySqlParser.Action.Cascade;
@@ -414,7 +407,7 @@ public sealed class Parser {
 			return AnySqlParser.Action.NoAction;
 		case "set":
 			Lex();
-			switch (Keyword()) {
+			switch (token.Value) {
 			case "null":
 				Lex();
 				return AnySqlParser.Action.SetNull;
@@ -440,8 +433,7 @@ public sealed class Parser {
 	}
 
 	AlterTableCheckConstraints AlterTableCheckConstraints(QualifiedName tableName, bool check) {
-		Debug.Assert(Keyword() == "constraint");
-		var location = new Location(file, line);
+		Debug.Assert(token.Value == "constraint");
 		Lex();
 		var a = new AlterTableCheckConstraints(tableName, check);
 		if (!Eat("all"))
@@ -452,10 +444,9 @@ public sealed class Parser {
 	}
 
 	Select Select() {
-		var location = new Location(file, line);
 		var a = new Select(QueryExpression());
 		while (token == kWord)
-			switch (Keyword()) {
+			switch (token.Value) {
 			case "order":
 				Lex();
 				Expect("by");
@@ -472,8 +463,9 @@ public sealed class Parser {
 		var a = Intersect();
 		for (;;) {
 			QueryOp op;
-			switch (Keyword()) {
+			switch (token.Value) {
 			case "union":
+				Lex();
 				if (Eat("all")) {
 					op = QueryOp.UnionAll;
 					break;
@@ -481,13 +473,12 @@ public sealed class Parser {
 				op = QueryOp.Union;
 				break;
 			case "except":
+				Lex();
 				op = QueryOp.Except;
 				break;
 			default:
 				return a;
 			}
-			var location = new Location(file, line);
-			Lex();
 			a = new QueryBinaryExpression(op, a, Intersect());
 		}
 	}
@@ -512,7 +503,7 @@ public sealed class Parser {
 		// but unknown keywords must be left alone
 		// as they might be part of the select list
 		for (;;) {
-			switch (Keyword()) {
+			switch (token.Value) {
 			case "all":
 				Lex();
 				a.All = true;
@@ -545,7 +536,7 @@ public sealed class Parser {
 
 		// Any keyword after the select list, must be a clause
 		while (token == kWord)
-			switch (Keyword()) {
+			switch (token.Value) {
 			case "where":
 				Lex();
 				a.Where = Expression();
@@ -584,7 +575,7 @@ public sealed class Parser {
 	TableSource Join() {
 		var a = PrimaryTableSource();
 		for (;;)
-			switch (Keyword()) {
+			switch (token.Value) {
 			case "inner": {
 				Lex();
 				Expect("join");
@@ -643,7 +634,7 @@ public sealed class Parser {
 		case kQuotedName:
 			break;
 		case kWord:
-			switch (Keyword()) {
+			switch (token.Value) {
 			case "as":
 				Lex();
 				break;
@@ -673,7 +664,7 @@ public sealed class Parser {
 	}
 
 	bool Desc() {
-		switch (Keyword()) {
+		switch (token.Value) {
 		case "desc":
 			Lex();
 			return true;
@@ -688,7 +679,7 @@ public sealed class Parser {
 		var a = And();
 		for (;;) {
 			BinaryOp op;
-			switch (Keyword()) {
+			switch (token.Value) {
 			case "not": {
 				Lex();
 				Expect("between");
@@ -736,7 +727,7 @@ public sealed class Parser {
 		switch (token.Value) {
 		case "is":
 			Lex();
-			switch (Keyword()) {
+			switch (token.Value) {
 			case "null":
 				Lex();
 				return new UnaryExpression(UnaryOp.IsNull, a);
@@ -980,12 +971,6 @@ public sealed class Parser {
 		var n = int.Parse(token.Value, System.Globalization.CultureInfo.InvariantCulture);
 		Lex();
 		return n;
-	}
-
-	string? Keyword() {
-		if (token != kWord)
-			return null;
-		return tokenString.ToLowerInvariant();
 	}
 
 	string Lex1() {

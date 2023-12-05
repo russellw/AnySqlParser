@@ -5,7 +5,7 @@ public sealed class Select: Statement {
 	public Expression? OrderBy;
 	public bool Desc;
 
-	public Select(Location location, QueryExpression queryExpression): base(location) {
+	public Select(QueryExpression queryExpression) {
 		QueryExpression = queryExpression;
 	}
 }

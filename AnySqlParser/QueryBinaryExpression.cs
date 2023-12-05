@@ -3,7 +3,7 @@ public sealed class QueryBinaryExpression: QueryExpression {
 	public QueryOp Op;
 	public QueryExpression Left, Right;
 
-	public QueryBinaryExpression(Location location, QueryOp op, QueryExpression left, QueryExpression right): base(location) {
+	public QueryBinaryExpression(QueryOp op, QueryExpression left, QueryExpression right) {
 		Op = op;
 		Left = left;
 		Right = right;

@@ -6,7 +6,7 @@ public sealed class Table: Statement {
 	public List<ForeignKey> ForeignKeys = new();
 	public List<Check> Checks = new();
 
-	public Table(Location location, QualifiedName name): base(location) {
+	public Table(QualifiedName name) {
 		Name = name;
 	}
 }
