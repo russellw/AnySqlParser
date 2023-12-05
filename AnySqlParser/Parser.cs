@@ -9,8 +9,11 @@ public sealed class Parser {
 
 	public static IEnumerable<Statement> Parse(TextReader reader, string file = "SQL", int line = 1) {
 		var parser = new Parser(reader, file, line);
-		while (parser.token.Length != 0)
-			yield return parser.StatementSemicolon();
+		while (parser.token.Length != 0) {
+			var a = parser.Statement();
+			if (a != null)
+				yield return a;
+		}
 	}
 
 	readonly TextReader reader;
@@ -27,13 +30,7 @@ public sealed class Parser {
 		Lex();
 	}
 
-	Statement StatementSemicolon() {
-		var a = Statement();
-		Eat(";");
-		return a;
-	}
-
-	Statement Statement() {
+	Statement? Statement() {
 		switch (token) {
 		case "select":
 			return Select();
@@ -60,7 +57,6 @@ public sealed class Parser {
 				a.Values.Add(Expression());
 			while (Eat(","));
 			Expect(")");
-
 			return a;
 		}
 		case "create": {
@@ -147,7 +143,8 @@ public sealed class Parser {
 			throw ErrorToken("expected noun");
 		}
 		}
-		throw ErrorToken("expected statement");
+		Lex();
+		return null;
 	}
 
 	Table Table() {
