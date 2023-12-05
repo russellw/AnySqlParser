@@ -151,6 +151,24 @@ public sealed class Parser {
 		return null;
 	}
 
+	void Ignore(List<string> ignored) {
+		var line1 = line;
+		int depth = 0;
+		do {
+			switch (token) {
+			case Eof:
+				throw Error(depth == 0 ? "missing element" : "unclosed (", line1);
+			case "(":
+				depth++;
+				break;
+			case ")":
+				depth--;
+				break;
+			}
+			ignored.Add(Lex1());
+		} while (depth != 0);
+	}
+
 	Table Table() {
 		Debug.Assert(token == "table");
 		Lex();
