@@ -876,23 +876,9 @@ public sealed class Parser {
 		case "@":
 			Lex();
 			return new ParameterRef(Name());
-		case kStringLiteral: {
-			var a = new StringLiteral(tokenString);
+		case "null":
 			Lex();
-			return a;
-		}
-		case kNumber: {
-			var a = new Number(tokenString);
-			Lex();
-			return a;
-		}
-		case kWord:
-			if (string.Equals(tokenString, "null", StringComparison.OrdinalIgnoreCase)) {
-				Lex();
-				return new Null(location);
-			}
-			return QualifiedName();
-		case kQuotedName:
+			return new Null();
 		case "*":
 			return QualifiedName();
 		case "(": {
@@ -902,18 +888,91 @@ public sealed class Parser {
 			return a;
 		}
 		}
+		switch (token.Value[0]) {
+		case 'N':
+		case 'A':
+		case 'B':
+		case 'C':
+		case 'D':
+		case 'E':
+		case 'F':
+		case 'G':
+		case 'H':
+		case 'I':
+		case 'J':
+		case 'K':
+		case 'L':
+		case 'M':
+		case 'O':
+		case 'P':
+		case 'Q':
+		case 'R':
+		case 'S':
+		case 'T':
+		case 'U':
+		case 'V':
+		case 'W':
+		case 'X':
+		case 'Y':
+		case 'Z':
+		case '_':
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+		case 'f':
+		case 'g':
+		case 'h':
+		case 'i':
+		case 'j':
+		case 'k':
+		case 'l':
+		case 'm':
+		case 'n':
+		case 'o':
+		case 'p':
+		case 'q':
+		case 'r':
+		case 's':
+		case 't':
+		case 'u':
+		case 'v':
+		case 'w':
+		case 'x':
+		case 'y':
+		case 'z':
+		case '"':
+		case '`':
+		case '[':
+			return QualifiedName();
+		case '\'':
+			return new StringLiteral(Etc.Unquote(Lex1()));
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			return new Number(Lex1());
+		case '.':
+			if (1 < token.Value.Length && char.IsDigit(token.Value, 1))
+				return new Number(Lex1());
+			break;
+		}
 		throw ErrorToken("expected expression");
 	}
 
 	QualifiedName QualifiedName() {
 		var a = new QualifiedName();
-		do {
-			if (Eat("*")) {
-				a.Star = true;
-				break;
-			}
-			a.Names.Add(Name());
-		} while (Eat("."));
+		if (!Eat("*"))
+			do
+				a.Names.Add(Name());
+			while (Eat("."));
 		return a;
 	}
 
@@ -927,6 +986,12 @@ public sealed class Parser {
 		if (token != kWord)
 			return null;
 		return tokenString.ToLowerInvariant();
+	}
+
+	string Lex1() {
+		var s = token.Value;
+		Lex();
+		return s;
 	}
 
 	string Name() {
@@ -983,28 +1048,16 @@ public sealed class Parser {
 		case 'w':
 		case 'x':
 		case 'y':
-		case 'z': {
-			var s = token.Value;
-			Lex();
-			return s;
-		}
+		case 'z':
+			return Lex1();
 		case '"':
-		case '`': {
-			var s = Etc.Unquote(token.Value);
-			Lex();
-			return s;
+		case '`':
+			return Etc.Unquote(Lex1());
+		case '[':
+			return Etc.Unquote(Lex1(), ']');
 		}
-		case '[': {
-			var s = Etc.Unquote(token.Value, ']');
-			Lex();
-			return s;
-		}
-		}
-		if (char.IsLetter(token.Value[0])) {
-			var s = token.Value;
-			Lex();
-			return s;
-		}
+		if (char.IsLetter(token.Value[0]))
+			return Lex1();
 		throw ErrorToken("expected name");
 	}
 
