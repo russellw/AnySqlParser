@@ -9,12 +9,16 @@ public sealed class Parser {
 
 	public static IEnumerable<Statement> Parse(TextReader reader, string file = "SQL", int line = 1) {
 		var parser = new Parser(reader, file, line);
-		while (parser.token.Length != 0) {
+		while (parser.token != Eof) {
 			var a = parser.Statement();
 			if (a != null)
 				yield return a;
 		}
 	}
+
+	// All tokens are represented as strings of positive length
+	// so the first character of the current token can always be tested
+	const string Eof = " ";
 
 	readonly TextReader reader;
 	readonly string file;
@@ -1138,7 +1142,7 @@ public sealed class Parser {
 				return;
 			case -1:
 				Read();
-				token = "";
+				token = Eof;
 				return;
 			case '-':
 				Read();
