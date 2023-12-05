@@ -7,6 +7,7 @@ public sealed class Index: Statement {
 	public List<string> Include = new();
 	public Expression? Where;
 
-	public Index(Location location): base(location) {
+	public Index(bool unique) {
+		Unique = unique;
 	}
 }

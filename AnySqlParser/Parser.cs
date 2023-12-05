@@ -39,40 +39,6 @@ public sealed class Parser {
 	Statement Statement() {
 		var location = new Location(file, line);
 		switch (token.Value) {
-		case "declare": {
-			Lex();
-			Expect("@");
-			var a = new Declare(location);
-			do {
-				var name = Name();
-				switch (token.Value) {
-				case "cursor":
-					Lex();
-					a.CursorVariables.Add(new CursorVariable(name));
-					continue;
-				case "as":
-					Lex();
-					break;
-				}
-				var b = new LocalVariable(name, DataType());
-				if (Eat("="))
-					b.Value = Expression();
-				a.LocalVariables.Add(b);
-			} while (Eat(","));
-			return a;
-		}
-		case "if": {
-			Lex();
-			var a = new If(location);
-			a.condition = Expression();
-			a.then = StatementSemicolon();
-			if (Eat("else"))
-				a.@else = StatementSemicolon();
-			return a;
-		}
-		case "set":
-			Lex();
-			return new SetGlobal(Name(), Expression());
 		case "select":
 			return Select();
 		case "insert": {
@@ -107,8 +73,7 @@ public sealed class Parser {
 			switch (token.Value) {
 			case "index": {
 				Lex();
-				var a = new Index(location);
-				a.Unique = unique;
+				var a = new Index(unique);
 				a.Name = Name();
 
 				// Table
@@ -134,7 +99,7 @@ public sealed class Parser {
 			}
 			case "view": {
 				Lex();
-				var a = new View(location);
+				var a = new View();
 				a.Name = QualifiedName();
 				Expect("as");
 				a.Query = Select();
@@ -161,7 +126,7 @@ public sealed class Parser {
 							constraintName = Name();
 						switch (token.Value) {
 						case "foreign":
-							a.ForeignKeys.Add(ForeignKey(constraintName));
+							a.ForeignKeys.Add(ForeignKey());
 							break;
 						case "check":
 							a.Checks.Add(Check(constraintName));
@@ -179,39 +144,6 @@ public sealed class Parser {
 					} while (Eat(","));
 					return a;
 				}
-				case "with":
-					Lex();
-					switch (token.Value) {
-					case "check":
-						Lex();
-						switch (token.Value) {
-						case "constraint":
-							return AlterTableCheckConstraints(tableName, true);
-						}
-						break;
-					case "nocheck":
-						Lex();
-						switch (token.Value) {
-						case "constraint":
-							return AlterTableCheckConstraints(tableName, false);
-						}
-						break;
-					}
-					break;
-				case "check":
-					Lex();
-					switch (token.Value) {
-					case "constraint":
-						return AlterTableCheckConstraints(tableName, true);
-					}
-					break;
-				case "nocheck":
-					Lex();
-					switch (token.Value) {
-					case "constraint":
-						return AlterTableCheckConstraints(tableName, false);
-					}
-					break;
 				}
 				throw ErrorToken("unknown syntax");
 			}
@@ -224,7 +156,6 @@ public sealed class Parser {
 
 	Table Table() {
 		Debug.Assert(token.Value == "table");
-		var location = new Location(file, line);
 		Lex();
 		var a = new Table(QualifiedName());
 		Expect("(");
@@ -266,7 +197,6 @@ public sealed class Parser {
 	}
 
 	Column Column() {
-		var location = new Location(file, line);
 		var a = new Column(Name(), DataType());
 
 		// Constraints etc
@@ -290,9 +220,9 @@ public sealed class Parser {
 				Lex();
 				a.Identity = true;
 				if (Eat("(")) {
-					a.IdentitySeed = Int();
+					Int();
 					Expect(",");
-					a.IdentityIncrement = Int();
+					Int();
 					Expect(")");
 				}
 				break;
@@ -346,11 +276,10 @@ public sealed class Parser {
 		return a;
 	}
 
-	ForeignKey ForeignKey(string? constraintName) {
-		var location = new Location(file, line);
+	ForeignKey ForeignKey() {
 		Expect("foreign");
 		Expect("key");
-		var a = new ForeignKey(constraintName);
+		var a = new ForeignKey();
 
 		// Columns
 		Expect("(");
