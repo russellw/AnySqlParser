@@ -4,7 +4,7 @@ public sealed class Table: Statement {
 	public List<Column> Columns = new();
 	public List<Key> Keys = new();
 	public List<ForeignKey> ForeignKeys = new();
-	public List<Check> Checks = new();
+	public List<Expression> Checks = new();
 
 	public Table(QualifiedName name) {
 		Name = name;

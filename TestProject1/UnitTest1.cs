@@ -60,14 +60,14 @@ public class UnitTest1 {
 
 	[Fact]
 	public void Eq() {
-		Expression a = new StringLiteral(new Location("", 0), "x");
-		Expression b = new StringLiteral(new Location("", 0), "y");
+		Expression a = new StringLiteral("x");
+		Expression b = new StringLiteral("y");
 		Assert.NotEqual(a, b);
 		Assert.False(a.Equals(b));
 		Assert.False(a.Eq(b));
 
-		a = new StringLiteral(new Location("", 0), "x");
-		b = new StringLiteral(new Location("", 0), "x");
+		a = new StringLiteral("x");
+		b = new StringLiteral("x");
 		Assert.NotEqual(a, b);
 		Assert.False(a.Equals(b));
 		Assert.True(a.Eq(b));

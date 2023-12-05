@@ -14,7 +14,4 @@ public sealed class QuerySpecification: QueryExpression {
 	public List<Expression> GroupBy = new();
 	public Expression? Having;
 	public Expression? Window;
-
-	public QuerySpecification(Location location): base(location) {
-	}
 }

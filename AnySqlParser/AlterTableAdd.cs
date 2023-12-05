@@ -4,9 +4,9 @@ public sealed class AlterTableAdd: Statement {
 	public List<Column> Columns = new();
 	public List<Key> Keys = new();
 	public List<ForeignKey> ForeignKeys = new();
-	public List<Check> Checks = new();
+	public List<Expression> Checks = new();
 
-	public AlterTableAdd(Location location, QualifiedName tableName): base(location) {
+	public AlterTableAdd(QualifiedName tableName) {
 		TableName = tableName;
 	}
 }

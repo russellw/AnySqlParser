@@ -37,14 +37,13 @@ public sealed class Parser {
 	}
 
 	Statement Statement() {
-		var location = new Location(file, line);
 		switch (token.Value) {
 		case "select":
 			return Select();
 		case "insert": {
 			Lex();
 			Eat("into");
-			var a = new Insert(location);
+			var a = new Insert();
 
 			// Table
 			a.TableName = QualifiedName();
@@ -129,7 +128,7 @@ public sealed class Parser {
 							a.ForeignKeys.Add(ForeignKey());
 							break;
 						case "check":
-							a.Checks.Add(Check(constraintName));
+							a.Checks.Add(Check());
 							break;
 						case "primary":
 						case "unique":
@@ -168,7 +167,7 @@ public sealed class Parser {
 				a.ForeignKeys.Add(ForeignKey());
 				break;
 			case "check":
-				a.Checks.Add(Check(constraintName));
+				a.Checks.Add(Check());
 				break;
 			case "primary":
 			case "unique":
@@ -198,9 +197,7 @@ public sealed class Parser {
 
 	Column Column() {
 		var a = new Column(Name(), DataType());
-
-		// Constraints etc
-		while (token == kWord) {
+		for (;;) {
 			if (Eat("constraint"))
 				Name();
 			switch (token.Value) {
@@ -236,22 +233,19 @@ public sealed class Parser {
 				case "for":
 					Lex();
 					Expect("replication");
-					a.ForReplication = false;
 					break;
 				default:
 					throw ErrorToken("expected option");
 				}
 				break;
 			default:
-				throw ErrorToken("expected constraint");
+				return a;
 			}
 		}
-		return a;
 	}
 
 	Key Key() {
-		var location = new Location(file, line);
-		var a = new Key(location);
+		var a = new Key();
 
 		// Primary?
 		switch (token.Value) {
@@ -317,7 +311,6 @@ public sealed class Parser {
 		if (Eat("not")) {
 			Expect("for");
 			Expect("replication");
-			a.ForReplication = false;
 		}
 		return a;
 	}
@@ -398,7 +391,6 @@ public sealed class Parser {
 		// https://stackoverflow.com/questions/56224171/does-intersect-have-a-higher-precedence-compared-to-union
 		QueryExpression a = QuerySpecification();
 		for (;;) {
-			var location = new Location(file, line);
 			if (!Eat("intersect"))
 				return a;
 			a = new QueryBinaryExpression(QueryOp.Intersect, a, QuerySpecification());
@@ -406,9 +398,8 @@ public sealed class Parser {
 	}
 
 	QuerySpecification QuerySpecification() {
-		var location = new Location(file, line);
 		Expect("select");
-		var a = new QuerySpecification(location);
+		var a = new QuerySpecification();
 
 		// Some clauses are written before the select list
 		// but unknown keywords must be left alone
@@ -446,7 +437,7 @@ public sealed class Parser {
 		} while (Eat(","));
 
 		// Any keyword after the select list, must be a clause
-		while (token == kWord)
+		for (;;)
 			switch (token.Value) {
 			case "where":
 				Lex();
@@ -476,7 +467,6 @@ public sealed class Parser {
 			default:
 				return a;
 			}
-		return a;
 	}
 
 	TableSource TableSource() {
@@ -541,28 +531,24 @@ public sealed class Parser {
 			return b;
 		}
 		var a = new PrimaryTableSource(QualifiedName());
-		switch (token) {
-		case kQuotedName:
+		switch (token.Value) {
+		case "as":
+			Lex();
 			break;
-		case kWord:
-			switch (token.Value) {
-			case "as":
-				Lex();
-				break;
-			case "where":
-			case "inner":
-			case "join":
-			case "left":
-			case "right":
-			case "full":
-			case "on":
-			case "group":
-			case "order":
-				return a;
-			}
-			break;
-		default:
+		case "where":
+		case "inner":
+		case "join":
+		case "left":
+		case "right":
+		case "full":
+		case "on":
+		case "group":
+		case "order":
 			return a;
+		default:
+			if (!IsName())
+				return a;
+			break;
 		}
 		a.TableAlias = Name();
 		return a;
@@ -955,6 +941,69 @@ public sealed class Parser {
 		if (char.IsLetter(token.Value[0]))
 			return Lex1();
 		throw ErrorToken("expected name");
+	}
+
+	bool IsName() {
+		switch (token.Value[0]) {
+		case 'N':
+		case 'A':
+		case 'B':
+		case 'C':
+		case 'D':
+		case 'E':
+		case 'F':
+		case 'G':
+		case 'H':
+		case 'I':
+		case 'J':
+		case 'K':
+		case 'L':
+		case 'M':
+		case 'O':
+		case 'P':
+		case 'Q':
+		case 'R':
+		case 'S':
+		case 'T':
+		case 'U':
+		case 'V':
+		case 'W':
+		case 'X':
+		case 'Y':
+		case 'Z':
+		case '_':
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+		case 'f':
+		case 'g':
+		case 'h':
+		case 'i':
+		case 'j':
+		case 'k':
+		case 'l':
+		case 'm':
+		case 'n':
+		case 'o':
+		case 'p':
+		case 'q':
+		case 'r':
+		case 's':
+		case 't':
+		case 'u':
+		case 'v':
+		case 'w':
+		case 'x':
+		case 'y':
+		case 'z':
+		case '"':
+		case '`':
+		case '[':
+			return true;
+		}
+		return char.IsLetter(token.Value[0]);
 	}
 
 	void Expect(string s) {
