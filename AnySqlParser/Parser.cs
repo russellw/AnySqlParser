@@ -4,10 +4,7 @@ using System.Text;
 namespace AnySqlParser;
 public sealed class Parser {
 	public static IEnumerable<Statement> Parse(string file) {
-		using var reader = new StreamReader(file);
-		var parser = new Parser(reader, file, 1);
-		while (parser.token.Length != 0)
-			yield return parser.StatementSemicolon();
+		return Parse(new StreamReader(file), file, 1);
 	}
 
 	public static IEnumerable<Statement> Parse(TextReader reader, string file = "SQL", int line = 1) {
