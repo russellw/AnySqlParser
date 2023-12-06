@@ -180,11 +180,13 @@ public sealed class Parser {
 	}
 
 	TableRef TableRef() {
-		return new TableRef(UnqualifiedName());
+		var location = new Location(file, line);
+		return new TableRef(location, UnqualifiedName());
 	}
 
 	ColumnRef ColumnRef() {
-		return new ColumnRef(Name());
+		var location = new Location(file, line);
+		return new ColumnRef(location, Name());
 	}
 
 	void ForeignKey(Table table, Column? column, Callback isEnd) {
