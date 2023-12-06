@@ -109,9 +109,9 @@ public sealed class Parser {
 				while (!Eat("("))
 					Ignore(a.Ignored);
 				do {
-					var ignored = TableElement(a, IsElementEnd);
+					var b = TableElement(a, IsElementEnd);
 					while (!IsElementEnd())
-						Ignore();
+						Ignore(b.Ignored);
 				} while (Eat(","));
 				Expect(")");
 				return a;
@@ -221,10 +221,12 @@ public sealed class Parser {
 		return a;
 	}
 
-	ForeignKey ForeignKey(Table table, Column? column, Callback isEnd) {
+	ForeignKey ForeignKey(Column? column, Callback isEnd)
+    {
+		var location = new Location(file, line);
 		if (Eat("foreign"))
 			Expect("key");
-		var a = new ForeignKey();
+		var a = new ForeignKey(location);
 
 		// Columns
 		if (column == null) {
@@ -245,8 +247,6 @@ public sealed class Parser {
 			while (Eat(","));
 			Expect(")");
 		}
-
-		table.ForeignKeys.Add(a);
 
 		// Search the postscript for actions
 		while (!isEnd()) {
@@ -270,48 +270,22 @@ public sealed class Parser {
 		return a;
 	}
 
-	Table Table(bool adding, string name) {
-		var a = new Table(UnqualifiedName());
-		Expect("(");
-		do {
-			string? constraintName = null;
-			if (Eat("constraint"))
-				constraintName = Name();
-			switch (token) {
-			case "foreign":
-				a.ForeignKeys.Add(ForeignKey());
-				break;
-			case "check":
-				a.Checks.Add(Check());
-				break;
-			case "primary":
-			case "unique":
-				a.Keys.Add(Key());
-				break;
-			default:
-				if (constraintName != null)
-					throw ErrorToken("expected constraint");
-				a.Columns.Add(Column());
-				break;
-			}
-		} while (Eat(","));
-		Expect(")");
-		return a;
-	}
-
 	Element TableConstraint(Table table, Callback isEnd) {
-		var location = new Location(file, line);
 		switch (token) {
 		case "foreign":
-			return ForeignKey(table, null, isEnd);
-		case "primary": {
-			var a = Key(table, null);
+				{
+					var a= ForeignKey(null, isEnd);
+					table.ForeignKeys.Add(a);
+					return a;
+                }
+            case "primary": {
+			var a = Key( null);
 			table.AddPrimaryKey(a);
 			return a;
 		}
 		case "unique":
 		case "key": {
-			var a = Key(table, null);
+			var a = Key( null);
 			table.Uniques.Add(a);
 			return a;
 		}
@@ -319,9 +293,11 @@ public sealed class Parser {
 		throw ErrorToken("expected constraint");
 	}
 
-	Key Key(Table table, Column? column) {
-		switch (token) {
-		case "primary":
+	Key Key( Column? column) {
+		var location = new Location(file, line);
+		switch (token)
+        {
+            case "primary":
 			Lex();
 			Expect("key");
 			break;
@@ -335,17 +311,17 @@ public sealed class Parser {
 		default:
 			throw Error("expected key");
 		}
-		var a = new Key();
+		var a = new Key(location);
 
 		if (column == null) {
 			while (!Eat("("))
 				Ignore(a.Ignored);
 			do
-				a.Columns.Add(Column(table));
+				a.Columns.Add(ColumnRef());
 			while (Eat(","));
 			Expect(")");
 		} else
-			a.Columns.Add(column);
+			a.Columns.Add(new ColumnRef(column));
 		return a;
 	}
 
@@ -367,18 +343,32 @@ public sealed class Parser {
 
 		// This is a column
 		var location = new Location(file, line);
-		var a = new Column(Name(), DataType());
-		table.Add(location, a);
+		var a = new Column(location, Name(), DataType());
 
 		// Search the postscript for column constraints
 		while (!isEnd()) {
 			switch (token) {
-			case "foreign":
+                case "default":
+                    Lex();
+                    a.Default = Expression();
+                    break;
+                case "identity":
+                    Lex();
+                    a.AutoIncrement = true;
+                    if (Eat("("))
+                    {
+                        Int();
+                        Expect(",");
+                        Int();
+                        Expect(")");
+                    }
+                    continue;
+                case "foreign":
 			case "references":
-				ForeignKey(table, a, isEnd);
+				ForeignKey(a, isEnd);
 				continue;
 			case "primary":
-				table.AddPrimaryKey(location, Key(table, a));
+				table.AddPrimaryKey( Key( a));
 				continue;
 			case "null":
 				Lex();
@@ -396,6 +386,10 @@ public sealed class Parser {
 			}
 			Ignore(a.Ignored);
 		}
+
+		//add to table
+		table.Add( a);
+        return a;
 	}
 
 	DataType DataType() {
@@ -406,81 +400,6 @@ public sealed class Parser {
 				a.Scale = Int();
 			Expect(")");
 		}
-		return a;
-	}
-
-	Column Column() {
-		var a = new Column(Name(), DataType());
-		for (;;) {
-			if (Eat("constraint"))
-				Name();
-			switch (token) {
-			case "default":
-				Lex();
-				a.Default = Expression();
-				break;
-			case "null":
-				Lex();
-				break;
-			case "primary":
-				Lex();
-				Expect("key");
-				a.PrimaryKey = true;
-				break;
-			case "identity":
-				Lex();
-				a.AutoIncrement = true;
-				if (Eat("(")) {
-					Int();
-					Expect(",");
-					Int();
-					Expect(")");
-				}
-				break;
-			case "not":
-				Lex();
-				switch (token) {
-				case "null":
-					Lex();
-					a.Nullable = false;
-					break;
-				case "for":
-					Lex();
-					Expect("replication");
-					break;
-				default:
-					throw ErrorToken("expected option");
-				}
-				break;
-			default:
-				return a;
-			}
-		}
-	}
-
-	Key Key() {
-		var a = new Key();
-
-		// Primary?
-		switch (token) {
-		case "primary":
-			Lex();
-			Expect("key");
-			a.Primary = true;
-			break;
-		case "unique":
-			Lex();
-			break;
-		default:
-			throw ErrorToken("expected key type");
-		}
-
-		// Columns
-		Expect("(");
-		do
-			a.Columns.Add(ColumnRef());
-		while (Eat(","));
-		Expect(")");
 		return a;
 	}
 
