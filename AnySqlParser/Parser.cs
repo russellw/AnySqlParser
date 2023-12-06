@@ -243,7 +243,7 @@ public sealed class Parser {
 	Table Table() {
 		Debug.Assert(token == "table");
 		Lex();
-		var a = new Table(QualifiedName());
+		var a = new Table(UnqualifiedName());
 		Expect("(");
 		do {
 			string? constraintName = null;
