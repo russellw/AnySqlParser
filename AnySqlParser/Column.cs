@@ -5,7 +5,7 @@ public sealed class Column {
 	public Expression? Default;
 	public bool Identity;
 	public bool Nullable = true;
-	public bool PrimaryKey;
+	public List<string> Ignored = new();
 
 	public Column(string name, DataType dataType) {
 		Name = name;

@@ -5,4 +5,5 @@ public sealed class ForeignKey {
 	public List<ColumnRef> RefColumns = new();
 	public Action OnDelete = Action.NoAction;
 	public Action OnUpdate = Action.NoAction;
+	public List<string> Ignored = new();
 }

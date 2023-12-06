@@ -153,6 +153,25 @@ public sealed class Parser {
 		return null;
 	}
 
+	bool IsElementEnd() {
+		switch (token) {
+		case ")":
+		case ",":
+			return true;
+		}
+		return false;
+	}
+
+	bool IsStatementEnd() {
+		switch (token) {
+		case Eof:
+		case ";":
+		case "go":
+			return true;
+		}
+		return false;
+	}
+
 	void Ignore(List<string> ignored) {
 		var line1 = line;
 		int depth = 0;
@@ -238,7 +257,7 @@ public sealed class Parser {
 				}
 				break;
 			}
-			Ignore();
+			Ignore(a.Ignored);
 		}
 	}
 
@@ -271,6 +290,103 @@ public sealed class Parser {
 		} while (Eat(","));
 		Expect(")");
 		return a;
+	}
+
+	void TableConstraint(Table table, Callback isEnd) {
+		var location = new Location(file, line);
+		switch (token) {
+		case "foreign":
+			ForeignKey(table, null, isEnd);
+			return;
+		case "primary":
+			table.AddPrimaryKey(location, Key(table, null));
+			return;
+		case "unique":
+		case "key":
+			table.Uniques.Add(Key(table, null));
+			return;
+		}
+	}
+
+	Key Key(Table table, Column? column) {
+		switch (token) {
+		case "primary":
+			Lex();
+			Expect("key");
+			break;
+		case "unique":
+			Lex();
+			Eat("key");
+			break;
+		case "key":
+			Lex();
+			break;
+		default:
+			throw Error("expected key");
+		}
+		var a = new Key();
+
+		if (column == null) {
+			while (!Eat("("))
+				Ignore(a.Ignored);
+			do
+				a.Columns.Add(Column(table));
+			while (Eat(","));
+			Expect(")");
+		} else
+			a.Columns.Add(column);
+		return a;
+	}
+
+	void ColumnOrTableConstraint(Table table, Callback isEnd) {
+		// Might be a table constraint
+		if (Eat("constraint")) {
+			Name();
+			TableConstraint(table, isEnd);
+			return;
+		}
+		switch (token) {
+		case "foreign":
+		case "key":
+		case "primary":
+		case "unique":
+		case "check":
+		case "exclude":
+			TableConstraint(table, isEnd);
+			return;
+		}
+
+		// This is a column
+		var location = new Location(file, line);
+		var a = new Column(Name(), DataType());
+		table.Add(location, a);
+
+		// Search the postscript for column constraints
+		while (!isEnd()) {
+			switch (token) {
+			case "foreign":
+			case "references":
+				ForeignKey(table, a, isEnd);
+				continue;
+			case "primary":
+				table.AddPrimaryKey(location, Key(table, a));
+				continue;
+			case "null":
+				Lex();
+				continue;
+			case "not":
+				Lex();
+				switch (token) {
+				case "null":
+					Lex();
+					a.Nullable = false;
+					continue;
+				}
+				a.Ignored.Add("not");
+				break;
+			}
+			Ignore(a.Ignored);
+		}
 	}
 
 	DataType DataType() {
