@@ -129,28 +129,9 @@ public sealed class Parser {
 				case "add": {
 					Lex();
 					var a = new Table(true, tableName);
-					do {
-						string? constraintName = null;
-						if (Eat("constraint"))
-							constraintName = Name();
-						switch (token) {
-						case "foreign":
-							a.ForeignKeys.Add(ForeignKey());
-							break;
-						case "check":
-							a.Checks.Add(Check());
-							break;
-						case "primary":
-						case "unique":
-							a.Keys.Add(Key());
-							break;
-						default:
-							if (constraintName != null)
-								throw ErrorToken("expected constraint");
-							a.Columns.Add(Column());
-							break;
-						}
-					} while (Eat(","));
+					do
+						TableElement(a, IsStatementEnd);
+					while (Eat(","));
 					return a;
 				}
 				}
