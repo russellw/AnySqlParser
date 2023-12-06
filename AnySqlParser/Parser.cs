@@ -16,6 +16,8 @@ public sealed class Parser {
 		}
 	}
 
+	delegate bool Callback();
+
 	// All tokens are represented as strings of positive length
 	// so the first character of the current token can always be tested
 	const string Eof = " ";
@@ -167,6 +169,73 @@ public sealed class Parser {
 			}
 			ignored.Add(Lex1());
 		} while (depth != 0);
+	}
+
+	string UnqualifiedName() {
+		string name;
+		do
+			name = Name();
+		while (Eat("."));
+		return name;
+	}
+
+	TableRef TableRef() {
+		return new TableRef(UnqualifiedName());
+	}
+
+	ColumnRef ColumnRef() {
+		return new ColumnRef(Name());
+	}
+
+	void ForeignKey(Table table, Column? column, Callback isEnd) {
+		if (Eat("foreign"))
+			Expect("key");
+		var key = new ForeignKey();
+
+		// Columns
+		if (column == null) {
+			Expect("(");
+			do
+				key.Columns.Add(Column(table));
+			while (Eat(","));
+			Expect(")");
+		} else
+			key.Columns.Add(column);
+
+		// References
+		Expect("references");
+		key.RefTable = Table();
+		if (Eat("(")) {
+			do
+				key.RefColumns.Add(Column(key.RefTable));
+			while (Eat(","));
+			Expect(")");
+		} else {
+			if (key.RefTable.PrimaryKey == null)
+				throw Error($"{key.RefTable} does not have a primary key", false);
+			key.RefColumns.AddRange(key.RefTable.PrimaryKey.Columns);
+		}
+
+		table.ForeignKeys.Add(key);
+
+		// Search the postscript for actions
+		while (!isEnd()) {
+			switch (Word()) {
+			case "on":
+				switch (Word(1)) {
+				case "delete":
+					tokenIndex += 2;
+					key.OnDelete = GetAction();
+					continue;
+				case "update":
+					tokenIndex += 2;
+					key.OnUpdate = GetAction();
+					continue;
+				}
+				break;
+			}
+			Ignore();
+		}
 	}
 
 	Table Table() {
