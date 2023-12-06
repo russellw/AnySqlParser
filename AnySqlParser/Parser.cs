@@ -221,8 +221,7 @@ public sealed class Parser {
 		return a;
 	}
 
-	ForeignKey ForeignKey(Column? column, Callback isEnd)
-    {
+	ForeignKey ForeignKey(Column? column, Callback isEnd) {
 		var location = new Location(file, line);
 		if (Eat("foreign"))
 			Expect("key");
@@ -272,20 +271,19 @@ public sealed class Parser {
 
 	Element TableConstraint(Table table, Callback isEnd) {
 		switch (token) {
-		case "foreign":
-				{
-					var a= ForeignKey(null, isEnd);
-					table.ForeignKeys.Add(a);
-					return a;
-                }
-            case "primary": {
-			var a = Key( null);
+		case "foreign": {
+			var a = ForeignKey(null, isEnd);
+			table.ForeignKeys.Add(a);
+			return a;
+		}
+		case "primary": {
+			var a = Key(null);
 			table.AddPrimaryKey(a);
 			return a;
 		}
 		case "unique":
 		case "key": {
-			var a = Key( null);
+			var a = Key(null);
 			table.Uniques.Add(a);
 			return a;
 		}
@@ -293,11 +291,10 @@ public sealed class Parser {
 		throw ErrorToken("expected constraint");
 	}
 
-	Key Key( Column? column) {
+	Key Key(Column? column) {
 		var location = new Location(file, line);
-		switch (token)
-        {
-            case "primary":
+		switch (token) {
+		case "primary":
 			Lex();
 			Expect("key");
 			break;
@@ -348,27 +345,26 @@ public sealed class Parser {
 		// Search the postscript for column constraints
 		while (!isEnd()) {
 			switch (token) {
-                case "default":
-                    Lex();
-                    a.Default = Expression();
-                    break;
-                case "identity":
-                    Lex();
-                    a.AutoIncrement = true;
-                    if (Eat("("))
-                    {
-                        Int();
-                        Expect(",");
-                        Int();
-                        Expect(")");
-                    }
-                    continue;
-                case "foreign":
+			case "default":
+				Lex();
+				a.Default = Expression();
+				break;
+			case "identity":
+				Lex();
+				a.AutoIncrement = true;
+				if (Eat("(")) {
+					Int();
+					Expect(",");
+					Int();
+					Expect(")");
+				}
+				continue;
+			case "foreign":
 			case "references":
 				ForeignKey(a, isEnd);
 				continue;
 			case "primary":
-				table.AddPrimaryKey( Key( a));
+				table.AddPrimaryKey(Key(a));
 				continue;
 			case "null":
 				Lex();
@@ -387,9 +383,9 @@ public sealed class Parser {
 			Ignore(a.Ignored);
 		}
 
-		//add to table
-		table.Add( a);
-        return a;
+		// Add to table
+		table.Add(a);
+		return a;
 	}
 
 	DataType DataType() {
