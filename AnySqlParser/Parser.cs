@@ -103,8 +103,19 @@ public sealed class Parser {
 				a.Query = Select();
 				return a;
 			}
-			case "table":
-				return Table();
+			case "table": {
+				Lex();
+				var a = new Table(false, UnqualifiedName());
+				while (!Eat("("))
+					Ignore(a.Ignored);
+				do {
+					var ignored = TableElement(a, IsElementEnd);
+					while (!IsElementEnd())
+						Ignore();
+				} while (Eat(","));
+				Expect(")");
+				return a;
+			}
 			}
 			throw ErrorToken("expected noun");
 		}
@@ -113,11 +124,11 @@ public sealed class Parser {
 			switch (token) {
 			case "table": {
 				Lex();
-				var tableName = QualifiedName();
+				var tableName = UnqualifiedName();
 				switch (token) {
 				case "add": {
 					Lex();
-					var a = new AlterTableAdd(tableName);
+					var a = new Table(true, tableName);
 					do {
 						string? constraintName = null;
 						if (Eat("constraint"))
@@ -210,7 +221,7 @@ public sealed class Parser {
 		return a;
 	}
 
-	void ForeignKey(Table table, Column? column, Callback isEnd) {
+	ForeignKey ForeignKey(Table table, Column? column, Callback isEnd) {
 		if (Eat("foreign"))
 			Expect("key");
 		var a = new ForeignKey();
@@ -256,11 +267,10 @@ public sealed class Parser {
 			}
 			Ignore(a.Ignored);
 		}
+		return a;
 	}
 
-	Table Table() {
-		Debug.Assert(token == "table");
-		Lex();
+	Table Table(bool adding, string name) {
 		var a = new Table(UnqualifiedName());
 		Expect("(");
 		do {
@@ -289,20 +299,24 @@ public sealed class Parser {
 		return a;
 	}
 
-	void TableConstraint(Table table, Callback isEnd) {
+	Element TableConstraint(Table table, Callback isEnd) {
 		var location = new Location(file, line);
 		switch (token) {
 		case "foreign":
-			ForeignKey(table, null, isEnd);
-			return;
-		case "primary":
-			table.AddPrimaryKey(location, Key(table, null));
-			return;
-		case "unique":
-		case "key":
-			table.Uniques.Add(Key(table, null));
-			return;
+			return ForeignKey(table, null, isEnd);
+		case "primary": {
+			var a = Key(table, null);
+			table.AddPrimaryKey(a);
+			return a;
 		}
+		case "unique":
+		case "key": {
+			var a = Key(table, null);
+			table.Uniques.Add(a);
+			return a;
+		}
+		}
+		throw ErrorToken("expected constraint");
 	}
 
 	Key Key(Table table, Column? column) {
@@ -335,12 +349,11 @@ public sealed class Parser {
 		return a;
 	}
 
-	void ColumnOrTableConstraint(Table table, Callback isEnd) {
+	Element TableElement(Table table, Callback isEnd) {
 		// Might be a table constraint
 		if (Eat("constraint")) {
 			Name();
-			TableConstraint(table, isEnd);
-			return;
+			return TableConstraint(table, isEnd);
 		}
 		switch (token) {
 		case "foreign":
@@ -349,8 +362,7 @@ public sealed class Parser {
 		case "unique":
 		case "check":
 		case "exclude":
-			TableConstraint(table, isEnd);
-			return;
+			return TableConstraint(table, isEnd);
 		}
 
 		// This is a column

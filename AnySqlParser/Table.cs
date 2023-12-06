@@ -1,5 +1,6 @@
 namespace AnySqlParser;
 public sealed class Table: Statement {
+	public bool Adding;
 	public string Name;
 	public List<Column> Columns = new();
 	public Dictionary<string, Column> ColumnMap = new();
@@ -7,20 +8,22 @@ public sealed class Table: Statement {
 	public List<Key> Uniques = new();
 	public List<ForeignKey> ForeignKeys = new();
 	public List<Expression> Checks = new();
+	public List<string> Ignored = new();
 
-	public Table(string name) {
+	public Table(bool adding, string name) {
+		Adding = adding;
 		Name = name;
 	}
 
-	public void Add(Location location, Column column) {
+	public void Add(Column column) {
 		Columns.Add(column);
 		if (!ColumnMap.TryAdd(column.Name, column))
-			throw new SqlError($"{location}: {this}.{column} already exists");
+			throw new SqlError($"{column.Location}: {this}.{column} already exists");
 	}
 
-	public void AddPrimaryKey(Location location, Key key) {
+	public void AddPrimaryKey(Key key) {
 		if (PrimaryKey != null)
-			throw new SqlError($"{location}: {this} already has a primary key");
+			throw new SqlError($"{key.Location}: {this} already has a primary key");
 		PrimaryKey = key;
 	}
 

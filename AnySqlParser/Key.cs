@@ -1,6 +1,8 @@
 ﻿namespace AnySqlParser;
-public sealed class Key {
+public sealed class Key: Element {
 	public bool Primary;
 	public List<ColumnRef> Columns = new();
-	public List<string> Ignored = new();
+
+	public Key(Location location): base(location) {
+	}
 }
