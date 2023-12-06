@@ -7,4 +7,8 @@ public readonly struct Location {
 		File = file;
 		Line = line;
 	}
+
+	public override string ToString() {
+		return $"{File}:{Line}";
+	}
 }

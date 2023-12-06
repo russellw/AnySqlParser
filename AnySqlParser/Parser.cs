@@ -189,49 +189,51 @@ public sealed class Parser {
 		return new ColumnRef(location, Name());
 	}
 
+	Column Column(Table table) {
+		var location = new Location(file, line);
+		return table.GetColumn(location, Name());
+	}
+
 	void ForeignKey(Table table, Column? column, Callback isEnd) {
 		if (Eat("foreign"))
 			Expect("key");
-		var key = new ForeignKey();
+		var a = new ForeignKey();
 
 		// Columns
 		if (column == null) {
 			Expect("(");
 			do
-				key.Columns.Add(Column(table));
+				a.Columns.Add(Column(table));
 			while (Eat(","));
 			Expect(")");
 		} else
-			key.Columns.Add(column);
+			a.Columns.Add(column);
 
 		// References
 		Expect("references");
-		key.RefTable = Table();
+		a.RefTable = TableRef();
 		if (Eat("(")) {
 			do
-				key.RefColumns.Add(Column(key.RefTable));
+				a.RefColumns.Add(ColumnRef());
 			while (Eat(","));
 			Expect(")");
-		} else {
-			if (key.RefTable.PrimaryKey == null)
-				throw Error($"{key.RefTable} does not have a primary key", false);
-			key.RefColumns.AddRange(key.RefTable.PrimaryKey.Columns);
 		}
 
-		table.ForeignKeys.Add(key);
+		table.ForeignKeys.Add(a);
 
 		// Search the postscript for actions
 		while (!isEnd()) {
-			switch (Word()) {
+			switch (token) {
 			case "on":
-				switch (Word(1)) {
+				Lex();
+				switch (token) {
 				case "delete":
-					tokenIndex += 2;
-					key.OnDelete = GetAction();
+					Lex();
+					a.OnDelete = GetAction();
 					continue;
 				case "update":
-					tokenIndex += 2;
-					key.OnUpdate = GetAction();
+					Lex();
+					a.OnUpdate = GetAction();
 					continue;
 				}
 				break;
@@ -357,72 +359,27 @@ public sealed class Parser {
 		return a;
 	}
 
-	ForeignKey ForeignKey() {
-		Expect("foreign");
-		Expect("key");
-		var a = new ForeignKey();
-
-		// Columns
-		Expect("(");
-		do
-			a.Columns.Add(Name());
-		while (Eat(","));
-		Expect(")");
-
-		// References
-		Expect("references");
-		a.RefTableName = QualifiedName();
-		if (Eat("(")) {
-			do
-				a.RefColumns.Add(Name());
-			while (Eat(","));
-			Expect(")");
-		}
-
-		// Actions
-		while (Eat("on"))
-			switch (token) {
-			case "delete":
-				Lex();
-				a.OnDelete = Action();
-				break;
-			case "update":
-				Lex();
-				a.OnUpdate = Action();
-				break;
-			default:
-				throw ErrorToken("expected event type");
-			}
-
-		// Replication
-		if (Eat("not")) {
-			Expect("for");
-			Expect("replication");
-		}
-		return a;
-	}
-
-	Action Action() {
+	Action GetAction() {
 		switch (token) {
 		case "cascade":
 			Lex();
-			return AnySqlParser.Action.Cascade;
+			return Action.Cascade;
 		case "no":
 			Lex();
 			Expect("action");
-			return AnySqlParser.Action.NoAction;
+			return Action.NoAction;
 		case "restrict":
 			Lex();
-			return AnySqlParser.Action.NoAction;
+			return Action.NoAction;
 		case "set":
 			Lex();
 			switch (token) {
 			case "null":
 				Lex();
-				return AnySqlParser.Action.SetNull;
+				return Action.SetNull;
 			case "default":
 				Lex();
-				return AnySqlParser.Action.SetDefault;
+				return Action.SetDefault;
 			}
 			throw ErrorToken("expected replacement value");
 		}
