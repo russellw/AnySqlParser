@@ -205,7 +205,9 @@ public sealed class Parser {
 
 	ColumnRef ColumnRef() {
 		var location = new Location(file, line);
-		return new ColumnRef(location, Name());
+		var a = new ColumnRef(location, Name());
+		a.Desc = Desc();
+		return a;
 	}
 
 	Column Column(Table table) {
@@ -420,7 +422,7 @@ public sealed class Parser {
 				break;
 			case "identity":
 				Lex();
-				a.Identity = true;
+				a.AutoIncrement = true;
 				if (Eat("(")) {
 					Int();
 					Expect(",");
@@ -469,7 +471,7 @@ public sealed class Parser {
 		// Columns
 		Expect("(");
 		do
-			a.Columns.Add(ColumnOrder());
+			a.Columns.Add(ColumnRef());
 		while (Eat(","));
 		Expect(")");
 		return a;
@@ -711,12 +713,6 @@ public sealed class Parser {
 			break;
 		}
 		a.TableAlias = Name();
-		return a;
-	}
-
-	ColumnOrder ColumnOrder() {
-		var a = new ColumnOrder(Name());
-		a.Desc = Desc();
 		return a;
 	}
 
