@@ -5,8 +5,13 @@ public struct ColumnRef {
 	public Column? Column;
 	public bool Desc;
 
-	public ColumnRef(Location location, string name): this() {
+	public ColumnRef(Location location, string name) {
 		Location = location;
 		Name = name;
+	}
+
+	public ColumnRef(Column column) {
+		Name = column.Name;
+		Column = column;
 	}
 }

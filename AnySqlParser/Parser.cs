@@ -81,7 +81,7 @@ public sealed class Parser {
 				// Columns
 				Expect("(");
 				do
-					a.Columns.Add(ColumnOrder());
+					a.Columns.Add(ColumnRef());
 				while (Eat(","));
 				Expect(")");
 
@@ -210,11 +210,6 @@ public sealed class Parser {
 		return a;
 	}
 
-	Column Column(Table table) {
-		var location = new Location(file, line);
-		return table.GetColumn(location, Name());
-	}
-
 	void ForeignKey(Table table, Column? column, Callback isEnd) {
 		if (Eat("foreign"))
 			Expect("key");
@@ -224,11 +219,11 @@ public sealed class Parser {
 		if (column == null) {
 			Expect("(");
 			do
-				a.Columns.Add(Column(table));
+				a.Columns.Add(ColumnRef());
 			while (Eat(","));
 			Expect(")");
 		} else
-			a.Columns.Add(column);
+			a.Columns.Add(new ColumnRef(column));
 
 		// References
 		Expect("references");
