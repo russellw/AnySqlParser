@@ -2,10 +2,9 @@ DROP DATABASE IF EXISTS test123987632022;
 CREATE DATABASE test123987632022;
 USE test123987632022;
 
--- SQL Server allows trailing comma
 create table directors(
-    name varchar(40) primary key,
-)
+    name varchar(40) primary key
+);
 
 create table movies(
     name varchar(40),
