@@ -10,7 +10,8 @@ create table movies(
     name varchar(40),
     year smallint check(1900<year and year<3000),
     director varchar(40),
-    constraint movie_director foreign key(director) references directors
+    -- MySQL requires references fields to be explicitly named
+    constraint movie_director foreign key(director) references directors(name)
 );
 
 insert into directors values('Stanley Kubrick');
