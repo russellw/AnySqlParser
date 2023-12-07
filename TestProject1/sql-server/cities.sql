@@ -1,6 +1,6 @@
 DROP DATABASE IF EXISTS test123987632022
 CREATE DATABASE test123987632022
-use test123987632022
+USE test123987632022
 
 create table countries(
     code nchar(2) primary key,
