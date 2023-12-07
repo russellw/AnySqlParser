@@ -262,6 +262,11 @@ public sealed class Parser {
 			table.AddPrimaryKey(a);
 			return a;
 		}
+		case "check": {
+			var a = Check();
+			table.Checks.Add(a);
+			return a;
+		}
 		case "unique":
 		case "key": {
 			var a = Key(null);
@@ -344,6 +349,9 @@ public sealed class Parser {
 			case "references":
 				ForeignKey(a, isEnd);
 				continue;
+			case "check":
+				table.Checks.Add(Check());
+				continue;
 			case "primary":
 				table.AddPrimaryKey(Key(a));
 				continue;
@@ -407,12 +415,15 @@ public sealed class Parser {
 		throw ErrorToken("expected action");
 	}
 
-	Expression Check() {
-		if (Eat("not")) {
-			Expect("for");
-			Expect("replication");
-		}
-		return Expression();
+	Check Check() {
+		Debug.Assert(token == "check");
+		var location = new Location(file, line);
+		var a = new Check(location);
+		while (!Eat("("))
+			Ignore(a.Ignored);
+		a.Expression = Expression();
+		Expect(")");
+		return a;
 	}
 
 	Select Select() {

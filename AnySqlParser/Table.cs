@@ -7,7 +7,7 @@ public sealed class Table: Statement {
 	public Key? PrimaryKey;
 	public List<Key> Uniques = new();
 	public List<ForeignKey> ForeignKeys = new();
-	public List<Expression> Checks = new();
+	public List<Check> Checks = new();
 	public List<string> Ignored = new();
 
 	public Table(bool adding, string name) {
