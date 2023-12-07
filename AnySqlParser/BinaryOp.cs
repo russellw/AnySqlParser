@@ -1,5 +1,6 @@
 ﻿namespace AnySqlParser;
 public enum BinaryOp {
+	Like,
 	Add,
 	Subtract,
 	Multiply,

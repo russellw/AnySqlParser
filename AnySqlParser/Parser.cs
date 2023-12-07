@@ -663,6 +663,9 @@ public sealed class Parser {
 			case "or":
 				op = BinaryOp.Or;
 				break;
+			case "like":
+				op = BinaryOp.Like;
+				break;
 			default:
 				return a;
 			}
