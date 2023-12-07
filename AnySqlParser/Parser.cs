@@ -666,6 +666,9 @@ public sealed class Parser {
 			case "like":
 				op = BinaryOp.Like;
 				break;
+			case "in":
+				op = BinaryOp.In;
+				break;
 			default:
 				return a;
 			}
