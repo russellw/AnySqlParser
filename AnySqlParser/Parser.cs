@@ -117,7 +117,7 @@ public sealed class Parser {
 				return a;
 			}
 			}
-			throw ErrorToken("expected noun");
+			break;
 		}
 		case "alter": {
 			Lex();
@@ -138,7 +138,7 @@ public sealed class Parser {
 				throw ErrorToken("unknown syntax");
 			}
 			}
-			throw ErrorToken("expected noun");
+			break;
 		}
 		}
 		Lex();
