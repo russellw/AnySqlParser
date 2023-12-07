@@ -1,9 +1,16 @@
-﻿namespace ConsoleApp1;
+﻿using AnySqlParser;
 
-internal class Program
+class Program
 {
     static void Main(string[] args)
     {
-        Console.WriteLine("Hello, World!");
+        foreach (var file in args)
+        {
+            Console.WriteLine(file);
+            foreach(var a in Parser.Parse(file))
+            {
+                Console.WriteLine(a);
+            }
+        }
+        }
     }
-}
