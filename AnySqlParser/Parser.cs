@@ -666,9 +666,17 @@ public sealed class Parser {
 			case "like":
 				op = BinaryOp.Like;
 				break;
-			case "in":
-				op = BinaryOp.In;
-				break;
+			case "in": {
+				Lex();
+				Expect("(");
+				var b = new List<Expression>();
+				do
+					b.Add(Expression());
+				while (Eat(","));
+				Expect(")");
+				a = new InList(false, a, b);
+				continue;
+			}
 			default:
 				return a;
 			}
