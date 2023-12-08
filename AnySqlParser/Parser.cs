@@ -194,6 +194,7 @@ public sealed class Parser {
 		// Throw away extra text associated with the statement just recognized
 		// but keep extra text associated with the following token
 		text.Remove(0, tokenTextCount);
+		tokenTextCount = 0;
 	}
 
 	bool IsStatementEnd() {
