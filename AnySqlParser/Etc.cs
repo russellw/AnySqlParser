@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace AnySqlParser;
@@ -23,5 +24,9 @@ public static class Etc {
 			sb.Append(c);
 		}
 		return sb.ToString();
+	}
+
+	public static void Print(object a, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0) {
+		Console.WriteLine($"{file}:{line}: {a}");
 	}
 }
