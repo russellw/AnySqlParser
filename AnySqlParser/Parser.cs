@@ -10,6 +10,7 @@ public sealed class Parser {
 	public static IEnumerable<Statement> Parse(TextReader reader, string file = "SQL", int line = 1) {
 		var parser = new Parser(reader, file, line);
 		while (parser.token != Eof) {
+			var textStatementStart = parser.textTokenStart;
 			var a = parser.Statement();
 			if (a != null)
 				yield return a;
@@ -27,6 +28,9 @@ public sealed class Parser {
 	int line;
 	int c;
 	string token = null!;
+	int textLine = 1;
+	int textTokenStart;
+	StringBuilder text = new();
 
 	Parser(TextReader reader, string file, int line) {
 		this.reader = reader;
@@ -1104,6 +1108,8 @@ public sealed class Parser {
 	}
 
 	void Lex() {
+		// Comments are more likely to belong to the following token than the previous one
+		textTokenStart = text.Length;
 		for (;;) {
 			switch (c) {
 			case '\'':
@@ -1227,16 +1233,15 @@ public sealed class Parser {
 				token = "@";
 				return;
 			case -1:
-				Read();
 				token = Eof;
 				return;
 			case '-':
 				Read();
 				switch (c) {
 				case '-':
-					reader.ReadLine();
-					line++;
-					Read();
+					do
+						Read();
+					while (c != '\n' && 0 <= c);
 					continue;
 				}
 				token = "-";
@@ -1418,6 +1423,7 @@ public sealed class Parser {
 	}
 
 	void Read() {
+		text.Append((char)c);
 		if (c == '\n')
 			line++;
 		c = reader.Read();
@@ -1427,9 +1433,9 @@ public sealed class Parser {
 		return Error($"{token}: {message}");
 	}
 
+	// Error functions return exception objects instead of throwing immediately
+	// so 'throw Error(...)' can mark the end of a case block
 	Exception Error(string message) {
-		// Error functions return exception objects instead of throwing immediately
-		// so 'throw Error(...)' can mark the end of a case block
 		return Error(message, line);
 	}
 
