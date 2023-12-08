@@ -107,11 +107,11 @@ public sealed class Parser {
 				Lex();
 				var a = new Table(false, UnqualifiedName());
 				while (!Eat("("))
-					Ignore(a.Ignored);
+					Skip(a.ExtraTokens);
 				do {
 					var b = TableElement(a, IsElementEnd);
 					while (!IsElementEnd())
-						Ignore(b.Ignored);
+						Skip(b.ExtraTokens);
 				} while (Eat(","));
 				Expect(")");
 				return a;
@@ -164,7 +164,7 @@ public sealed class Parser {
 		return false;
 	}
 
-	void Ignore(List<string> ignored) {
+	void Skip(List<string> extraTokens) {
 		var line1 = line;
 		int depth = 0;
 		do {
@@ -178,7 +178,7 @@ public sealed class Parser {
 				depth--;
 				break;
 			}
-			ignored.Add(Lex1());
+			extraTokens.Add(Lex1());
 		} while (depth != 0);
 	}
 
@@ -245,7 +245,7 @@ public sealed class Parser {
 				}
 				break;
 			}
-			Ignore(a.Ignored);
+			Skip(a.ExtraTokens);
 		}
 		return a;
 	}
@@ -298,7 +298,7 @@ public sealed class Parser {
 
 		if (column == null) {
 			while (!Eat("("))
-				Ignore(a.Ignored);
+				Skip(a.ExtraTokens);
 			do
 				a.Columns.Add(ColumnRef());
 			while (Eat(","));
@@ -366,10 +366,10 @@ public sealed class Parser {
 					a.Nullable = false;
 					continue;
 				}
-				a.Ignored.Add("not");
+				a.ExtraTokens.Add("not");
 				break;
 			}
-			Ignore(a.Ignored);
+			Skip(a.ExtraTokens);
 		}
 
 		// Add to table
@@ -420,7 +420,7 @@ public sealed class Parser {
 		var location = new Location(file, line);
 		var a = new Check(location);
 		while (!Eat("("))
-			Ignore(a.Ignored);
+			Skip(a.ExtraTokens);
 		a.Expression = Expression();
 		Expect(")");
 		return a;
