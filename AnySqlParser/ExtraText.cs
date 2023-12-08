@@ -7,8 +7,4 @@ public sealed class ExtraText: Statement {
 		Location = location;
 		Text = text;
 	}
-
-	public override string ToString() {
-		return $"{Location}:\n{Text}";
-	}
 }
