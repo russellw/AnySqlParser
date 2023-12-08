@@ -59,11 +59,6 @@ public sealed class Parser {
 			switch (token) {
 			case Eof:
 				yield break;
-			case "select":
-				yield return ExtraText(extraTextLine, extraTextCount);
-				yield return Select();
-				EndStatement();
-				continue;
 			case "insert": {
 				yield return ExtraText(extraTextLine, extraTextCount);
 				Lex();
@@ -180,7 +175,7 @@ public sealed class Parser {
 				break;
 			}
 			}
-			Lex();
+			Skip(null);
 			goto nextToken;
 		}
 	}
@@ -209,7 +204,7 @@ public sealed class Parser {
 		return false;
 	}
 
-	void Skip(List<string> extraTokens) {
+	void Skip(List<string>? extraTokens) {
 		var line1 = line;
 		int depth = 0;
 		do {
@@ -223,7 +218,8 @@ public sealed class Parser {
 				depth--;
 				break;
 			}
-			extraTokens.Add(Lex1());
+			extraTokens?.Add(token);
+			Lex();
 		} while (depth != 0);
 	}
 
