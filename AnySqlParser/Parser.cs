@@ -36,9 +36,7 @@ public sealed class Parser {
 
 	ExtraText ExtraText(int textLine, int n) {
 		var location = new Location(file, textLine);
-		var a = new ExtraText(location, text.ToString(0, n));
-		text.Clear();
-		return a;
+		return new ExtraText(location, text.ToString(0, n));
 	}
 
 	IEnumerable<Statement> Statements() {
@@ -192,6 +190,10 @@ public sealed class Parser {
 	void EndStatement() {
 		Eat(";");
 		Eat("go");
+
+		// Throw away extra text associated with the statement just recognized
+		// but keep extra text associated with the following token
+		text.Remove(0, tokenTextCount);
 	}
 
 	bool IsStatementEnd() {
