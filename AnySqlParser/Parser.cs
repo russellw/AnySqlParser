@@ -22,9 +22,9 @@ public sealed class Parser {
 	int line;
 	int c;
 	string token = null!;
-	int textLine = 1;
-	int textTokenStart;
-	StringBuilder text = new();
+	int tokenLine = 1;
+	int tokenTextCount;
+	readonly StringBuilder text = new();
 
 	Parser(TextReader reader, string file, int line) {
 		this.reader = reader;
@@ -34,124 +34,155 @@ public sealed class Parser {
 		Lex();
 	}
 
-	IEnumerable<Statement> Statements() {
-		while (token != Eof) {
-			var location = new Location(file, textLine);
-			var textStatementStart = textTokenStart;
-			var a = Statement();
-			if (a == null)
-				continue;
-			yield return a;
-		}
+	ExtraText ExtraText(int textLine, int n) {
+		var location = new Location(file, textLine);
+		var a = new ExtraText(location, text.ToString(0, n));
+		text.Clear();
+		return a;
 	}
 
-	Statement? Statement() {
-		switch (token) {
-		case "select":
-			return Select();
-		case "insert": {
-			Lex();
-			Eat("into");
-			var a = new Insert();
+	IEnumerable<Statement> Statements() {
+		for (;;) {
+			// Next statement
+			// in general, there will be a block of extra text before the statement
+			// consisting of comments, and unrecognized statements
+			// remember the line where the extra text began
+			var extraTextLine = tokenLine;
 
-			// Table
-			a.TableName = QualifiedName();
+		nextToken:
+			// This token might begin a recognized statement
+			// remember the character count where it began
+			// so everything up to that point, can be saved as extra text
+			var extraTextCount = tokenTextCount;
 
-			// Columns
-			if (Eat("(")) {
-				do
-					a.Columns.Add(Name());
-				while (Eat(","));
-				Expect(")");
-			}
-
-			// Values
-			Expect("values");
-			Expect("(");
-			do
-				a.Values.Add(Expression());
-			while (Eat(","));
-			Expect(")");
-			return a;
-		}
-		case "create": {
-			Lex();
-			var unique = Eat("unique");
+			// Does this token begin a recognized statement?
 			switch (token) {
-			case "index": {
+			case Eof:
+				yield break;
+			case "select":
+				yield return ExtraText(extraTextLine, extraTextCount);
+				yield return Select();
+				EndStatement();
+				continue;
+			case "insert": {
+				yield return ExtraText(extraTextLine, extraTextCount);
 				Lex();
-				var a = new Index(unique);
-				a.Name = Name();
+				Eat("into");
+				var a = new Insert();
 
 				// Table
-				Expect("on");
 				a.TableName = QualifiedName();
 
 				// Columns
-				Expect("(");
-				do
-					a.Columns.Add(ColumnRef());
-				while (Eat(","));
-				Expect(")");
-
-				// Include
-				if (Eat("include")) {
-					Expect("(");
+				if (Eat("(")) {
 					do
-						a.Include.Add(Name());
+						a.Columns.Add(Name());
 					while (Eat(","));
 					Expect(")");
 				}
-				return a;
-			}
-			case "view": {
-				Lex();
-				var a = new View();
-				a.Name = QualifiedName();
-				Expect("as");
-				a.Query = Select();
-				return a;
-			}
-			case "table": {
-				Lex();
-				var a = new Table(false, UnqualifiedName());
-				while (!Eat("("))
-					Skip(a.ExtraTokens);
-				do {
-					var b = TableElement(a, IsElementEnd);
-					while (!IsElementEnd())
-						Skip(b.ExtraTokens);
-				} while (Eat(","));
+
+				// Values
+				Expect("values");
+				Expect("(");
+				do
+					a.Values.Add(Expression());
+				while (Eat(","));
 				Expect(")");
-				return a;
+				EndStatement();
+				yield return a;
+				continue;
 			}
-			}
-			break;
-		}
-		case "alter": {
-			Lex();
-			switch (token) {
-			case "table": {
+			case "create": {
 				Lex();
-				var tableName = UnqualifiedName();
+				var unique = Eat("unique");
 				switch (token) {
-				case "add": {
+				case "index": {
+					yield return ExtraText(extraTextLine, extraTextCount);
 					Lex();
-					var a = new Table(true, tableName);
+					var a = new Index(unique);
+					a.Name = Name();
+
+					// Table
+					Expect("on");
+					a.TableName = QualifiedName();
+
+					// Columns
+					Expect("(");
 					do
-						TableElement(a, IsStatementEnd);
+						a.Columns.Add(ColumnRef());
 					while (Eat(","));
-					return a;
+					Expect(")");
+
+					// Include
+					if (Eat("include")) {
+						Expect("(");
+						do
+							a.Include.Add(Name());
+						while (Eat(","));
+						Expect(")");
+					}
+					EndStatement();
+					yield return a;
+					continue;
+				}
+				case "view": {
+					yield return ExtraText(extraTextLine, extraTextCount);
+					Lex();
+					var a = new View();
+					a.Name = QualifiedName();
+					Expect("as");
+					a.Query = Select();
+					EndStatement();
+					yield return a;
+					continue;
+				}
+				case "table": {
+					yield return ExtraText(extraTextLine, extraTextCount);
+					Lex();
+					var a = new Table(false, UnqualifiedName());
+					while (!Eat("("))
+						Skip(a.ExtraTokens);
+					do {
+						var b = TableElement(a, IsElementEnd);
+						while (!IsElementEnd())
+							Skip(b.ExtraTokens);
+					} while (Eat(","));
+					Expect(")");
+					EndStatement();
+					yield return a;
+					continue;
 				}
 				}
-				throw ErrorToken("unknown syntax");
+				break;
+			}
+			case "alter": {
+				Lex();
+				switch (token) {
+				case "table": {
+					Lex();
+					var tableName = UnqualifiedName();
+					switch (token) {
+					case "add": {
+						yield return ExtraText(extraTextLine, extraTextCount);
+						Lex();
+						var a = new Table(true, tableName);
+						do
+							TableElement(a, IsStatementEnd);
+						while (Eat(","));
+						EndStatement();
+						yield return a;
+						continue;
+					}
+					}
+					throw ErrorToken("unknown syntax");
+				}
+				}
+				break;
 			}
 			}
-			break;
+			Lex();
+			goto nextToken;
 		}
-		}
-		Lex();
-		return null;
 	}
 
 	bool IsElementEnd() {
@@ -161,6 +192,11 @@ public sealed class Parser {
 			return true;
 		}
 		return false;
+	}
+
+	void EndStatement() {
+		Eat(";");
+		Eat("go");
 	}
 
 	bool IsStatementEnd() {
@@ -1114,8 +1150,8 @@ public sealed class Parser {
 
 	void Lex() {
 		// Comments are more likely to belong to the following token than the previous one
-		textLine = line;
-		textTokenStart = text.Length;
+		tokenLine = line;
+		tokenTextCount = text.Length;
 		for (;;) {
 			switch (c) {
 			case '\'':

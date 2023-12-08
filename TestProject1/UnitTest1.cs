@@ -55,7 +55,7 @@ public class UnitTest1 {
 	[Fact]
 	public void SampleDB1() {
 		var statements = ParseFile("sql-server-samples/sampleDB1.sql");
-		Assert.True(statements[0] is Table);
+		Assert.True(statements[1] is Table);
 	}
 
 	[Fact]
@@ -130,9 +130,12 @@ public class UnitTest1 {
 	}
 
 	static Expression Selected(List<Statement> statements) {
-		var select = (Select)statements[0];
-		var querySpecification = (QuerySpecification)select.QueryExpression;
-		return querySpecification.SelectList[0].Expression;
+		foreach (var a in statements)
+			if (a is Select select) {
+				var querySpecification = (QuerySpecification)select.QueryExpression;
+				return querySpecification.SelectList[0].Expression;
+			}
+		throw new Exception(statements.ToString());
 	}
 
 	[Fact]
