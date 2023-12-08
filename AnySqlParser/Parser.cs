@@ -4,17 +4,11 @@ using System.Text;
 namespace AnySqlParser;
 public sealed class Parser {
 	public static IEnumerable<Statement> Parse(string file) {
-		return Parse(new StreamReader(file), file, 1);
+		return new Parser(new StreamReader(file), file, 1).Statements();
 	}
 
 	public static IEnumerable<Statement> Parse(TextReader reader, string file = "SQL", int line = 1) {
-		var parser = new Parser(reader, file, line);
-		while (parser.token != Eof) {
-			var textStatementStart = parser.textTokenStart;
-			var a = parser.Statement();
-			if (a != null)
-				yield return a;
-		}
+		return new Parser(reader, file, line).Statements();
 	}
 
 	delegate bool Callback();
@@ -38,6 +32,17 @@ public sealed class Parser {
 		this.line = line;
 		Read();
 		Lex();
+	}
+
+	IEnumerable<Statement> Statements() {
+		while (token != Eof) {
+			var location = new Location(file, textLine);
+			var textStatementStart = textTokenStart;
+			var a = Statement();
+			if (a == null)
+				continue;
+			yield return a;
+		}
 	}
 
 	Statement? Statement() {
@@ -1109,6 +1114,7 @@ public sealed class Parser {
 
 	void Lex() {
 		// Comments are more likely to belong to the following token than the previous one
+		textLine = line;
 		textTokenStart = text.Length;
 		for (;;) {
 			switch (c) {
