@@ -1,7 +1,7 @@
 namespace AnySqlParser;
-public readonly struct Location {
-	public readonly string File;
-	public readonly int Line;
+public struct Location {
+	public string File;
+	public int Line;
 
 	public Location(string file, int line) {
 		File = file;

@@ -1,6 +1,6 @@
 ﻿namespace AnySqlParser;
 public sealed class SelectColumn {
-	public readonly Location Location;
+	public Location Location;
 	public Expression Expression;
 	public Expression? ColumnAlias;
 

@@ -1,6 +1,6 @@
 ﻿namespace AnySqlParser;
 public struct TableRef {
-	public readonly Location Location;
+	public Location Location;
 	public string Name;
 	public Table? Table;
 
