@@ -1,7 +1,11 @@
-﻿namespace Benchmark;
+﻿using AnySqlParser;
 
-internal class Program {
+class Program {
 	static void Main(string[] args) {
-		Console.WriteLine("Hello, World!");
-	}
+        int n = 0;
+        foreach (var file in args)
+            foreach (var a in Parser.Parse(file))
+                n++;
+        Console.WriteLine(n);
+    }
 }
