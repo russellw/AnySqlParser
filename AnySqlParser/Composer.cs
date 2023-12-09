@@ -11,10 +11,19 @@ public abstract class Composer {
 		}
 		foreach (var table in database.Tables)
 			foreach (var key in table.ForeignKeys)
-				Add(key);
+				Add(table, key);
 	}
 
-	protected void Add(ForeignKey key) {
+	protected void Add(Table table, ForeignKey key) {
+		sb.Append("ALTER TABLE ");
+		sb.Append(Name(table.Name));
+		sb.Append(" ADD FOREIGN KEY (");
+		sb.Append(string.Join(',', key.Columns.Select(c => Name(c.Name))));
+		sb.Append(") REFERENCES ");
+		sb.Append(Name(key.RefTable.Name));
+		sb.Append(" (");
+		sb.Append(string.Join(',', key.RefColumns.Select(c => Name(c.Name))));
+		sb.AppendLine(");");
 	}
 
 	protected void Add(DataType type) {
@@ -52,16 +61,16 @@ public abstract class Composer {
 			sb.AppendLine(",");
 		}
 		if (table.PrimaryKey != null) {
-			sb.Append("\tPRIMARY KEY(");
+			sb.Append("\tPRIMARY KEY (");
 			sb.Append(string.Join(',', table.PrimaryKey.Columns.Select(c => Name(c.Name))));
 			sb.AppendLine("),");
 		}
 		foreach (var key in table.Uniques) {
-			sb.Append("\tUNIQUE(");
+			sb.Append("\tUNIQUE (");
 			sb.Append(string.Join(',', key.Columns.Select(c => Name(c.Name))));
 			sb.AppendLine("),");
 		}
-		sb.AppendLine(")");
+		sb.AppendLine(");");
 
 		if (table.ExtraTokens.Count != 0) {
 			sb.Append("--");

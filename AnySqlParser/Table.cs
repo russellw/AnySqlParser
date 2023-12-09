@@ -36,8 +36,4 @@ public sealed class Table: Statement {
 			return column;
 		throw new SqlError($"{location}: {this}.{name} not found");
 	}
-
-	public override string ToString() {
-		return Name;
-	}
 }
