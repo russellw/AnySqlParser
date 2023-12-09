@@ -1,5 +1,5 @@
 namespace AnySqlParser;
 public abstract class Statement {
-	public virtual void AddTo(Database db) {
+	public virtual void AddTo(Database database) {
 	}
 }

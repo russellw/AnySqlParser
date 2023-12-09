@@ -15,6 +15,18 @@ public static class Etc {
 		return Unquote(s, s[0]);
 	}
 
+	public static string Quote(string s, char q) {
+		var sb = new StringBuilder();
+		sb.Append(q);
+		foreach (char c in s) {
+			sb.Append(c);
+			if (c == q)
+				sb.Append(c);
+		}
+		sb.Append(q);
+		return sb.ToString();
+	}
+
 	public static string Unquote(string s, char q) {
 		var sb = new StringBuilder();
 		for (int i = 1; i < s.Length - 1;) {

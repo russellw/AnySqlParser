@@ -15,8 +15,8 @@ public sealed class Table: Statement {
 		Name = name;
 	}
 
-	public override void AddTo(Database db) {
-		db.Tables.Add(this);
+	public override void AddTo(Database database) {
+		database.Tables.Add(this);
 	}
 
 	public void Add(Column column) {
