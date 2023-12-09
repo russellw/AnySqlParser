@@ -22,7 +22,7 @@ class Program {
 			files.Add(s);
 		}
 		if (extraText) {
-			foreach (var file in args)
+			foreach (var file in files)
 				foreach (var a in Parser.Parse(file)) {
 					if (a is ExtraText extra) {
 						Console.ForegroundColor = ConsoleColor.Red;
