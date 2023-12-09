@@ -63,18 +63,14 @@ public class UnitTest1 {
 		Expression a = new StringLiteral("x");
 		Expression b = new StringLiteral("y");
 		Assert.NotEqual(a, b);
-		Assert.False(a.Equals(b));
-		Assert.False(a.Eq(b));
 
 		a = new StringLiteral("x");
 		b = new StringLiteral("x");
-		Assert.NotEqual(a, b);
-		Assert.False(a.Equals(b));
-		Assert.True(a.Eq(b));
+		Assert.Equal(a, b);
 
 		a = new BinaryExpression(BinaryOp.Add, new StringLiteral("x"), new StringLiteral("y"));
 		b = new BinaryExpression(BinaryOp.Add, new StringLiteral("x"), new StringLiteral("y"));
-		Assert.True(a.Eq(b));
+		Assert.Equal(a, b);
 	}
 
 	[Fact]
@@ -86,47 +82,47 @@ public class UnitTest1 {
 		statements = ParseText("create table t(c int default ~1)");
 		a = Default(statements);
 		Assert.True(a is UnaryExpression);
-		Assert.True(a.Eq(new UnaryExpression(UnaryOp.BitNot, new Number("1"))));
+		Assert.True(a.Equals(new UnaryExpression(UnaryOp.BitNot, new Number("1"))));
 
 		statements = ParseText("create table t(c int default -1)");
 		a = Default(statements);
 		Assert.True(a is UnaryExpression);
-		Assert.True(a.Eq(new UnaryExpression(UnaryOp.Minus, new Number("1"))));
+		Assert.True(a.Equals(new UnaryExpression(UnaryOp.Minus, new Number("1"))));
 
 		a = Default(ParseText("create table t(c int default 1*2)"));
 		Expression b;
 		b = new BinaryExpression(BinaryOp.Multiply, new Number("1"), new Number("2"));
-		Assert.True(a.Eq(b));
+		Assert.True(a.Equals(b));
 
 		a = Default(ParseText("create table t(c int default 1*2*3)"));
 		b = new BinaryExpression(
 			BinaryOp.Multiply, new BinaryExpression(BinaryOp.Multiply, new Number("1"), new Number("2")), new Number("3"));
-		Assert.True(a.Eq(b));
+		Assert.True(a.Equals(b));
 
 		a = Default(ParseText("create table t(c int default (1*2)*3)"));
 		b = new BinaryExpression(
 			BinaryOp.Multiply, new BinaryExpression(BinaryOp.Multiply, new Number("1"), new Number("2")), new Number("3"));
-		Assert.True(a.Eq(b));
+		Assert.True(a.Equals(b));
 
 		a = Default(ParseText("create table t(c int default 1*(2*3))"));
 		b = new BinaryExpression(
 			BinaryOp.Multiply, new Number("1"), new BinaryExpression(BinaryOp.Multiply, new Number("2"), new Number("3")));
-		Assert.True(a.Eq(b));
+		Assert.True(a.Equals(b));
 
 		a = Default(ParseText("create table t(c int default 1*2+3)"));
 		b = new BinaryExpression(
 			BinaryOp.Add, new BinaryExpression(BinaryOp.Multiply, new Number("1"), new Number("2")), new Number("3"));
-		Assert.True(a.Eq(b));
+		Assert.True(a.Equals(b));
 
 		a = Default(ParseText("create table t(c int default 1+2*3)"));
 		b = new BinaryExpression(
 			BinaryOp.Add, new Number("1"), new BinaryExpression(BinaryOp.Multiply, new Number("2"), new Number("3")));
-		Assert.True(a.Eq(b));
+		Assert.True(a.Equals(b));
 
 		a = Default(ParseText("create table t(c int default 1=2*3)"));
 		b = new BinaryExpression(
 			BinaryOp.Equal, new Number("1"), new BinaryExpression(BinaryOp.Multiply, new Number("2"), new Number("3")));
-		Assert.True(a.Eq(b));
+		Assert.True(a.Equals(b));
 	}
 
 	static Expression Default(List<Statement> statements) {

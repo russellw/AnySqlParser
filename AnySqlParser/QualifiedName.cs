@@ -10,9 +10,11 @@ public sealed class QualifiedName: Expression {
 		Names.Add(name);
 	}
 
-	public override bool Eq(Expression b0) {
-		if (b0 is QualifiedName b)
-			return Names == b.Names;
-		return false;
+	public override bool Equals(object? obj) {
+		return obj is QualifiedName name && Names.SequenceEqual(name.Names) && Star == name.Star;
+	}
+
+	public override int GetHashCode() {
+		return HashCode.Combine(Names, Star);
 	}
 }

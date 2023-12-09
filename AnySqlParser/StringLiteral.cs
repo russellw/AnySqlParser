@@ -6,9 +6,11 @@ public sealed class StringLiteral: Expression {
 		Value = value;
 	}
 
-	public override bool Eq(Expression b0) {
-		if (b0 is StringLiteral b)
-			return Value == b.Value;
-		return false;
+	public override bool Equals(object? obj) {
+		return obj is StringLiteral literal && Value == literal.Value;
+	}
+
+	public override int GetHashCode() {
+		return HashCode.Combine(Value);
 	}
 }

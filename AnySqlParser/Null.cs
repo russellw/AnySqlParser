@@ -3,7 +3,11 @@ public sealed class Null: Expression {
 	public Null() {
 	}
 
-	public override bool Eq(Expression b) {
-		return b is Null;
+	public override bool Equals(object? obj) {
+		return obj is Null;
+	}
+
+	public override int GetHashCode() {
+		return 0;
 	}
 }

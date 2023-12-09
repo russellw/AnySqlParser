@@ -10,9 +10,14 @@ public sealed class TernaryExpression: Expression {
 		Third = third;
 	}
 
-	public override bool Eq(Expression b0) {
-		if (b0 is TernaryExpression b)
-			return Op == b.Op && First.Eq(b.First) && Second.Eq(b.Second) && Third.Eq(b.Third);
-		return false;
+	public override bool Equals(object? obj) {
+		return obj is TernaryExpression expression && Op == expression.Op &&
+			   EqualityComparer<Expression>.Default.Equals(First, expression.First) &&
+			   EqualityComparer<Expression>.Default.Equals(Second, expression.Second) &&
+			   EqualityComparer<Expression>.Default.Equals(Third, expression.Third);
+	}
+
+	public override int GetHashCode() {
+		return HashCode.Combine(Op, First, Second, Third);
 	}
 }

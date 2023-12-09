@@ -6,9 +6,11 @@ public sealed class Number: Expression {
 		Value = value;
 	}
 
-	public override bool Eq(Expression b0) {
-		if (b0 is Number b)
-			return Value == b.Value;
-		return false;
+	public override bool Equals(object? obj) {
+		return obj is Number number && Value == number.Value;
+	}
+
+	public override int GetHashCode() {
+		return HashCode.Combine(Value);
 	}
 }

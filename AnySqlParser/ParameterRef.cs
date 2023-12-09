@@ -6,9 +6,11 @@ public sealed class ParameterRef: Expression {
 		Name = name;
 	}
 
-	public override bool Eq(Expression b0) {
-		if (b0 is ParameterRef b)
-			return Name == b.Name;
-		return false;
+	public override bool Equals(object? obj) {
+		return obj is ParameterRef @ref && Name == @ref.Name;
+	}
+
+	public override int GetHashCode() {
+		return HashCode.Combine(Name);
 	}
 }

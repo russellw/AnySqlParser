@@ -7,9 +7,12 @@ public sealed class Cast: Expression {
 		Operand = operand;
 	}
 
-	public override bool Eq(Expression b0) {
-		if (b0 is Cast b)
-			return Operand.Eq(b.Operand) && DataType == b.DataType;
-		return false;
+	public override bool Equals(object? obj) {
+		return obj is Cast cast && EqualityComparer<Expression>.Default.Equals(Operand, cast.Operand) &&
+			   DataType.Equals(cast.DataType);
+	}
+
+	public override int GetHashCode() {
+		return HashCode.Combine(Operand, DataType);
 	}
 }
