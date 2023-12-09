@@ -7,7 +7,14 @@ public abstract class Composer {
 	protected void Add(Database database) {
 		foreach (var table in database.Tables) {
 			Add(table);
+			sb.AppendLine();
 		}
+		foreach (var table in database.Tables)
+			foreach (var key in table.ForeignKeys)
+				Add(key);
+	}
+
+	protected void Add(ForeignKey key) {
 	}
 
 	protected void Add(DataType type) {
@@ -30,24 +37,43 @@ public abstract class Composer {
 	}
 
 	protected void Add(Column column) {
-		Name(column.Name);
+		sb.Append(Name(column.Name));
 		sb.Append(' ');
 		sb.Append(column.Type);
 	}
 
 	protected void Add(Table table) {
 		sb.Append("CREATE TABLE ");
-		Name(table.Name);
+		sb.Append(Name(table.Name));
 		sb.Append("(\n");
 		foreach (var column in table.Columns) {
 			sb.Append('\t');
 			Add(column);
-			sb.Append(",\n");
+			sb.AppendLine(",");
 		}
-		sb.Append(")\n");
+		if (table.PrimaryKey != null) {
+			sb.Append("\tPRIMARY KEY(");
+			sb.Append(string.Join(',', table.PrimaryKey.Columns.Select(c => Name(c.Name))));
+			sb.AppendLine(")");
+		}
+		foreach (var key in table.Uniques) {
+			sb.Append("\tUNIQUE(");
+			sb.Append(string.Join(',', key.Columns.Select(c => Name(c.Name))));
+			sb.AppendLine(")");
+		}
+		sb.AppendLine(")");
+
+		if (table.ExtraTokens.Count != 0) {
+			sb.Append("--");
+			foreach (var s in table.ExtraTokens) {
+				sb.Append(' ');
+				sb.Append(s);
+			}
+			sb.AppendLine();
+		}
 	}
 
-	protected virtual void Name(string name) {
-		sb.Append(Etc.Quote(name, '"'));
+	protected virtual string Name(string name) {
+		return Etc.Quote(name, '"');
 	}
 }
