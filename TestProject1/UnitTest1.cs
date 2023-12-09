@@ -55,7 +55,7 @@ public class UnitTest1 {
 	[Fact]
 	public void SampleDB1() {
 		var statements = ParseFile("sql-server-samples/sampleDB1.sql");
-		Assert.True(statements[1] is Table);
+		Assert.True(statements[1] is Select);
 	}
 
 	[Fact]
@@ -79,61 +79,61 @@ public class UnitTest1 {
 
 	[Fact]
 	public void Select() {
-		var statements = ParseText("select 1");
-		var a = Selected(statements);
+		var statements = ParseText("create table t(c int default 1)");
+		var a = Default(statements);
 		Assert.True(a is Number);
 
-		statements = ParseText("select ~1");
-		a = Selected(statements);
+		statements = ParseText("create table t(c int default ~1)");
+		a = Default(statements);
 		Assert.True(a is UnaryExpression);
 		Assert.True(a.Eq(new UnaryExpression(UnaryOp.BitNot, new Number("1"))));
 
-		statements = ParseText("select -1");
-		a = Selected(statements);
+		statements = ParseText("create table t(c int default -1)");
+		a = Default(statements);
 		Assert.True(a is UnaryExpression);
 		Assert.True(a.Eq(new UnaryExpression(UnaryOp.Minus, new Number("1"))));
 
-		a = Selected(ParseText("select 1*2"));
+		a = Default(ParseText("create table t(c int default 1*2)"));
 		Expression b;
 		b = new BinaryExpression(BinaryOp.Multiply, new Number("1"), new Number("2"));
 		Assert.True(a.Eq(b));
 
-		a = Selected(ParseText("select 1*2*3"));
+		a = Default(ParseText("create table t(c int default 1*2*3)"));
 		b = new BinaryExpression(
 			BinaryOp.Multiply, new BinaryExpression(BinaryOp.Multiply, new Number("1"), new Number("2")), new Number("3"));
 		Assert.True(a.Eq(b));
 
-		a = Selected(ParseText("select (1*2)*3"));
+		a = Default(ParseText("create table t(c int default (1*2)*3)"));
 		b = new BinaryExpression(
 			BinaryOp.Multiply, new BinaryExpression(BinaryOp.Multiply, new Number("1"), new Number("2")), new Number("3"));
 		Assert.True(a.Eq(b));
 
-		a = Selected(ParseText("select 1*(2*3)"));
+		a = Default(ParseText("create table t(c int default 1*(2*3))"));
 		b = new BinaryExpression(
 			BinaryOp.Multiply, new Number("1"), new BinaryExpression(BinaryOp.Multiply, new Number("2"), new Number("3")));
 		Assert.True(a.Eq(b));
 
-		a = Selected(ParseText("select 1*2+3"));
+		a = Default(ParseText("create table t(c int default 1*2+3)"));
 		b = new BinaryExpression(
 			BinaryOp.Add, new BinaryExpression(BinaryOp.Multiply, new Number("1"), new Number("2")), new Number("3"));
 		Assert.True(a.Eq(b));
 
-		a = Selected(ParseText("select 1+2*3"));
+		a = Default(ParseText("create table t(c int default 1+2*3)"));
 		b = new BinaryExpression(
 			BinaryOp.Add, new Number("1"), new BinaryExpression(BinaryOp.Multiply, new Number("2"), new Number("3")));
 		Assert.True(a.Eq(b));
 
-		a = Selected(ParseText("select 1=2*3"));
+		a = Default(ParseText("create table t(c int default 1=2*3)"));
 		b = new BinaryExpression(
 			BinaryOp.Equal, new Number("1"), new BinaryExpression(BinaryOp.Multiply, new Number("2"), new Number("3")));
 		Assert.True(a.Eq(b));
 	}
 
-	static Expression Selected(List<Statement> statements) {
+	static Expression Default(List<Statement> statements) {
 		foreach (var a in statements)
-			if (a is Select select) {
-				var querySpecification = (QuerySpecification)select.QueryExpression;
-				return querySpecification.SelectList[0].Expression;
+			if (a is Select table) {
+				var column = table.Columns[0];
+				return column.Default!;
 			}
 		throw new Exception(statements.ToString());
 	}
