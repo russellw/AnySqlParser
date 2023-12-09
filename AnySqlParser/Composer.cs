@@ -12,6 +12,21 @@ public abstract class Composer {
 
 	protected void Add(DataType type) {
 		sb.Append(type.Name);
+		if (type.Size >= 0) {
+			sb.Append('(');
+			sb.Append(type.Size);
+			if (type.Scale >= 0) {
+				sb.Append(',');
+				sb.Append(type.Scale);
+			}
+			sb.Append(')');
+			return;
+		}
+		if (type.Values != null) {
+			sb.Append('(');
+			sb.Append(string.Join(',', type.Values.Select(s => Etc.Quote(s, '\''))));
+			sb.Append(')');
+		}
 	}
 
 	protected void Add(Column column) {
