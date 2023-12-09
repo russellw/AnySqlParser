@@ -1319,6 +1319,13 @@ public sealed class Parser {
 			case ' ':
 				Read();
 				continue;
+			case '$':
+				if (char.IsDigit((char)reader.Peek())) {
+					Read();
+					Number();
+					return;
+				}
+				break;
 			case 'N':
 				if (reader.Peek() == '\'') {
 					// We are reading everything as Unicode anyway
