@@ -17,7 +17,7 @@ public abstract class Composer {
 	protected void Add(Column column) {
 		Name(column.Name);
 		sb.Append(' ');
-		sb.Append(column.DataType);
+		sb.Append(column.Type);
 	}
 
 	protected void Add(Table table) {
