@@ -9,8 +9,8 @@ public sealed class Column: Element {
 	public bool PrimaryKey;
 	public bool Nullable = true;
 
-	public Column(Location location, string name, DataType dataType): base(location) {
-		DataType = dataType;
+	public Column(Location location, string name, DataType type): base(location) {
+		DataType = type;
 		Name = name;
 	}
 }
