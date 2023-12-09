@@ -36,12 +36,12 @@ public sealed class Parser {
 
 	ExtraText? ExtraText(int textLine, int n) {
 		var i = 0;
-		while (i < n && char.IsWhiteSpace(text[i]))
+		while (char.IsWhiteSpace(text[i]))
 			i++;
 		if (i == n)
 			return null;
 		var location = new Location(file, textLine);
-		return new ExtraText(location, text.ToString(0, n - i));
+		return new ExtraText(location, text.ToString(i, n - i));
 	}
 
 	IEnumerable<Statement> Statements() {
