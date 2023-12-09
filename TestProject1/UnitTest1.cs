@@ -13,7 +13,7 @@ public class UnitTest1 {
 		Assert.Empty(ParseText("--"));
 		Assert.Empty(ParseText("--\n--\n"));
 
-		var e = Assert.Throws<FormatException>(() => ParseText("--\n--\n!"));
+		var e = Assert.Throws<SqlError>(() => ParseText("--\n--\n!"));
 		Assert.Matches(".*:3: ", e.Message);
 	}
 
@@ -24,32 +24,32 @@ public class UnitTest1 {
 		Assert.Empty(ParseText("/**************/"));
 		Assert.Empty(ParseText("/*////////////*/"));
 
-		var e = Assert.Throws<FormatException>(() => ParseText("/*/"));
+		var e = Assert.Throws<SqlError>(() => ParseText("/*/"));
 		Assert.Matches(".*:1: ", e.Message);
 
-		e = Assert.Throws<FormatException>(() => ParseText("/*/", "foo", 5));
+		e = Assert.Throws<SqlError>(() => ParseText("/*/", "foo", 5));
 		Assert.Matches("foo:5: ", e.Message);
 
-		e = Assert.Throws<FormatException>(() => ParseText("\n\n/*/", "foo", 5));
+		e = Assert.Throws<SqlError>(() => ParseText("\n\n/*/", "foo", 5));
 		Assert.Matches("foo:7: ", e.Message);
 	}
 
 	[Fact]
 	public void StrayCharacter() {
-		Assert.Throws<FormatException>(() => ParseText("!"));
-		Assert.Throws<FormatException>(() => ParseText("|"));
+		Assert.Throws<SqlError>(() => ParseText("!"));
+		Assert.Throws<SqlError>(() => ParseText("|"));
 	}
 
 	[Fact]
 	public void StringLiteral() {
-		Assert.Throws<FormatException>(() => ParseText("'"));
+		Assert.Throws<SqlError>(() => ParseText("'"));
 	}
 
 	[Fact]
 	public void QuotedName() {
-		Assert.Throws<FormatException>(() => ParseText("\"..."));
-		Assert.Throws<FormatException>(() => ParseText("`"));
-		Assert.Throws<FormatException>(() => ParseText("["));
+		Assert.Throws<SqlError>(() => ParseText("\"..."));
+		Assert.Throws<SqlError>(() => ParseText("`"));
+		Assert.Throws<SqlError>(() => ParseText("["));
 	}
 
 	[Fact]

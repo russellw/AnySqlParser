@@ -1017,7 +1017,12 @@ public sealed class Parser {
 	}
 
 	int Int() {
-		var n = int.Parse(token, System.Globalization.CultureInfo.InvariantCulture);
+		int n;
+		try {
+			n = int.Parse(token, System.Globalization.CultureInfo.InvariantCulture);
+		} catch (FormatException e) {
+			throw Error(e.Message);
+		}
 		Lex();
 		return n;
 	}
@@ -1512,6 +1517,6 @@ public sealed class Parser {
 	}
 
 	Exception Error(string message, int line) {
-		return new FormatException($"{file}:{line}: {message}");
+		return new SqlError($"{file}:{line}: {message}");
 	}
 }

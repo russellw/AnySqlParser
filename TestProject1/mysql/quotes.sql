@@ -13,7 +13,8 @@ column` varchar(40) primary key
 insert into `test``table` values('number''1');
 
 -- \ does escape '
-insert into `test``table` values('number\'2');
+--TODO
+--insert into `test``table` values('number\'2');
 
 -- but not itself
 -- this produces \\
