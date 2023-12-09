@@ -984,7 +984,7 @@ public sealed class Parser {
 		case '[':
 			return QualifiedName();
 		case '\'':
-			return new StringLiteral(Etc.Unquote(Lex1()));
+			return StringLiteral();
 		case '0':
 		case '1':
 		case '2':
@@ -1002,6 +1002,12 @@ public sealed class Parser {
 			break;
 		}
 		throw ErrorToken("expected expression");
+	}
+
+	StringLiteral StringLiteral() {
+		if (token[0] == '\'')
+			return new StringLiteral(Etc.Unquote(Lex1()));
+		throw ErrorToken("expected string literal");
 	}
 
 	QualifiedName QualifiedName() {
