@@ -25,11 +25,10 @@ class Program {
 			foreach (var file in files)
 				foreach (var a in Parser.Parse(file)) {
 					if (a is ExtraText extra) {
-						Console.ForegroundColor = ConsoleColor.Red;
+						Console.ForegroundColor = ConsoleColor.Green;
 						Console.WriteLine(extra.Location);
-						Console.ForegroundColor = ConsoleColor.Yellow;
-						Console.WriteLine(extra.Text);
 						Console.ResetColor();
+						Console.WriteLine(extra.Text);
 						Console.WriteLine();
 						continue;
 					}
