@@ -30,7 +30,7 @@ public sealed class Parser {
 		this.reader = reader;
 		this.file = file;
 		this.line = line;
-		Read();
+		c = reader.Read();
 		Lex();
 	}
 
