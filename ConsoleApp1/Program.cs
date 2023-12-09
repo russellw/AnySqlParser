@@ -30,9 +30,9 @@ class Program {
 						Console.ForegroundColor = ConsoleColor.Yellow;
 						Console.WriteLine(extra.Text);
 						Console.ResetColor();
+						Console.WriteLine();
 						continue;
 					}
-					Console.WriteLine(a);
 				}
 			return;
 		}

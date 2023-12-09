@@ -36,7 +36,7 @@ public sealed class Parser {
 
 	ExtraText? ExtraText(int textLine, int n) {
 		var i = 0;
-		while (char.IsWhiteSpace(text[i]))
+		while (i < n && char.IsWhiteSpace(text[i]))
 			i++;
 		if (i == n)
 			return null;
