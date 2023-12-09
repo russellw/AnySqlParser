@@ -442,9 +442,89 @@ public sealed class Parser {
 		return a;
 	}
 
+	string DataTypeName() {
+		switch (token) {
+		case "character":
+		case "char":
+			Lex();
+			switch (token) {
+			case "large":
+				Lex();
+				Expect("object");
+				return "clob";
+			case "varying":
+				Lex();
+				return "varchar";
+			}
+			return "char";
+		case "binary":
+			Lex();
+			switch (token) {
+			case "large":
+				Lex();
+				Expect("object");
+				return "blob";
+			}
+			return "binary";
+		case "double":
+			Eat("precision");
+			return "double";
+		case "long":
+			Lex();
+			switch (token) {
+			case "raw":
+			case "varbinary":
+			case "varchar":
+				return "long " + Lex1();
+			}
+			return "long";
+		case "time":
+			Lex();
+			switch (token) {
+			case "with":
+				Lex();
+				Expect("timezone");
+				return "time with timezone";
+			}
+			return "time";
+		case "timestamp":
+			Lex();
+			switch (token) {
+			case "with":
+				Lex();
+				Expect("timezone");
+				return "timestamp with timezone";
+			}
+			return "timestamp";
+		case "interval":
+			Lex();
+			switch (token) {
+			case "day":
+				Lex();
+				Expect("to");
+				Expect("second");
+				return "interval day to second";
+			case "year":
+				Lex();
+				Expect("to");
+				Expect("month");
+				return "interval year to month";
+			}
+			return "interval";
+		}
+		return Name();
+	}
+
 	DataType DataType() {
-		var a = new DataType(QualifiedName());
-		if (Eat("(")) {
+		var a = new DataType(DataTypeName());
+		if (a.Name == "enum") {
+			Expect("(");
+			a.Values = new();
+			do
+				a.Values.Add(StringLiteral());
+			while (Eat(","));
+			Expect(")");
+		} else if (Eat("(")) {
 			a.Size = Int();
 			if (Eat(","))
 				a.Scale = Int();
@@ -984,7 +1064,7 @@ public sealed class Parser {
 		case '[':
 			return QualifiedName();
 		case '\'':
-			return StringLiteral();
+			return new StringLiteral(StringLiteral());
 		case '0':
 		case '1':
 		case '2':
@@ -1004,9 +1084,9 @@ public sealed class Parser {
 		throw ErrorToken("expected expression");
 	}
 
-	StringLiteral StringLiteral() {
+	string StringLiteral() {
 		if (token[0] == '\'')
-			return new StringLiteral(Etc.Unquote(Lex1()));
+			return Etc.Unquote(Lex1());
 		throw ErrorToken("expected string literal");
 	}
 
@@ -1322,6 +1402,11 @@ public sealed class Parser {
 				}
 				token = "-";
 				return;
+			case '#':
+				do
+					Read();
+				while (c != '\n' && 0 <= c);
+				continue;
 			case '\n':
 			case '\r':
 			case '\t':
