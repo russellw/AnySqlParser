@@ -21,6 +21,7 @@ class Program {
 			}
 			files.Add(s);
 		}
+
 		if (extraText) {
 			foreach (var file in files)
 				foreach (var a in Parser.Parse(file)) {
@@ -35,5 +36,11 @@ class Program {
 				}
 			return;
 		}
+
+		var database = new Database();
+		foreach (var file in files)
+			foreach (var a in Parser.Parse(file))
+				a.AddTo(database);
+		Console.Write(SqlServerComposer.Compose(database));
 	}
 }

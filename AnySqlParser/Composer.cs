@@ -39,13 +39,13 @@ public abstract class Composer {
 	protected void Add(Column column) {
 		sb.Append(Name(column.Name));
 		sb.Append(' ');
-		sb.Append(column.Type);
+		Add(column.Type);
 	}
 
 	protected void Add(Table table) {
 		sb.Append("CREATE TABLE ");
 		sb.Append(Name(table.Name));
-		sb.Append("(\n");
+		sb.Append(" (\n");
 		foreach (var column in table.Columns) {
 			sb.Append('\t');
 			Add(column);
@@ -54,12 +54,12 @@ public abstract class Composer {
 		if (table.PrimaryKey != null) {
 			sb.Append("\tPRIMARY KEY(");
 			sb.Append(string.Join(',', table.PrimaryKey.Columns.Select(c => Name(c.Name))));
-			sb.AppendLine(")");
+			sb.AppendLine("),");
 		}
 		foreach (var key in table.Uniques) {
 			sb.Append("\tUNIQUE(");
 			sb.Append(string.Join(',', key.Columns.Select(c => Name(c.Name))));
-			sb.AppendLine(")");
+			sb.AppendLine("),");
 		}
 		sb.AppendLine(")");
 
@@ -73,7 +73,7 @@ public abstract class Composer {
 		}
 	}
 
-	protected virtual string Name(string name) {
-		return Etc.Quote(name, '"');
+	protected virtual string Name(string s) {
+		return Etc.Quote(s, '"');
 	}
 }
