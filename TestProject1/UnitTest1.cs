@@ -55,7 +55,7 @@ public class UnitTest1 {
 	[Fact]
 	public void SampleDB1() {
 		var statements = ParseFile("sql-server-samples/sampleDB1.sql");
-		Assert.True(statements[1] is Select);
+		Assert.True(statements[1] is Table);
 	}
 
 	[Fact]
@@ -131,7 +131,7 @@ public class UnitTest1 {
 
 	static Expression Default(List<Statement> statements) {
 		foreach (var a in statements)
-			if (a is Select table) {
+			if (a is Table table) {
 				var column = table.Columns[0];
 				return column.Default!;
 			}
