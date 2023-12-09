@@ -34,9 +34,14 @@ public sealed class Parser {
 		Lex();
 	}
 
-	ExtraText ExtraText(int textLine, int n) {
+	ExtraText? ExtraText(int textLine, int n) {
+		var i = 0;
+		while (i < n && char.IsWhiteSpace(text[i]))
+			i++;
+		if (i == n)
+			return null;
 		var location = new Location(file, textLine);
-		return new ExtraText(location, text.ToString(0, n));
+		return new ExtraText(location, text.ToString(0, n - i));
 	}
 
 	IEnumerable<Statement> Statements() {
@@ -58,8 +63,12 @@ public sealed class Parser {
 			case Eof:
 				yield break;
 			case "insert": {
-				yield return ExtraText(extraTextLine, extraTextCount);
 				Lex();
+				if (token == ",")
+					break;
+				var extra = ExtraText(extraTextLine, extraTextCount);
+				if (extra != null)
+					yield return extra;
 				Eat("into");
 				var a = new Insert();
 
@@ -90,7 +99,9 @@ public sealed class Parser {
 				var unique = Eat("unique");
 				switch (token) {
 				case "index": {
-					yield return ExtraText(extraTextLine, extraTextCount);
+					var extra = ExtraText(extraTextLine, extraTextCount);
+					if (extra != null)
+						yield return extra;
 					Lex();
 					var a = new Index(unique);
 					a.Name = Name();
@@ -119,7 +130,9 @@ public sealed class Parser {
 					continue;
 				}
 				case "view": {
-					yield return ExtraText(extraTextLine, extraTextCount);
+					var extra = ExtraText(extraTextLine, extraTextCount);
+					if (extra != null)
+						yield return extra;
 					Lex();
 					var a = new View();
 					a.Name = QualifiedName();
@@ -130,12 +143,16 @@ public sealed class Parser {
 					continue;
 				}
 				case "table": {
-					yield return ExtraText(extraTextLine, extraTextCount);
+					var extra = ExtraText(extraTextLine, extraTextCount);
+					if (extra != null)
+						yield return extra;
 					Lex();
 					var a = new Table(false, UnqualifiedName());
 					while (!Eat("("))
 						Skip(a.ExtraTokens);
 					do {
+						if (token == ")")
+							break;
 						var b = TableElement(a, IsElementEnd);
 						while (!IsElementEnd())
 							Skip(b.ExtraTokens);
@@ -156,7 +173,9 @@ public sealed class Parser {
 					var tableName = UnqualifiedName();
 					switch (token) {
 					case "add": {
-						yield return ExtraText(extraTextLine, extraTextCount);
+						var extra = ExtraText(extraTextLine, extraTextCount);
+						if (extra != null)
+							yield return extra;
 						Lex();
 						var a = new Table(true, tableName);
 						do
@@ -167,7 +186,7 @@ public sealed class Parser {
 						continue;
 					}
 					}
-					throw ErrorToken("unknown syntax");
+					break;
 				}
 				}
 				break;
@@ -218,6 +237,8 @@ public sealed class Parser {
 				depth++;
 				break;
 			case ")":
+				if (depth == 0)
+					throw Error("unexpected )");
 				depth--;
 				break;
 			}
@@ -378,7 +399,7 @@ public sealed class Parser {
 			case "default":
 				Lex();
 				a.Default = Expression();
-				break;
+				continue;
 			case "identity":
 				Lex();
 				a.AutoIncrement = true;
@@ -411,7 +432,7 @@ public sealed class Parser {
 					continue;
 				}
 				a.ExtraTokens.Add("not");
-				break;
+				continue;
 			}
 			Skip(a.ExtraTokens);
 		}
@@ -985,10 +1006,13 @@ public sealed class Parser {
 
 	QualifiedName QualifiedName() {
 		var a = new QualifiedName();
-		if (!Eat("*"))
-			do
-				a.Names.Add(Name());
-			while (Eat("."));
+		do {
+			if (Eat("*")) {
+				a.Star = true;
+				break;
+			}
+			a.Names.Add(Name());
+		} while (Eat("."));
 		return a;
 	}
 
