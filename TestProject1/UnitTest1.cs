@@ -155,10 +155,10 @@ public class UnitTest1 {
 	[Fact]
 	public void Sqlite() {
 		var statements = ParseFile("sqlite/cities.sql");
-		Assert.True(statements[1] is Table);
+		Assert.True(statements[0] is Table);
 
 		statements = ParseFile("sqlite/movies.sql");
-		Assert.True(statements[1] is Table);
+		Assert.True(statements[0] is Table);
 
 		statements = ParseFile("sqlite/quotes.sql");
 		Assert.True(statements[0] is Table);

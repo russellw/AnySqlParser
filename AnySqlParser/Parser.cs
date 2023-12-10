@@ -23,43 +23,17 @@ public sealed class Parser {
 	int c;
 	bool newline;
 	string token = null!;
-	int tokenLine = 1;
-	int tokenTextCount;
-	readonly StringBuilder text = new();
 
 	Parser(TextReader reader, string file, int line) {
 		this.reader = reader;
 		this.file = file;
 		this.line = line;
-		c = reader.Read();
+		Read();
 		Lex();
-	}
-
-	ExtraText? ExtraText(int textLine, int n) {
-		var i = 0;
-		while (i < n && char.IsWhiteSpace(text[i]))
-			i++;
-		if (i == n)
-			return null;
-		var location = new Location(file, textLine);
-		return new ExtraText(location, text.ToString(i, n - i));
 	}
 
 	IEnumerable<Statement> Statements() {
 		for (;;) {
-			// Next statement
-			// in general, there will be a block of extra text before the statement
-			// consisting of comments, and unrecognized statements
-			// remember the line where the extra text began
-			var extraTextLine = tokenLine;
-
-		nextToken:
-			// This token might begin a recognized statement
-			// remember the character count where it began
-			// so everything up to that point, can be saved as extra text
-			var extraTextCount = tokenTextCount;
-
-			// Does this token begin a recognized statement?
 			switch (token) {
 			case Eof:
 				yield break;
@@ -67,9 +41,6 @@ public sealed class Parser {
 				Lex();
 				if (token == ",")
 					break;
-				var extra = ExtraText(extraTextLine, extraTextCount);
-				if (extra != null)
-					yield return extra;
 				Eat("into");
 				var a = new Insert();
 
@@ -100,9 +71,6 @@ public sealed class Parser {
 				var unique = Eat("unique");
 				switch (token) {
 				case "index": {
-					var extra = ExtraText(extraTextLine, extraTextCount);
-					if (extra != null)
-						yield return extra;
 					Lex();
 					var a = new Index(unique);
 					a.Name = Name();
@@ -131,9 +99,6 @@ public sealed class Parser {
 					continue;
 				}
 				case "view": {
-					var extra = ExtraText(extraTextLine, extraTextCount);
-					if (extra != null)
-						yield return extra;
 					Lex();
 					var a = new View();
 					a.Name = QualifiedName();
@@ -144,9 +109,6 @@ public sealed class Parser {
 					continue;
 				}
 				case "table": {
-					var extra = ExtraText(extraTextLine, extraTextCount);
-					if (extra != null)
-						yield return extra;
 					Lex();
 					var a = new Table(false, UnqualifiedName());
 					while (!Eat("("))
@@ -174,9 +136,6 @@ public sealed class Parser {
 					var tableName = UnqualifiedName();
 					switch (token) {
 					case "add": {
-						var extra = ExtraText(extraTextLine, extraTextCount);
-						if (extra != null)
-							yield return extra;
 						Lex();
 						var a = new Table(true, tableName);
 						do
@@ -194,7 +153,6 @@ public sealed class Parser {
 			}
 			}
 			Skip(null);
-			goto nextToken;
 		}
 	}
 
@@ -210,11 +168,6 @@ public sealed class Parser {
 	void EndStatement() {
 		Eat(";");
 		Eat("go");
-
-		// Throw away extra text associated with the statement just recognized
-		// but keep extra text associated with the following token
-		text.Remove(0, tokenTextCount);
-		tokenTextCount = 0;
 	}
 
 	bool IsStatementEnd() {
@@ -1265,12 +1218,6 @@ public sealed class Parser {
 
 	void Lex() {
 		newline = false;
-
-		// Comments are more likely to belong to the following token than the previous one
-		tokenLine = line;
-		tokenTextCount = text.Length;
-
-		// While space/comment
 		for (;;) {
 			switch (c) {
 			case '\'':
@@ -1599,7 +1546,6 @@ public sealed class Parser {
 	}
 
 	void Read() {
-		text.Append((char)c);
 		if (c == '\n')
 			line++;
 		c = reader.Read();
