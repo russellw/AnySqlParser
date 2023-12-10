@@ -21,7 +21,7 @@ public abstract class Composer {
 		sb.Append(Name(key.RefTable.Name));
 		sb.Append(" (");
 		sb.Append(string.Join(',', key.RefColumns.Select(c => Name(c.Name))));
-		sb.AppendLine(");");
+		sb.Append(");\n");
 	}
 
 	protected void Add(DataType type) {
@@ -56,19 +56,19 @@ public abstract class Composer {
 		foreach (var column in table.Columns) {
 			sb.Append('\t');
 			Add(column);
-			sb.AppendLine(",");
+			sb.Append(",\n");
 		}
 		if (table.PrimaryKey != null) {
 			sb.Append("\tPRIMARY KEY (");
 			sb.Append(string.Join(',', table.PrimaryKey.Columns.Select(c => Name(c.Name))));
-			sb.AppendLine("),");
+			sb.Append("),\n");
 		}
 		foreach (var key in table.Uniques) {
 			sb.Append("\tUNIQUE (");
 			sb.Append(string.Join(',', key.Columns.Select(c => Name(c.Name))));
-			sb.AppendLine("),");
+			sb.Append("),\n");
 		}
-		sb.AppendLine(");");
+		sb.Append(");\n");
 	}
 
 	protected virtual string Name(string s) {
