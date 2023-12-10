@@ -112,13 +112,13 @@ public sealed class Parser {
 					Lex();
 					var a = new Table(false, UnqualifiedName());
 					while (!Eat("("))
-						Skip(a.ExtraTokens);
+						Skip();
 					do {
 						if (token == ")")
 							break;
 						var b = TableElement(a, IsElementEnd);
 						while (!IsElementEnd())
-							Skip(b.ExtraTokens);
+							Skip();
 					} while (Eat(","));
 					Expect(")");
 					EndStatement();
@@ -152,7 +152,7 @@ public sealed class Parser {
 				break;
 			}
 			}
-			Skip(null);
+			Skip();
 		}
 	}
 
@@ -180,7 +180,7 @@ public sealed class Parser {
 		return false;
 	}
 
-	void Skip(List<string>? extraTokens) {
+	void Skip() {
 		var line1 = line;
 		int depth = 0;
 		do {
@@ -196,7 +196,6 @@ public sealed class Parser {
 				depth--;
 				break;
 			}
-			extraTokens?.Add(token);
 			Lex();
 		} while (depth != 0);
 	}
@@ -264,7 +263,7 @@ public sealed class Parser {
 				}
 				break;
 			}
-			Skip(a.ExtraTokens);
+			Skip();
 		}
 		return a;
 	}
@@ -317,7 +316,7 @@ public sealed class Parser {
 
 		if (column == null) {
 			while (!Eat("("))
-				Skip(a.ExtraTokens);
+				Skip();
 			do
 				a.Columns.Add(ColumnRef());
 			while (Eat(","));
@@ -385,10 +384,9 @@ public sealed class Parser {
 					a.Nullable = false;
 					continue;
 				}
-				a.ExtraTokens.Add("not");
 				continue;
 			}
-			Skip(a.ExtraTokens);
+			Skip();
 		}
 
 		// Add to table
@@ -519,7 +517,7 @@ public sealed class Parser {
 		var location = new Location(file, line);
 		var a = new Check(location);
 		while (!Eat("("))
-			Skip(a.ExtraTokens);
+			Skip();
 		a.Expression = Expression();
 		Expect(")");
 		return a;

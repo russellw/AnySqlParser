@@ -8,7 +8,6 @@ public sealed class Table: Statement {
 	public List<Key> Uniques = new();
 	public List<ForeignKey> ForeignKeys = new();
 	public List<Check> Checks = new();
-	public List<string> ExtraTokens = new();
 
 	public Table(bool adding, string name) {
 		Adding = adding;

@@ -5,10 +5,8 @@ public abstract class Composer {
 	protected readonly StringBuilder sb = new();
 
 	protected void Add(Database database) {
-		foreach (var table in database.Tables) {
+		foreach (var table in database.Tables)
 			Add(table);
-			sb.AppendLine();
-		}
 		foreach (var table in database.Tables)
 			foreach (var key in table.ForeignKeys)
 				Add(table, key);
@@ -19,16 +17,11 @@ public abstract class Composer {
 		sb.Append(Name(table.Name));
 		sb.Append(" ADD FOREIGN KEY (");
 		sb.Append(string.Join(',', key.Columns.Select(c => Name(c.Name))));
-		sb.AppendLine(")");
-
-		sb.Append("\tREFERENCES ");
+		sb.Append(") REFERENCES ");
 		sb.Append(Name(key.RefTable.Name));
 		sb.Append(" (");
 		sb.Append(string.Join(',', key.RefColumns.Select(c => Name(c.Name))));
 		sb.AppendLine(");");
-
-		Extra(table.ExtraTokens);
-		sb.AppendLine();
 	}
 
 	protected void Add(DataType type) {
@@ -56,17 +49,6 @@ public abstract class Composer {
 		Add(column.Type);
 	}
 
-	protected void Extra(List<string> tokens) {
-		if (tokens.Count == 0)
-			return;
-		sb.Append("--");
-		foreach (var s in tokens) {
-			sb.Append(' ');
-			sb.Append(s);
-		}
-		sb.AppendLine();
-	}
-
 	protected void Add(Table table) {
 		sb.Append("CREATE TABLE ");
 		sb.Append(Name(table.Name));
@@ -87,7 +69,6 @@ public abstract class Composer {
 			sb.AppendLine("),");
 		}
 		sb.AppendLine(");");
-		Extra(table.ExtraTokens);
 	}
 
 	protected virtual string Name(string s) {
