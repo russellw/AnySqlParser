@@ -164,6 +164,27 @@ public class UnitTest1 {
 		Assert.True(statements[0] is Table);
 	}
 
+	[Fact]
+	public void MySql() {
+		var statements = ParseFile("mysql/cities.sql");
+		Assert.True(statements.Count > 0);
+
+		statements = ParseFile("mysql/cities-dump.sql");
+		Assert.True(statements.Count > 0);
+
+		statements = ParseFile("mysql/forward-ref.sql");
+		Assert.True(statements.Count > 0);
+
+		statements = ParseFile("mysql/movies.sql");
+		Assert.True(statements.Count > 0);
+
+		statements = ParseFile("mysql/quotes.sql");
+		Assert.True(statements.Count > 0);
+
+		statements = ParseFile("mysql-samples/employees.sql");
+		Assert.True(statements.Count > 0);
+	}
+
 	static List<Statement> ParseFile(string file) {
 		return new List<Statement>(Parser.Parse(file));
 	}
