@@ -2,9 +2,11 @@ DROP DATABASE IF EXISTS test123987632022;
 CREATE DATABASE test123987632022;
 USE test123987632022;
 
-create table directors(
-    name varchar(40) primary key
+create table Directors(
+    Name varchar(40)
 );
+
+alter table directors add primary key(name);
 
 create table movies(
     name varchar(40),

@@ -18,7 +18,7 @@ public sealed class Table: Statement {
 
 	public void Add(Column column) {
 		Columns.Add(column);
-		if (!ColumnMap.TryAdd(column.Name, column))
+		if (!ColumnMap.TryAdd(column.Name.ToLowerInvariant(), column))
 			throw new SqlError($"{column.Location}: {this}.{column} already exists");
 	}
 
@@ -29,7 +29,7 @@ public sealed class Table: Statement {
 	}
 
 	public Column GetColumn(Location location, string name) {
-		if (ColumnMap.TryGetValue(name, out Column? column))
+		if (ColumnMap.TryGetValue(name.ToLowerInvariant(), out Column? column))
 			return column;
 		throw new SqlError($"{location}: {this}.{name} not found");
 	}
