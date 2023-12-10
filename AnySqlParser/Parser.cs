@@ -3,12 +3,12 @@ using System.Text;
 
 namespace AnySqlParser;
 public sealed class Parser {
-	public static IEnumerable<Statement> Parse(string file) {
-		return new Parser(new StreamReader(file), file, 1).Statements();
+	public static IEnumerable<Statement> Parse(string file, Schema schema) {
+		return Parse(new StreamReader(file), schema, file, 1);
 	}
 
-	public static IEnumerable<Statement> Parse(TextReader reader, string file = "SQL", int line = 1) {
-		return new Parser(reader, file, line).Statements();
+	public static IEnumerable<Statement> Parse(TextReader reader, Schema schema, string file = "SQL", int line = 1) {
+		return new Parser(reader, file, line).Statements(schema);
 	}
 
 	delegate bool Callback();
@@ -32,7 +32,7 @@ public sealed class Parser {
 		Lex();
 	}
 
-	IEnumerable<Statement> Statements() {
+	IEnumerable<Statement> Statements(Schema schema) {
 		for (;;) {
 			switch (token) {
 			case Eof:

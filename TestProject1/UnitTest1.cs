@@ -186,11 +186,13 @@ public class UnitTest1 {
 	}
 
 	static List<Statement> ParseFile(string file) {
-		return new List<Statement>(Parser.Parse(file));
+		var schema = new Schema();
+		return new List<Statement>(Parser.Parse(file, schema));
 	}
 
 	static List<Statement> ParseText(string sql, string file = "SQL", int line = 1) {
-		return new List<Statement>(Parser.Parse(new StringReader(sql), file, line));
+		var schema = new Schema();
+		return new List<Statement>(Parser.Parse(new StringReader(sql), schema, file, line));
 	}
 }
 }
