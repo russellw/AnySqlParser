@@ -34,14 +34,14 @@ public sealed class Parser {
 
 	IEnumerable<Statement> Statements(Schema schema) {
 		for (;;) {
-			switch (token.ToLowerInvariant()) {
+			switch (token.ToUpperInvariant()) {
 			case Eof:
 				yield break;
-			case "insert": {
+			case "INSERT": {
 				Lex();
 				if (token == ",")
 					break;
-				Eat("into");
+				Eat("INTO");
 				var a = new Insert();
 
 				// Table
@@ -56,7 +56,7 @@ public sealed class Parser {
 				}
 
 				// Values
-				Expect("values");
+				Expect("VALUES");
 				Expect("(");
 				do
 					a.Values.Add(Expression());
@@ -66,18 +66,18 @@ public sealed class Parser {
 				yield return a;
 				continue;
 			}
-			case "create": {
+			case "CREATE": {
 				var location = new Location(file, line);
 				Lex();
-				var unique = Eat("unique");
-				switch (token.ToLowerInvariant()) {
-				case "index": {
+				var unique = Eat("UNIQUE");
+				switch (token.ToUpperInvariant()) {
+				case "INDEX": {
 					Lex();
 					var a = new Index(unique);
 					a.Name = Name();
 
 					// Table
-					Expect("on");
+					Expect("ON");
 					a.TableName = QualifiedName();
 
 					// Columns
@@ -88,7 +88,7 @@ public sealed class Parser {
 					Expect(")");
 
 					// Include
-					if (Eat("include")) {
+					if (Eat("INCLUDE")) {
 						Expect("(");
 						do
 							a.Include.Add(Name());
@@ -99,17 +99,17 @@ public sealed class Parser {
 					yield return a;
 					continue;
 				}
-				case "view": {
+				case "VIEW": {
 					Lex();
 					var a = new View();
 					a.Name = QualifiedName();
-					Expect("as");
+					Expect("AS");
 					a.Query = Select();
 					EndStatement();
 					yield return a;
 					continue;
 				}
-				case "table": {
+				case "TABLE": {
 					Lex();
 					var a = schema.CreateTable(location, UnqualifiedName());
 					while (!Eat("("))
@@ -128,15 +128,15 @@ public sealed class Parser {
 				}
 				break;
 			}
-			case "alter": {
+			case "ALTER": {
 				var location = new Location(file, line);
 				Lex();
-				switch (token.ToLowerInvariant()) {
-				case "table": {
+				switch (token.ToUpperInvariant()) {
+				case "TABLE": {
 					Lex();
 					var tableName = UnqualifiedName();
-					switch (token.ToLowerInvariant()) {
-					case "add": {
+					switch (token.ToUpperInvariant()) {
+					case "ADD": {
 						Lex();
 						var a = schema.GetTable(location, tableName);
 						do
@@ -167,14 +167,14 @@ public sealed class Parser {
 
 	void EndStatement() {
 		Eat(";");
-		Eat("go");
+		Eat("GO");
 	}
 
 	bool IsStatementEnd() {
-		switch (token.ToLowerInvariant()) {
+		switch (token.ToUpperInvariant()) {
 		case Eof:
 		case ";":
-		case "go":
+		case "GO":
 			return true;
 		}
 		return false;
@@ -222,8 +222,8 @@ public sealed class Parser {
 
 	ForeignKey ForeignKey(Column? column, Callback isEnd) {
 		var location = new Location(file, line);
-		if (Eat("foreign"))
-			Expect("key");
+		if (Eat("FOREIGN"))
+			Expect("KEY");
 		var a = new ForeignKey(location);
 
 		// Columns
@@ -237,7 +237,7 @@ public sealed class Parser {
 			a.Columns.Add(new ColumnRef(column));
 
 		// References
-		Expect("references");
+		Expect("REFERENCES");
 		a.RefTable = TableRef();
 		if (Eat("(")) {
 			do
@@ -248,15 +248,15 @@ public sealed class Parser {
 
 		// Search the postscript for actions
 		while (!isEnd()) {
-			switch (token.ToLowerInvariant()) {
-			case "on":
+			switch (token.ToUpperInvariant()) {
+			case "ON":
 				Lex();
-				switch (token.ToLowerInvariant()) {
-				case "delete":
+				switch (token.ToUpperInvariant()) {
+				case "DELETE":
 					Lex();
 					a.OnDelete = GetAction();
 					continue;
-				case "update":
+				case "UPDATE":
 					Lex();
 					a.OnUpdate = GetAction();
 					continue;
@@ -269,24 +269,24 @@ public sealed class Parser {
 	}
 
 	Element TableConstraint(Table table, Callback isEnd) {
-		switch (token.ToLowerInvariant()) {
-		case "foreign": {
+		switch (token.ToUpperInvariant()) {
+		case "FOREIGN": {
 			var a = ForeignKey(null, isEnd);
 			table.ForeignKeys.Add(a);
 			return a;
 		}
-		case "primary": {
+		case "PRIMARY": {
 			var a = Key(null);
 			table.AddPrimaryKey(a);
 			return a;
 		}
-		case "check": {
+		case "CHECK": {
 			var a = Check();
 			table.Checks.Add(a);
 			return a;
 		}
-		case "unique":
-		case "key": {
+		case "UNIQUE":
+		case "KEY": {
 			var a = Key(null);
 			table.Uniques.Add(a);
 			return a;
@@ -297,16 +297,16 @@ public sealed class Parser {
 
 	Key Key(Column? column) {
 		var location = new Location(file, line);
-		switch (token.ToLowerInvariant()) {
-		case "primary":
+		switch (token.ToUpperInvariant()) {
+		case "PRIMARY":
 			Lex();
-			Expect("key");
+			Expect("KEY");
 			break;
-		case "unique":
+		case "UNIQUE":
 			Lex();
-			Eat("key");
+			Eat("KEY");
 			break;
-		case "key":
+		case "KEY":
 			Lex();
 			break;
 		default:
@@ -328,17 +328,17 @@ public sealed class Parser {
 
 	Element TableElement(Table table, Callback isEnd) {
 		// Might be a table constraint
-		if (Eat("constraint")) {
+		if (Eat("CONSTRAINT")) {
 			Name();
 			return TableConstraint(table, isEnd);
 		}
-		switch (token.ToLowerInvariant()) {
-		case "foreign":
-		case "key":
-		case "primary":
-		case "unique":
-		case "check":
-		case "exclude":
+		switch (token.ToUpperInvariant()) {
+		case "FOREIGN":
+		case "KEY":
+		case "PRIMARY":
+		case "UNIQUE":
+		case "CHECK":
+		case "EXCLUDE":
 			return TableConstraint(table, isEnd);
 		}
 
@@ -348,12 +348,12 @@ public sealed class Parser {
 
 		// Search the postscript for column constraints
 		while (!isEnd()) {
-			switch (token.ToLowerInvariant()) {
-			case "default":
+			switch (token.ToUpperInvariant()) {
+			case "DEFAULT":
 				Lex();
 				a.Default = Expression();
 				continue;
-			case "identity":
+			case "IDENTITY":
 				Lex();
 				a.AutoIncrement = true;
 				if (Eat("(")) {
@@ -363,23 +363,23 @@ public sealed class Parser {
 					Expect(")");
 				}
 				continue;
-			case "foreign":
-			case "references":
+			case "FOREIGN":
+			case "REFERENCES":
 				ForeignKey(a, isEnd);
 				continue;
-			case "check":
+			case "CHECK":
 				table.Checks.Add(Check());
 				continue;
-			case "primary":
+			case "PRIMARY":
 				table.AddPrimaryKey(Key(a));
 				continue;
-			case "null":
+			case "NULL":
 				Lex();
 				continue;
-			case "not":
+			case "NOT":
 				Lex();
-				switch (token.ToLowerInvariant()) {
-				case "null":
+				switch (token.ToUpperInvariant()) {
+				case "NULL":
 					Lex();
 					a.Nullable = false;
 					continue;
@@ -395,81 +395,81 @@ public sealed class Parser {
 	}
 
 	string DataTypeName() {
-		switch (token.ToLowerInvariant()) {
-		case "character":
-		case "char":
+		switch (token.ToUpperInvariant()) {
+		case "CHARACTER":
+		case "CHAR":
 			Lex();
-			switch (token.ToLowerInvariant()) {
-			case "large":
+			switch (token.ToUpperInvariant()) {
+			case "LARGE":
 				Lex();
-				Expect("object");
-				return "clob";
-			case "varying":
+				Expect("OBJECT");
+				return "CLOB";
+			case "VARYING":
 				Lex();
-				return "varchar";
+				return "VARCHAR";
 			}
-			return "char";
-		case "binary":
+			return "CHAR";
+		case "BINARY":
 			Lex();
-			switch (token.ToLowerInvariant()) {
-			case "large":
+			switch (token.ToUpperInvariant()) {
+			case "LARGE":
 				Lex();
-				Expect("object");
-				return "blob";
+				Expect("OBJECT");
+				return "BLOB";
 			}
-			return "binary";
-		case "double":
-			Eat("precision");
-			return "double";
-		case "long":
+			return "BINARY";
+		case "DOUBLE":
+			Eat("PRECISION");
+			return "DOUBLE";
+		case "LONG":
 			Lex();
-			switch (token.ToLowerInvariant()) {
-			case "raw":
-			case "varbinary":
-			case "varchar":
-				return "long " + Lex1();
+			switch (token.ToUpperInvariant()) {
+			case "RAW":
+			case "VARBINARY":
+			case "VARCHAR":
+				return "LONG " + Lex1();
 			}
-			return "long";
-		case "time":
+			return "LONG";
+		case "TIME":
 			Lex();
-			switch (token.ToLowerInvariant()) {
-			case "with":
+			switch (token.ToUpperInvariant()) {
+			case "WITH":
 				Lex();
-				Expect("timezone");
-				return "time with timezone";
+				Expect("TIMEZONE");
+				return "TIME WITH TIMEZONE";
 			}
-			return "time";
-		case "timestamp":
+			return "TIME";
+		case "TIMESTAMP":
 			Lex();
-			switch (token.ToLowerInvariant()) {
-			case "with":
+			switch (token.ToUpperInvariant()) {
+			case "WITH":
 				Lex();
-				Expect("timezone");
-				return "timestamp with timezone";
+				Expect("TIMEZONE");
+				return "TIMESTAMP WITH TIMEZONE";
 			}
-			return "timestamp";
-		case "interval":
+			return "TIMESTAMP";
+		case "INTERVAL":
 			Lex();
-			switch (token.ToLowerInvariant()) {
-			case "day":
+			switch (token.ToUpperInvariant()) {
+			case "DAY":
 				Lex();
-				Expect("to");
-				Expect("second");
-				return "interval day to second";
-			case "year":
+				Expect("TO");
+				Expect("SECOND");
+				return "INTERVAL DAY TO SECOND";
+			case "YEAR":
 				Lex();
-				Expect("to");
-				Expect("month");
-				return "interval year to month";
+				Expect("TO");
+				Expect("MONTH");
+				return "INTERVAL YEAR TO MONTH";
 			}
-			return "interval";
+			return "INTERVAL";
 		}
-		return Name().ToLowerInvariant();
+		return Name().ToUpperInvariant();
 	}
 
 	DataType DataType() {
 		var a = new DataType(DataTypeName());
-		if (a.Name == "enum") {
+		if (a.Name == "ENUM") {
 			Expect("(");
 			a.Values = new();
 			do
@@ -486,24 +486,24 @@ public sealed class Parser {
 	}
 
 	Action GetAction() {
-		switch (token.ToLowerInvariant()) {
-		case "cascade":
+		switch (token.ToUpperInvariant()) {
+		case "CASCADE":
 			Lex();
 			return Action.Cascade;
-		case "no":
+		case "NO":
 			Lex();
-			Expect("action");
+			Expect("ACTION");
 			return Action.NoAction;
-		case "restrict":
+		case "RESTRICT":
 			Lex();
 			return Action.NoAction;
-		case "set":
+		case "SET":
 			Lex();
-			switch (token.ToLowerInvariant()) {
-			case "null":
+			switch (token.ToUpperInvariant()) {
+			case "NULL":
 				Lex();
 				return Action.SetNull;
-			case "default":
+			case "DEFAULT":
 				Lex();
 				return Action.SetDefault;
 			}
@@ -513,7 +513,7 @@ public sealed class Parser {
 	}
 
 	Check Check() {
-		Debug.Assert(Token("check"));
+		Debug.Assert(Token("CHECK"));
 		var location = new Location(file, line);
 		var a = new Check(location);
 		while (!Eat("("))
@@ -525,10 +525,10 @@ public sealed class Parser {
 
 	Select Select() {
 		var a = new Select(QueryExpression());
-		switch (token.ToLowerInvariant()) {
-		case "order":
+		switch (token.ToUpperInvariant()) {
+		case "ORDER":
 			Lex();
-			Expect("by");
+			Expect("BY");
 			a.OrderBy = Expression();
 			a.Desc = Desc();
 			break;
@@ -540,16 +540,16 @@ public sealed class Parser {
 		var a = Intersect();
 		for (;;) {
 			QueryOp op;
-			switch (token.ToLowerInvariant()) {
-			case "union":
+			switch (token.ToUpperInvariant()) {
+			case "UNION":
 				Lex();
-				if (Eat("all")) {
+				if (Eat("ALL")) {
 					op = QueryOp.UnionAll;
 					break;
 				}
 				op = QueryOp.Union;
 				break;
-			case "except":
+			case "EXCEPT":
 				Lex();
 				op = QueryOp.Except;
 				break;
@@ -563,37 +563,38 @@ public sealed class Parser {
 	QueryExpression Intersect() {
 		// https://stackoverflow.com/questions/56224171/does-intersect-have-a-higher-precedence-compared-to-union
 		QueryExpression a = QuerySpecification();
+		// TODO
 		for (;;) {
-			if (!Eat("intersect"))
+			if (!Eat("INTERSECT"))
 				return a;
 			a = new QueryBinaryExpression(QueryOp.Intersect, a, QuerySpecification());
 		}
 	}
 
 	QuerySpecification QuerySpecification() {
-		Expect("select");
+		Expect("SELECT");
 		var a = new QuerySpecification();
 
 		// Some clauses are written before the select list
 		// but unknown keywords must be left alone
 		// as they might be part of the select list
 		for (;;) {
-			switch (token.ToLowerInvariant()) {
-			case "all":
+			switch (token.ToUpperInvariant()) {
+			case "ALL":
 				Lex();
 				a.All = true;
 				continue;
-			case "distinct":
+			case "DISTINCT":
 				Lex();
 				a.Distinct = true;
 				continue;
-			case "top":
+			case "TOP":
 				Lex();
 				a.Top = Expression();
-				if (Eat("percent"))
+				if (Eat("PERCENT"))
 					a.Percent = true;
-				if (Eat("with")) {
-					Expect("ties");
+				if (Eat("WITH")) {
+					Expect("TIES");
 					a.WithTies = true;
 				}
 				continue;
@@ -604,34 +605,34 @@ public sealed class Parser {
 		// Select list
 		do {
 			var c = new SelectColumn(new Location(file, line), Expression());
-			if (Eat("as"))
+			if (Eat("AS"))
 				c.ColumnAlias = Expression();
 			a.SelectList.Add(c);
 		} while (Eat(","));
 
 		// Any keyword after the select list, must be a clause
 		for (;;)
-			switch (token.ToLowerInvariant()) {
-			case "where":
+			switch (token.ToUpperInvariant()) {
+			case "WHERE":
 				Lex();
 				a.Where = Expression();
 				break;
-			case "group":
+			case "GROUP":
 				Lex();
-				Expect("by");
+				Expect("BY");
 				do
 					a.GroupBy.Add(Expression());
 				while (Eat(","));
 				break;
-			case "having":
+			case "HAVING":
 				Lex();
 				a.Having = Expression();
 				break;
-			case "window":
+			case "WINDOW":
 				Lex();
 				a.Window = Expression();
 				break;
-			case "from":
+			case "FROM":
 				Lex();
 				do
 					a.From.Add(TableSource());
@@ -649,46 +650,46 @@ public sealed class Parser {
 	TableSource Join() {
 		var a = PrimaryTableSource();
 		for (;;)
-			switch (token.ToLowerInvariant()) {
-			case "inner": {
+			switch (token.ToUpperInvariant()) {
+			case "INNER": {
 				Lex();
-				Expect("join");
+				Expect("JOIN");
 				var b = PrimaryTableSource();
-				Expect("on");
+				Expect("ON");
 				a = new Join(JoinType.Inner, a, b, Expression());
 				break;
 			}
-			case "join": {
+			case "JOIN": {
 				Lex();
 				var b = PrimaryTableSource();
-				Expect("on");
+				Expect("ON");
 				a = new Join(JoinType.Inner, a, b, Expression());
 				break;
 			}
-			case "left": {
+			case "LEFT": {
 				Lex();
-				Eat("outer");
-				Expect("join");
+				Eat("OUTER");
+				Expect("JOIN");
 				var b = PrimaryTableSource();
-				Expect("on");
+				Expect("ON");
 				a = new Join(JoinType.Left, a, b, Expression());
 				break;
 			}
-			case "right": {
+			case "RIGHT": {
 				Lex();
-				Eat("outer");
-				Expect("join");
+				Eat("OUTER");
+				Expect("JOIN");
 				var b = PrimaryTableSource();
-				Expect("on");
+				Expect("ON");
 				a = new Join(JoinType.Right, a, b, Expression());
 				break;
 			}
-			case "full": {
+			case "FULL": {
 				Lex();
-				Eat("outer");
-				Expect("join");
+				Eat("OUTER");
+				Expect("JOIN");
 				var b = PrimaryTableSource();
-				Expect("on");
+				Expect("ON");
 				a = new Join(JoinType.Full, a, b, Expression());
 				break;
 			}
@@ -704,19 +705,19 @@ public sealed class Parser {
 			return b;
 		}
 		var a = new PrimaryTableSource(QualifiedName());
-		switch (token.ToLowerInvariant()) {
-		case "as":
+		switch (token.ToUpperInvariant()) {
+		case "AS":
 			Lex();
 			break;
-		case "where":
-		case "inner":
-		case "join":
-		case "left":
-		case "right":
-		case "full":
-		case "on":
-		case "group":
-		case "order":
+		case "WHERE":
+		case "INNER":
+		case "JOIN":
+		case "LEFT":
+		case "RIGHT":
+		case "FULL":
+		case "ON":
+		case "GROUP":
+		case "ORDER":
 			return a;
 		default:
 			if (!IsName())
@@ -728,11 +729,11 @@ public sealed class Parser {
 	}
 
 	bool Desc() {
-		switch (token.ToLowerInvariant()) {
-		case "desc":
+		switch (token.ToUpperInvariant()) {
+		case "DESC":
 			Lex();
 			return true;
-		case "asc":
+		case "ASC":
 			Lex();
 			return false;
 		}
@@ -743,27 +744,27 @@ public sealed class Parser {
 		var a = And();
 		for (;;) {
 			BinaryOp op;
-			switch (token.ToLowerInvariant()) {
-			case "not": {
+			switch (token.ToUpperInvariant()) {
+			case "NOT": {
 				Lex();
-				Expect("between");
+				Expect("BETWEEN");
 				var b = Addition();
-				Expect("and");
+				Expect("AND");
 				return new TernaryExpression(TernaryOp.NotBetween, a, b, Addition());
 			}
-			case "between": {
+			case "BETWEEN": {
 				Lex();
 				var b = Addition();
-				Expect("and");
+				Expect("AND");
 				return new TernaryExpression(TernaryOp.Between, a, b, Addition());
 			}
-			case "or":
+			case "OR":
 				op = BinaryOp.Or;
 				break;
-			case "like":
+			case "LIKE":
 				op = BinaryOp.Like;
 				break;
-			case "in": {
+			case "IN": {
 				Lex();
 				Expect("(");
 				var b = new List<Expression>();
@@ -784,8 +785,9 @@ public sealed class Parser {
 
 	Expression And() {
 		var a = Not();
+		// TODO
 		for (;;) {
-			if (Eat("and")) {
+			if (Eat("AND")) {
 				a = new BinaryExpression(BinaryOp.And, a, Not());
 				continue;
 			}
@@ -794,7 +796,7 @@ public sealed class Parser {
 	}
 
 	Expression Not() {
-		if (Eat("not"))
+		if (Eat("NOT"))
 			return new UnaryExpression(UnaryOp.Not, Not());
 		return Comparison();
 	}
@@ -802,16 +804,16 @@ public sealed class Parser {
 	Expression Comparison() {
 		var a = Addition();
 		BinaryOp op;
-		switch (token.ToLowerInvariant()) {
-		case "is":
+		switch (token.ToUpperInvariant()) {
+		case "IS":
 			Lex();
-			switch (token.ToLowerInvariant()) {
-			case "null":
+			switch (token.ToUpperInvariant()) {
+			case "NULL":
 				Lex();
 				return new UnaryExpression(UnaryOp.IsNull, a);
-			case "not":
+			case "NOT":
 				Lex();
-				Expect("null");
+				Expect("NULL");
 				return new UnaryExpression(UnaryOp.IsNull, a);
 			}
 			throw ErrorToken("expected NOT or NULL");
@@ -894,21 +896,21 @@ public sealed class Parser {
 	}
 
 	Expression Prefix() {
-		switch (token.ToLowerInvariant()) {
-		case "select":
+		switch (token.ToUpperInvariant()) {
+		case "SELECT":
 			return new Subquery(QueryExpression());
-		case "exists": {
+		case "EXISTS": {
 			Lex();
 			Expect("(");
 			var a = new Exists(Select());
 			Expect(")");
 			return a;
 		}
-		case "cast": {
+		case "CAST": {
 			Lex();
 			Expect("(");
 			var a = new Cast(Expression());
-			Expect("as");
+			Expect("AS");
 			a.DataType = DataType();
 			Expect(")");
 			return a;
@@ -941,11 +943,11 @@ public sealed class Parser {
 	}
 
 	Expression Primary() {
-		switch (token.ToLowerInvariant()) {
+		switch (token.ToUpperInvariant()) {
 		case "@":
 			Lex();
 			return new ParameterRef(Name());
-		case "null":
+		case "NULL":
 			Lex();
 			return new Null();
 		case "*":
@@ -1203,7 +1205,7 @@ public sealed class Parser {
 
 	void Expect(string s) {
 		if (!Eat(s))
-			throw ErrorToken("expected " + s.ToUpperInvariant());
+			throw ErrorToken("expected " + s);
 	}
 
 	bool Token(string s) {
