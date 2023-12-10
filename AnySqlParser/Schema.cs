@@ -1,4 +1,4 @@
 ﻿namespace AnySqlParser;
-public sealed class Database {
+public sealed class Schema {
 	public List<Table> Tables = new();
 }

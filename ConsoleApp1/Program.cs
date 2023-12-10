@@ -2,7 +2,7 @@
 
 class Program {
 	static void Main(string[] args) {
-		var database = new Database();
+		var database = new Schema();
 		foreach (var file in args)
 			foreach (var a in Parser.Parse(file))
 				a.AddTo(database);

@@ -2,9 +2,9 @@
 
 namespace AnySqlParser;
 public sealed class SqlServerComposer: Composer {
-	public static string Compose(Database database) {
+	public static string Compose(Schema schema) {
 		var composer = new SqlServerComposer();
-		composer.Add(database);
+		composer.Add(schema);
 		return composer.sb.ToString();
 	}
 

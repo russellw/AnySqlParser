@@ -4,10 +4,10 @@ namespace AnySqlParser;
 public abstract class Composer {
 	protected readonly StringBuilder sb = new();
 
-	protected void Add(Database database) {
-		foreach (var table in database.Tables)
+	protected void Add(Schema schema) {
+		foreach (var table in schema.Tables)
 			Add(table);
-		foreach (var table in database.Tables)
+		foreach (var table in schema.Tables)
 			foreach (var key in table.ForeignKeys)
 				Add(table, key);
 	}
