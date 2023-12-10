@@ -67,6 +67,7 @@ public sealed class Parser {
 				continue;
 			}
 			case "create": {
+				var location = new Location(file, line);
 				Lex();
 				var unique = Eat("unique");
 				switch (token) {
@@ -110,7 +111,7 @@ public sealed class Parser {
 				}
 				case "table": {
 					Lex();
-					var a = new Table(false, UnqualifiedName());
+					var a = schema.CreateTable(location, UnqualifiedName());
 					while (!Eat("("))
 						Skip();
 					do {
@@ -122,13 +123,13 @@ public sealed class Parser {
 					} while (Eat(","));
 					Expect(")");
 					EndStatement();
-					yield return a;
 					continue;
 				}
 				}
 				break;
 			}
 			case "alter": {
+				var location = new Location(file, line);
 				Lex();
 				switch (token) {
 				case "table": {
@@ -137,12 +138,11 @@ public sealed class Parser {
 					switch (token) {
 					case "add": {
 						Lex();
-						var a = new Table(true, tableName);
+						var a = schema.GetTable(location, tableName);
 						do
 							TableElement(a, IsStatementEnd);
 						while (Eat(","));
 						EndStatement();
-						yield return a;
 						continue;
 					}
 					}
@@ -1129,9 +1129,9 @@ public sealed class Parser {
 			return Lex1();
 		case '"':
 		case '`':
-			return Etc.Unquote(Lex1());
+			return Etc.Unquote(Lex1()).ToLowerInvariant();
 		case '[':
-			return Etc.Unquote(Lex1(), ']');
+			return Etc.Unquote(Lex1(), ']').ToLowerInvariant();
 		}
 		if (char.IsLetter(token[0]))
 			return Lex1();

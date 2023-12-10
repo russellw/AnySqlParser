@@ -1,17 +1,17 @@
 using AnySqlParser;
 
-namespace AnySqlParserTest {
+namespace AnySqlParserTest;
 public class UnitTest1 {
 	[Fact]
 	public void Blank() {
-		Assert.Empty(ParseText(""));
-		Assert.Empty(ParseText("\t\n"));
+		AssertEmpty(ParseText(""));
+		AssertEmpty(ParseText("\t\n"));
 	}
 
 	[Fact]
 	public void LineComment() {
-		Assert.Empty(ParseText("--"));
-		Assert.Empty(ParseText("--\n--\n"));
+		AssertEmpty(ParseText("--"));
+		AssertEmpty(ParseText("--\n--\n"));
 
 		var e = Assert.Throws<SqlError>(() => ParseText("--\n--\n!"));
 		Assert.Matches(".*:3: ", e.Message);
@@ -19,10 +19,10 @@ public class UnitTest1 {
 
 	[Fact]
 	public void BlockComment() {
-		Assert.Empty(ParseText("/**/"));
-		Assert.Empty(ParseText(" /*.*/ "));
-		Assert.Empty(ParseText("/**************/"));
-		Assert.Empty(ParseText("/*////////////*/"));
+		AssertEmpty(ParseText("/**/"));
+		AssertEmpty(ParseText(" /*.*/ "));
+		AssertEmpty(ParseText("/**************/"));
+		AssertEmpty(ParseText("/*////////////*/"));
 
 		var e = Assert.Throws<SqlError>(() => ParseText("/*/"));
 		Assert.Matches(".*:1: ", e.Message);
@@ -32,6 +32,10 @@ public class UnitTest1 {
 
 		e = Assert.Throws<SqlError>(() => ParseText("\n\n/*/", "foo", 5));
 		Assert.Matches("foo:7: ", e.Message);
+	}
+
+	void AssertEmpty(Schema schema) {
+		Assert.Empty(schema.Tables);
 	}
 
 	[Fact]
@@ -54,8 +58,8 @@ public class UnitTest1 {
 
 	[Fact]
 	public void SampleDB1() {
-		var statements = ParseFile("sql-server-samples/sampleDB1.sql");
-		Assert.True(statements[0] is Table);
+		var schema = ParseFile("sql-server-samples/sampleDB1.sql");
+		Assert.Equal(2, schema.Tables.Count);
 	}
 
 	[Fact]
@@ -75,17 +79,17 @@ public class UnitTest1 {
 
 	[Fact]
 	public void Select() {
-		var statements = ParseText("create table t(c int default 1)");
-		var a = Default(statements);
+		var schema = ParseText("create table t(c int default 1)");
+		var a = Default(schema);
 		Assert.True(a is Number);
 
-		statements = ParseText("create table t(c int default ~1)");
-		a = Default(statements);
+		schema = ParseText("create table t(c int default ~1)");
+		a = Default(schema);
 		Assert.True(a is UnaryExpression);
 		Assert.True(a.Equals(new UnaryExpression(UnaryOp.BitNot, new Number("1"))));
 
-		statements = ParseText("create table t(c int default -1)");
-		a = Default(statements);
+		schema = ParseText("create table t(c int default -1)");
+		a = Default(schema);
 		Assert.True(a is UnaryExpression);
 		Assert.True(a.Equals(new UnaryExpression(UnaryOp.Minus, new Number("1"))));
 
@@ -125,74 +129,76 @@ public class UnitTest1 {
 		Assert.True(a.Equals(b));
 	}
 
-	static Expression Default(List<Statement> statements) {
-		foreach (var a in statements)
-			if (a is Table table) {
-				var column = table.Columns[0];
-				return column.Default!;
-			}
-		throw new Exception(statements.ToString());
+	static Expression Default(Schema schema) {
+		foreach (var table in schema.Tables) {
+			var column = table.Columns[0];
+			return column.Default!;
+		}
+		throw new Exception(schema.ToString());
 	}
 
 	[Fact]
 	public void Northwind() {
-		var statements = ParseFile("sql-server-samples/instnwnd.sql");
-		Assert.True(statements.Count > 0);
+		var schema = ParseFile("sql-server-samples/instnwnd.sql");
+		Assert.Equal(13, schema.Tables.Count);
 	}
 
 	[Fact]
 	public void NorthwindAzure() {
-		var statements = ParseFile("sql-server-samples/instnwnd (Azure SQL Database).sql");
-		Assert.True(statements.Count > 0);
+		var schema = ParseFile("sql-server-samples/instnwnd (Azure SQL Database).sql");
+		Assert.Equal(13, schema.Tables.Count);
 	}
 
 	[Fact]
 	public void InstPubs() {
-		var statements = ParseFile("sql-server-samples/instpubs.sql");
-		Assert.True(statements.Count > 0);
+		var schema = ParseFile("sql-server-samples/instpubs.sql");
+		Assert.Equal(11, schema.Tables.Count);
 	}
 
 	[Fact]
 	public void Sqlite() {
-		var statements = ParseFile("sqlite/cities.sql");
-		Assert.True(statements[0] is Table);
+		var schema = ParseFile("sqlite/cities.sql");
+		Assert.Equal(2, schema.Tables.Count);
 
-		statements = ParseFile("sqlite/movies.sql");
-		Assert.True(statements[0] is Table);
+		schema = ParseFile("sqlite/movies.sql");
+		Assert.Equal(2, schema.Tables.Count);
 
-		statements = ParseFile("sqlite/quotes.sql");
-		Assert.True(statements[0] is Table);
+		schema = ParseFile("sqlite/quotes.sql");
+		Assert.Single(schema.Tables);
 	}
 
 	[Fact]
 	public void MySql() {
-		var statements = ParseFile("mysql/cities.sql");
-		Assert.True(statements.Count > 0);
+		var schema = ParseFile("mysql/cities.sql");
+		Assert.Equal(2, schema.Tables.Count);
 
-		statements = ParseFile("mysql/cities-dump.sql");
-		Assert.True(statements.Count > 0);
+		schema = ParseFile("mysql/cities-dump.sql");
+		Assert.Equal(2, schema.Tables.Count);
 
-		statements = ParseFile("mysql/forward-ref.sql");
-		Assert.True(statements.Count > 0);
+		schema = ParseFile("mysql/forward-ref.sql");
+		Assert.Equal(2, schema.Tables.Count);
 
-		statements = ParseFile("mysql/movies.sql");
-		Assert.True(statements.Count > 0);
+		schema = ParseFile("mysql/movies.sql");
+		Assert.Equal(2, schema.Tables.Count);
 
-		statements = ParseFile("mysql/quotes.sql");
-		Assert.True(statements.Count > 0);
+		schema = ParseFile("mysql/quotes.sql");
+		Assert.Single(schema.Tables);
 
-		statements = ParseFile("mysql-samples/employees.sql");
-		Assert.True(statements.Count > 0);
+		schema = ParseFile("mysql-samples/employees.sql");
+		Assert.Equal(6, schema.Tables.Count);
 	}
 
-	static List<Statement> ParseFile(string file) {
+	static Schema ParseFile(string file) {
 		var schema = new Schema();
-		return new List<Statement>(Parser.Parse(file, schema));
+		foreach (var _ in Parser.Parse(file, schema)) {
+		}
+		return schema;
 	}
 
-	static List<Statement> ParseText(string sql, string file = "SQL", int line = 1) {
+	static Schema ParseText(string sql, string file = "SQL", int line = 1) {
 		var schema = new Schema();
-		return new List<Statement>(Parser.Parse(new StringReader(sql), schema, file, line));
+		foreach (var _ in Parser.Parse(new StringReader(sql), schema, file, line)) {
+		}
+		return schema;
 	}
-}
 }

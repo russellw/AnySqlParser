@@ -1,6 +1,5 @@
 namespace AnySqlParser;
 public sealed class Table: Statement {
-	public bool Adding;
 	public string Name;
 	public List<Column> Columns = new();
 	public Dictionary<string, Column> ColumnMap = new();
@@ -9,8 +8,7 @@ public sealed class Table: Statement {
 	public List<ForeignKey> ForeignKeys = new();
 	public List<Check> Checks = new();
 
-	public Table(bool adding, string name) {
-		Adding = adding;
+	public Table(string name) {
 		Name = name;
 	}
 
