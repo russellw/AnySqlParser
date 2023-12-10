@@ -563,12 +563,9 @@ public sealed class Parser {
 	QueryExpression Intersect() {
 		// https://stackoverflow.com/questions/56224171/does-intersect-have-a-higher-precedence-compared-to-union
 		QueryExpression a = QuerySpecification();
-		// TODO
-		for (;;) {
-			if (!Eat("INTERSECT"))
-				return a;
+		while (Eat("INTERSECT"))
 			a = new QueryBinaryExpression(QueryOp.Intersect, a, QuerySpecification());
-		}
+		return a;
 	}
 
 	QuerySpecification QuerySpecification() {
@@ -785,14 +782,9 @@ public sealed class Parser {
 
 	Expression And() {
 		var a = Not();
-		// TODO
-		for (;;) {
-			if (Eat("AND")) {
-				a = new BinaryExpression(BinaryOp.And, a, Not());
-				continue;
-			}
-			return a;
-		}
+		while (Eat("AND"))
+			a = new BinaryExpression(BinaryOp.And, a, Not());
+		return a;
 	}
 
 	Expression Not() {
