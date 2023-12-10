@@ -152,6 +152,18 @@ public class UnitTest1 {
 		Assert.True(statements.Count > 0);
 	}
 
+	[Fact]
+	public void Sqlite() {
+		var statements = ParseFile("sqlite/cities.sql");
+		Assert.True(statements[1] is Table);
+
+		statements = ParseFile("sqlite/movies.sql");
+		Assert.True(statements[1] is Table);
+
+		statements = ParseFile("sqlite/quotes.sql");
+		Assert.True(statements[0] is Table);
+	}
+
 	static List<Statement> ParseFile(string file) {
 		return new List<Statement>(Parser.Parse(file));
 	}
