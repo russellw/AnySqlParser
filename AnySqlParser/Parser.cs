@@ -34,7 +34,7 @@ public sealed class Parser {
 
 	IEnumerable<Statement> Statements(Schema schema) {
 		for (;;) {
-			switch (token) {
+			switch (token.ToLowerInvariant()) {
 			case Eof:
 				yield break;
 			case "insert": {
@@ -70,7 +70,7 @@ public sealed class Parser {
 				var location = new Location(file, line);
 				Lex();
 				var unique = Eat("unique");
-				switch (token) {
+				switch (token.ToLowerInvariant()) {
 				case "index": {
 					Lex();
 					var a = new Index(unique);
@@ -131,11 +131,11 @@ public sealed class Parser {
 			case "alter": {
 				var location = new Location(file, line);
 				Lex();
-				switch (token) {
+				switch (token.ToLowerInvariant()) {
 				case "table": {
 					Lex();
 					var tableName = UnqualifiedName();
-					switch (token) {
+					switch (token.ToLowerInvariant()) {
 					case "add": {
 						Lex();
 						var a = schema.GetTable(location, tableName);
@@ -171,7 +171,7 @@ public sealed class Parser {
 	}
 
 	bool IsStatementEnd() {
-		switch (token) {
+		switch (token.ToLowerInvariant()) {
 		case Eof:
 		case ";":
 		case "go":
@@ -248,10 +248,10 @@ public sealed class Parser {
 
 		// Search the postscript for actions
 		while (!isEnd()) {
-			switch (token) {
+			switch (token.ToLowerInvariant()) {
 			case "on":
 				Lex();
-				switch (token) {
+				switch (token.ToLowerInvariant()) {
 				case "delete":
 					Lex();
 					a.OnDelete = GetAction();
@@ -269,7 +269,7 @@ public sealed class Parser {
 	}
 
 	Element TableConstraint(Table table, Callback isEnd) {
-		switch (token) {
+		switch (token.ToLowerInvariant()) {
 		case "foreign": {
 			var a = ForeignKey(null, isEnd);
 			table.ForeignKeys.Add(a);
@@ -297,7 +297,7 @@ public sealed class Parser {
 
 	Key Key(Column? column) {
 		var location = new Location(file, line);
-		switch (token) {
+		switch (token.ToLowerInvariant()) {
 		case "primary":
 			Lex();
 			Expect("key");
@@ -332,7 +332,7 @@ public sealed class Parser {
 			Name();
 			return TableConstraint(table, isEnd);
 		}
-		switch (token) {
+		switch (token.ToLowerInvariant()) {
 		case "foreign":
 		case "key":
 		case "primary":
@@ -348,7 +348,7 @@ public sealed class Parser {
 
 		// Search the postscript for column constraints
 		while (!isEnd()) {
-			switch (token) {
+			switch (token.ToLowerInvariant()) {
 			case "default":
 				Lex();
 				a.Default = Expression();
@@ -378,7 +378,7 @@ public sealed class Parser {
 				continue;
 			case "not":
 				Lex();
-				switch (token) {
+				switch (token.ToLowerInvariant()) {
 				case "null":
 					Lex();
 					a.Nullable = false;
@@ -395,11 +395,11 @@ public sealed class Parser {
 	}
 
 	string DataTypeName() {
-		switch (token) {
+		switch (token.ToLowerInvariant()) {
 		case "character":
 		case "char":
 			Lex();
-			switch (token) {
+			switch (token.ToLowerInvariant()) {
 			case "large":
 				Lex();
 				Expect("object");
@@ -411,7 +411,7 @@ public sealed class Parser {
 			return "char";
 		case "binary":
 			Lex();
-			switch (token) {
+			switch (token.ToLowerInvariant()) {
 			case "large":
 				Lex();
 				Expect("object");
@@ -423,7 +423,7 @@ public sealed class Parser {
 			return "double";
 		case "long":
 			Lex();
-			switch (token) {
+			switch (token.ToLowerInvariant()) {
 			case "raw":
 			case "varbinary":
 			case "varchar":
@@ -432,7 +432,7 @@ public sealed class Parser {
 			return "long";
 		case "time":
 			Lex();
-			switch (token) {
+			switch (token.ToLowerInvariant()) {
 			case "with":
 				Lex();
 				Expect("timezone");
@@ -441,7 +441,7 @@ public sealed class Parser {
 			return "time";
 		case "timestamp":
 			Lex();
-			switch (token) {
+			switch (token.ToLowerInvariant()) {
 			case "with":
 				Lex();
 				Expect("timezone");
@@ -450,7 +450,7 @@ public sealed class Parser {
 			return "timestamp";
 		case "interval":
 			Lex();
-			switch (token) {
+			switch (token.ToLowerInvariant()) {
 			case "day":
 				Lex();
 				Expect("to");
@@ -464,7 +464,7 @@ public sealed class Parser {
 			}
 			return "interval";
 		}
-		return Name();
+		return Name().ToLowerInvariant();
 	}
 
 	DataType DataType() {
@@ -486,7 +486,7 @@ public sealed class Parser {
 	}
 
 	Action GetAction() {
-		switch (token) {
+		switch (token.ToLowerInvariant()) {
 		case "cascade":
 			Lex();
 			return Action.Cascade;
@@ -499,7 +499,7 @@ public sealed class Parser {
 			return Action.NoAction;
 		case "set":
 			Lex();
-			switch (token) {
+			switch (token.ToLowerInvariant()) {
 			case "null":
 				Lex();
 				return Action.SetNull;
@@ -513,7 +513,7 @@ public sealed class Parser {
 	}
 
 	Check Check() {
-		Debug.Assert(token == "check");
+		Debug.Assert(Token("check"));
 		var location = new Location(file, line);
 		var a = new Check(location);
 		while (!Eat("("))
@@ -525,7 +525,7 @@ public sealed class Parser {
 
 	Select Select() {
 		var a = new Select(QueryExpression());
-		switch (token) {
+		switch (token.ToLowerInvariant()) {
 		case "order":
 			Lex();
 			Expect("by");
@@ -540,7 +540,7 @@ public sealed class Parser {
 		var a = Intersect();
 		for (;;) {
 			QueryOp op;
-			switch (token) {
+			switch (token.ToLowerInvariant()) {
 			case "union":
 				Lex();
 				if (Eat("all")) {
@@ -578,7 +578,7 @@ public sealed class Parser {
 		// but unknown keywords must be left alone
 		// as they might be part of the select list
 		for (;;) {
-			switch (token) {
+			switch (token.ToLowerInvariant()) {
 			case "all":
 				Lex();
 				a.All = true;
@@ -611,7 +611,7 @@ public sealed class Parser {
 
 		// Any keyword after the select list, must be a clause
 		for (;;)
-			switch (token) {
+			switch (token.ToLowerInvariant()) {
 			case "where":
 				Lex();
 				a.Where = Expression();
@@ -649,7 +649,7 @@ public sealed class Parser {
 	TableSource Join() {
 		var a = PrimaryTableSource();
 		for (;;)
-			switch (token) {
+			switch (token.ToLowerInvariant()) {
 			case "inner": {
 				Lex();
 				Expect("join");
@@ -704,7 +704,7 @@ public sealed class Parser {
 			return b;
 		}
 		var a = new PrimaryTableSource(QualifiedName());
-		switch (token) {
+		switch (token.ToLowerInvariant()) {
 		case "as":
 			Lex();
 			break;
@@ -728,7 +728,7 @@ public sealed class Parser {
 	}
 
 	bool Desc() {
-		switch (token) {
+		switch (token.ToLowerInvariant()) {
 		case "desc":
 			Lex();
 			return true;
@@ -743,7 +743,7 @@ public sealed class Parser {
 		var a = And();
 		for (;;) {
 			BinaryOp op;
-			switch (token) {
+			switch (token.ToLowerInvariant()) {
 			case "not": {
 				Lex();
 				Expect("between");
@@ -802,10 +802,10 @@ public sealed class Parser {
 	Expression Comparison() {
 		var a = Addition();
 		BinaryOp op;
-		switch (token) {
+		switch (token.ToLowerInvariant()) {
 		case "is":
 			Lex();
-			switch (token) {
+			switch (token.ToLowerInvariant()) {
 			case "null":
 				Lex();
 				return new UnaryExpression(UnaryOp.IsNull, a);
@@ -894,7 +894,7 @@ public sealed class Parser {
 	}
 
 	Expression Prefix() {
-		switch (token) {
+		switch (token.ToLowerInvariant()) {
 		case "select":
 			return new Subquery(QueryExpression());
 		case "exists": {
@@ -941,7 +941,7 @@ public sealed class Parser {
 	}
 
 	Expression Primary() {
-		switch (token) {
+		switch (token.ToLowerInvariant()) {
 		case "@":
 			Lex();
 			return new ParameterRef(Name());
@@ -1129,9 +1129,9 @@ public sealed class Parser {
 			return Lex1();
 		case '"':
 		case '`':
-			return Etc.Unquote(Lex1()).ToLowerInvariant();
+			return Etc.Unquote(Lex1());
 		case '[':
-			return Etc.Unquote(Lex1(), ']').ToLowerInvariant();
+			return Etc.Unquote(Lex1(), ']');
 		}
 		if (char.IsLetter(token[0]))
 			return Lex1();
@@ -1206,8 +1206,12 @@ public sealed class Parser {
 			throw ErrorToken("expected " + s.ToUpperInvariant());
 	}
 
+	bool Token(string s) {
+		return string.Equals(token, s, StringComparison.OrdinalIgnoreCase);
+	}
+
 	bool Eat(string s) {
-		if (token == s) {
+		if (Token(s)) {
 			Lex();
 			return true;
 		}
@@ -1500,7 +1504,7 @@ public sealed class Parser {
 		do
 			AppendRead(sb);
 		while (Etc.IsWordPart(c));
-		token = sb.ToString().ToLowerInvariant();
+		token = sb.ToString();
 	}
 
 	void Number() {
