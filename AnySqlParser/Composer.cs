@@ -68,6 +68,7 @@ public abstract class Composer {
 			sb.Append(string.Join(',', key.Columns.Select(c => Name(c.Name))));
 			sb.Append("),\n");
 		}
+		sb.Remove(sb.Length - 2, 1);
 		sb.Append(");\n");
 	}
 
