@@ -21,6 +21,7 @@ public sealed class Parser {
 	readonly string file;
 	int line;
 	int c;
+	bool newline;
 	string token = null!;
 	int tokenLine = 1;
 	int tokenTextCount;
@@ -1263,9 +1264,13 @@ public sealed class Parser {
 	}
 
 	void Lex() {
+		newline = false;
+
 		// Comments are more likely to belong to the following token than the previous one
 		tokenLine = line;
 		tokenTextCount = text.Length;
+
+		// While space/comment
 		for (;;) {
 			switch (c) {
 			case '\'':
@@ -1408,6 +1413,9 @@ public sealed class Parser {
 				while (c != '\n' && 0 <= c);
 				continue;
 			case '\n':
+				newline = true;
+				Read();
+				continue;
 			case '\r':
 			case '\t':
 			case '\f':

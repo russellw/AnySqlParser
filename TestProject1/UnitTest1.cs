@@ -55,7 +55,7 @@ public class UnitTest1 {
 	[Fact]
 	public void SampleDB1() {
 		var statements = ParseFile("sql-server-samples/sampleDB1.sql");
-		Assert.True(statements[1] is Table);
+		Assert.True(statements[0] is Table);
 	}
 
 	[Fact]

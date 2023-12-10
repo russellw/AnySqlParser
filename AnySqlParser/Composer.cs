@@ -87,7 +87,6 @@ public abstract class Composer {
 			sb.AppendLine("),");
 		}
 		sb.AppendLine(");");
-
 		Extra(table.ExtraTokens);
 	}
 
