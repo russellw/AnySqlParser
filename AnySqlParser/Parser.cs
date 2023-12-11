@@ -919,19 +919,28 @@ public sealed class Parser {
 
 	Expression Postfix() {
 		var a = Primary();
-		if (Eat("(")) {
-			if (a is QualifiedName a1) {
-				var call = new Call(a1);
-				if (token != ")")
-					do
-						call.Arguments.Add(Expression());
-					while (Eat(","));
-				Expect(")");
-				return call;
+		for (;;)
+			switch (token.ToUpperInvariant()) {
+			case "::":
+			case "AS":
+				Lex();
+				a = new Cast(a, DataType());
+				break;
+			case "(":
+				Lex();
+				if (a is QualifiedName a1) {
+					var call = new Call(a1);
+					if (token != ")")
+						do
+							call.Arguments.Add(Expression());
+						while (Eat(","));
+					Expect(")");
+					return call;
+				}
+				throw Error("call of non-function");
+			default:
+				return a;
 			}
-			throw Error("call of non-function");
-		}
-		return a;
 	}
 
 	Expression Primary() {

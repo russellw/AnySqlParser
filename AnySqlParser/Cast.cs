@@ -7,6 +7,11 @@ public sealed class Cast: Expression {
 		Operand = operand;
 	}
 
+	public Cast(Expression operand, DataType type) {
+		Operand = operand;
+		DataType = type;
+	}
+
 	public override bool Equals(object? obj) {
 		return obj is Cast cast && EqualityComparer<Expression>.Default.Equals(Operand, cast.Operand) &&
 			   DataType.Equals(cast.DataType);
