@@ -63,6 +63,9 @@
     <None Update="postgres\quotes.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="sql-server-samples\aspstate_sql2016_no_retry.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="sql-server-samples\instnwnd %28Azure SQL Database%29.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
