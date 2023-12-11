@@ -217,6 +217,9 @@ public class UnitTest1 {
 
 		schema = ParseFile("postgres/quotes.sql");
 		Assert.Single(schema.Tables);
+
+		schema = ParseFile("postgres/as.sql");
+		Assert.Single(schema.Tables);
 	}
 
 	static Schema ParseFile(string file) {

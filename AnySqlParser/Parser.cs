@@ -1197,7 +1197,7 @@ public sealed class Parser {
 
 	void Expect(string s) {
 		if (!Eat(s))
-			throw ErrorToken("expected " + s);
+			throw ErrorToken($"expected '{s}'");
 	}
 
 	bool Token(string s) {
@@ -1556,7 +1556,7 @@ public sealed class Parser {
 	}
 
 	Exception ErrorToken(string message) {
-		return Error($"{token}: {message}");
+		return Error($"'{token}': {message}");
 	}
 
 	// Error functions return exception objects instead of throwing immediately
