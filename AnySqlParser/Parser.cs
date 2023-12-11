@@ -903,7 +903,7 @@ public sealed class Parser {
 			Expect("(");
 			var a = new Cast(Expression());
 			Expect("AS");
-			a.DataType = DataType();
+			a.Type = DataType();
 			Expect(")");
 			return a;
 		}
