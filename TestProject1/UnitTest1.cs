@@ -198,6 +198,9 @@ public class UnitTest1 {
 
 		schema = ParseFile("sql-server/quotes.sql");
 		Assert.Single(schema.Tables);
+
+		schema = ParseFile("sql-server-samples/aspstate_sql2016_no_retry.sql");
+		Assert.Equal(5, schema.Tables.Count);
 	}
 
 	[Fact]
