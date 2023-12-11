@@ -1,8 +1,6 @@
 ﻿using AnySqlParser;
 
 class Program {
-	static bool all;
-
 	static void Main(string[] args) {
 		var options = true;
 		var paths = new List<string>();
@@ -17,10 +15,6 @@ class Program {
 					while (s.StartsWith('-'))
 						s = s[1..];
 					switch (s) {
-					case "a":
-					case "all":
-						all = true;
-						break;
 					case "?":
 					case "h":
 					case "help":
@@ -37,7 +31,6 @@ class Program {
 						break;
 					}
 				}
-				continue;
 			}
 			paths.Add(s);
 		}
@@ -65,10 +58,8 @@ class Program {
 	static void Descend(string path) {
 		try {
 			if (Directory.Exists(path))
-				foreach (var entry in Directory.GetFileSystemEntries(path)) {
-					if (all || !Path.GetFileName(entry).StartsWith('.'))
-						Descend(entry);
-				}
+				foreach (var entry in Directory.GetFileSystemEntries(path))
+					Descend(entry);
 			else if (string.Equals(Path.GetExtension(path), ".sql", StringComparison.OrdinalIgnoreCase))
 				Do(path);
 		} catch (UnauthorizedAccessException e) {
