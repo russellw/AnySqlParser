@@ -24,14 +24,18 @@ public abstract class Composer {
 		sb.Append(");\n");
 	}
 
+	protected void Add(Expression a) {
+		sb.Append(a);
+	}
+
 	protected void Add(DataType type) {
 		sb.Append(type.Name);
-		if (type.Size >= 0) {
+		if (type.Size != null) {
 			sb.Append('(');
-			sb.Append(type.Size);
-			if (type.Scale >= 0) {
+			Add(type.Size);
+			if (type.Scale != null) {
 				sb.Append(',');
-				sb.Append(type.Scale);
+				Add(type.Scale);
 			}
 			sb.Append(')');
 			return;

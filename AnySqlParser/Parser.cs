@@ -478,9 +478,9 @@ public sealed class Parser {
 			while (Eat(","));
 			Expect(")");
 		} else if (Eat("(")) {
-			a.Size = Int();
+			a.Size = Expression();
 			if (Eat(","))
-				a.Scale = Int();
+				a.Scale = Expression();
 			Expect(")");
 		}
 		return a;

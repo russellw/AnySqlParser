@@ -13,4 +13,8 @@ public sealed class Number: Expression {
 	public override int GetHashCode() {
 		return HashCode.Combine(Value);
 	}
+
+	public override string ToString() {
+		return Value;
+	}
 }
