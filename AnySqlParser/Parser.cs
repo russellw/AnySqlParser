@@ -1251,6 +1251,15 @@ public sealed class Parser {
 					return;
 				}
 				break;
+			case ':':
+				Read();
+				switch (c) {
+				case ':':
+					Read();
+					token = "::";
+					return;
+				}
+				break;
 			case '>':
 				Read();
 				switch (c) {
@@ -1351,6 +1360,7 @@ public sealed class Parser {
 				token = "-";
 				return;
 			case '#':
+			case '\\':
 				do
 					Read();
 				while (c != '\n' && 0 <= c);
