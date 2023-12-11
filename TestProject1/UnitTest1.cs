@@ -188,6 +188,37 @@ public class UnitTest1 {
 		Assert.Equal(6, schema.Tables.Count);
 	}
 
+	[Fact]
+	public void SqlServer() {
+		var schema = ParseFile("sql-server/cities.sql");
+		Assert.Equal(2, schema.Tables.Count);
+
+		schema = ParseFile("sql-server/movies.sql");
+		Assert.Equal(2, schema.Tables.Count);
+
+		schema = ParseFile("sql-server/quotes.sql");
+		Assert.Single(schema.Tables);
+	}
+
+	[Fact]
+	public void Postgres() {
+		var schema = ParseFile("northwind_psql/northwind.sql");
+		// The postgres version has an extra table for US states
+		Assert.Equal(14, schema.Tables.Count);
+
+		schema = ParseFile("postgres/cities.sql");
+		Assert.Equal(2, schema.Tables.Count);
+
+		schema = ParseFile("postgres/cities-dump.sql");
+		Assert.Equal(2, schema.Tables.Count);
+
+		schema = ParseFile("postgres/movies.sql");
+		Assert.Equal(2, schema.Tables.Count);
+
+		schema = ParseFile("postgres/quotes.sql");
+		Assert.Single(schema.Tables);
+	}
+
 	static Schema ParseFile(string file) {
 		var schema = new Schema();
 		foreach (var _ in Parser.Parse(file, schema)) {

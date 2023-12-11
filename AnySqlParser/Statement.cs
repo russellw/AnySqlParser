@@ -1,5 +1,2 @@
 namespace AnySqlParser;
-public abstract class Statement {
-	public virtual void AddTo(Schema schema) {
-	}
-}
+public abstract class Statement {}

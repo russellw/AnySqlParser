@@ -1,5 +1,5 @@
 namespace AnySqlParser;
-public sealed class Table: Statement {
+public sealed class Table {
 	public string Name;
 	public List<Column> Columns = new();
 	public Dictionary<string, Column> ColumnMap = new();
@@ -10,10 +10,6 @@ public sealed class Table: Statement {
 
 	public Table(string name) {
 		Name = name;
-	}
-
-	public override void AddTo(Schema schema) {
-		schema.Tables.Add(this);
 	}
 
 	public void Add(Column column) {
