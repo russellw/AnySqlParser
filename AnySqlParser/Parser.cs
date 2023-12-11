@@ -1352,18 +1352,16 @@ public sealed class Parser {
 				Read();
 				switch (c) {
 				case '-':
-					do
-						Read();
-					while (c != '\n' && 0 <= c);
+					reader.ReadLine();
+					c = '\n';
 					continue;
 				}
 				token = "-";
 				return;
 			case '#':
 			case '\\':
-				do
-					Read();
-				while (c != '\n' && 0 <= c);
+				reader.ReadLine();
+				c = '\n';
 				continue;
 			case '\n':
 				newline = true;
