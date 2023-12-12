@@ -201,6 +201,8 @@ public class UnitTest1 {
 
 		schema = ParseFile("sql-server-samples/aspstate_sql2016_no_retry.sql");
 		Assert.Equal(2, schema.Tables.Count);
+
+		schema = ParseFile("sql-server-samples/setup_reset.sql");
 	}
 
 	[Fact]
