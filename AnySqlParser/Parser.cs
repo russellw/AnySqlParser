@@ -957,9 +957,6 @@ public sealed class Parser {
 
 	Expression Primary() {
 		switch (token) {
-		case "@":
-			Lex();
-			return new ParameterRef(Name());
 		case "NULL":
 			Lex();
 			return new Null();
@@ -977,6 +974,7 @@ public sealed class Parser {
 		case 'A':
 		case 'B':
 		case '$':
+		case '@':
 		case 'C':
 		case 'D':
 		case 'E':
@@ -1130,6 +1128,7 @@ public sealed class Parser {
 		case 'w':
 		case 'x':
 		case '$':
+		case '@':
 		case 'y':
 		case 'z': {
 			var s = wordOriginalCase;
@@ -1155,6 +1154,7 @@ public sealed class Parser {
 		case 'C':
 		case 'D':
 		case '$':
+		case '@':
 		case 'E':
 		case 'F':
 		case 'G':
@@ -1363,10 +1363,6 @@ public sealed class Parser {
 				Read();
 				token = "*";
 				return;
-			case '@':
-				Read();
-				token = "@";
-				return;
 			case -1:
 				token = Eof;
 				return;
@@ -1426,6 +1422,7 @@ public sealed class Parser {
 			case 'J':
 			case 'K':
 			case 'L':
+			case '@':
 			case 'M':
 			case 'O':
 			case 'P':
