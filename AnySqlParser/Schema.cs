@@ -3,12 +3,10 @@ public sealed class Schema {
 	public List<Table> Tables = new();
 	public Dictionary<string, Table> TableMap = new();
 
-	public Table CreateTable(Location location, string name) {
-		var table = new Table(name);
+	public void Add(Location location, Table table) {
 		if (!TableMap.TryAdd(table.Name.ToLowerInvariant(), table))
-			throw new SqlError($"{location}: {name} already exists");
+			throw new SqlError($"{location}: {table} already exists");
 		Tables.Add(table);
-		return table;
 	}
 
 	public Table GetTable(Location location, string name) {

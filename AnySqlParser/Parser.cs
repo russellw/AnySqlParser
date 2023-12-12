@@ -119,7 +119,7 @@ public sealed class Parser {
 					continue;
 				case "TABLE": {
 					Lex();
-					var a = schema.CreateTable(location, UnqualifiedName());
+					var table = new Table(UnqualifiedName());
 					if (Eat("AS"))
 						Name();
 					if (token == ";")
@@ -128,12 +128,13 @@ public sealed class Parser {
 					do {
 						if (token == ")")
 							break;
-						var b = TableElement(a, IsElementEnd);
+						var a = TableElement(table, IsElementEnd);
 						while (!IsElementEnd())
 							Skip();
 					} while (Eat(","));
 					Expect(")");
 					EndStatement();
+					schema.Add(location, table);
 					continue;
 				}
 				}

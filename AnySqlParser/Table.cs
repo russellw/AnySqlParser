@@ -12,6 +12,10 @@ public sealed class Table {
 		Name = name;
 	}
 
+	public override string ToString() {
+		return Name;
+	}
+
 	public void Add(Column column) {
 		Columns.Add(column);
 		if (!ColumnMap.TryAdd(column.Name.ToLowerInvariant(), column))
