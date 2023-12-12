@@ -203,6 +203,8 @@ public class UnitTest1 {
 
 		schema = ParseFile("sql-server-samples/setup_reset.sql");
 		Assert.Equal(7, schema.Tables.Count);
+
+		schema = ParseFile("sql-server-samples/instawdbdw.sql");
 	}
 
 	[Fact]

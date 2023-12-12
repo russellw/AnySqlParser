@@ -1276,7 +1276,8 @@ public sealed class Parser {
 					token = "::";
 					return;
 				}
-				throw Error($"stray ':'");
+				token = ":";
+				return;
 			case '>':
 				Read();
 				switch (c) {
