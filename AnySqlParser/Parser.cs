@@ -57,7 +57,8 @@ public sealed class Parser {
 				}
 
 				// Values
-				Expect("VALUES");
+				if (!Eat("VALUES"))
+					continue;
 				Expect("(");
 				do
 					a.Values.Add(Expression());
@@ -119,8 +120,11 @@ public sealed class Parser {
 				case "TABLE": {
 					Lex();
 					var a = schema.CreateTable(location, UnqualifiedName());
-					while (!Eat("("))
-						Skip();
+					if (Eat("AS"))
+						Name();
+					if (token == ";")
+						continue;
+					Expect("(");
 					do {
 						if (token == ")")
 							break;
@@ -971,6 +975,7 @@ public sealed class Parser {
 		case 'N':
 		case 'A':
 		case 'B':
+		case '$':
 		case 'C':
 		case 'D':
 		case 'E':
@@ -1123,6 +1128,7 @@ public sealed class Parser {
 		case 'v':
 		case 'w':
 		case 'x':
+		case '$':
 		case 'y':
 		case 'z': {
 			var s = wordOriginalCase;
@@ -1147,6 +1153,7 @@ public sealed class Parser {
 		case 'B':
 		case 'C':
 		case 'D':
+		case '$':
 		case 'E':
 		case 'F':
 		case 'G':
@@ -1388,12 +1395,13 @@ public sealed class Parser {
 				Read();
 				continue;
 			case '$':
-				Read();
-				if (char.IsDigit((char)c)) {
+				if (char.IsDigit((char)reader.Peek())) {
+					Read();
 					Number();
 					return;
 				}
-				throw Error($"stray '$'");
+				Word();
+				return;
 			case 'N':
 				if (reader.Peek() == '\'') {
 					// We are reading everything as Unicode anyway

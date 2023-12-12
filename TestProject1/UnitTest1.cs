@@ -41,7 +41,6 @@ public class UnitTest1 {
 	[Fact]
 	public void StrayCharacter() {
 		Assert.Throws<SqlError>(() => ParseText("!"));
-		Assert.Throws<SqlError>(() => ParseText("$"));
 	}
 
 	[Fact]
