@@ -203,6 +203,7 @@ public class UnitTest1 {
 		Assert.Equal(2, schema.Tables.Count);
 
 		schema = ParseFile("sql-server-samples/setup_reset.sql");
+		Assert.Equal(7, schema.Tables.Count);
 	}
 
 	[Fact]
