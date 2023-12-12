@@ -41,7 +41,7 @@ public class UnitTest1 {
 	[Fact]
 	public void StrayCharacter() {
 		Assert.Throws<SqlError>(() => ParseText("!"));
-		Assert.Throws<SqlError>(() => ParseText("|"));
+		Assert.Throws<SqlError>(() => ParseText("$"));
 	}
 
 	[Fact]
@@ -200,7 +200,7 @@ public class UnitTest1 {
 		Assert.Single(schema.Tables);
 
 		schema = ParseFile("sql-server-samples/aspstate_sql2016_no_retry.sql");
-		Assert.Equal(5, schema.Tables.Count);
+		Assert.Equal(2, schema.Tables.Count);
 	}
 
 	[Fact]

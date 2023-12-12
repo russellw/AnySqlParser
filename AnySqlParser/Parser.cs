@@ -110,6 +110,12 @@ public sealed class Parser {
 					yield return a;
 					continue;
 				}
+				case "PROC":
+				case "PROCEDURE":
+					do
+						Skip();
+					while (token != "GO" && token != Eof);
+					continue;
 				case "TABLE": {
 					Lex();
 					var a = schema.CreateTable(location, UnqualifiedName());
@@ -358,9 +364,9 @@ public sealed class Parser {
 				Lex();
 				a.AutoIncrement = true;
 				if (Eat("(")) {
-					Int();
+					Expression();
 					Expect(",");
-					Int();
+					Expression();
 					Expect(")");
 				}
 				continue;
@@ -1058,17 +1064,6 @@ public sealed class Parser {
 		return a;
 	}
 
-	int Int() {
-		int n;
-		try {
-			n = int.Parse(token, System.Globalization.CultureInfo.InvariantCulture);
-		} catch (FormatException e) {
-			throw Error(e.Message);
-		}
-		Lex();
-		return n;
-	}
-
 	string Lex1() {
 		var s = token;
 		Lex();
@@ -1254,7 +1249,7 @@ public sealed class Parser {
 					token = "<=";
 					return;
 				}
-				break;
+				throw Error($"stray '!'");
 			case '|':
 				Read();
 				switch (c) {
@@ -1263,7 +1258,8 @@ public sealed class Parser {
 					token = "||";
 					return;
 				}
-				break;
+				token = "|";
+				return;
 			case ':':
 				Read();
 				switch (c) {
@@ -1272,7 +1268,7 @@ public sealed class Parser {
 					token = "::";
 					return;
 				}
-				break;
+				throw Error($"stray ':'");
 			case '>':
 				Read();
 				switch (c) {
@@ -1338,6 +1334,10 @@ public sealed class Parser {
 				Read();
 				token = "%";
 				return;
+			case '^':
+				Read();
+				token = "^";
+				return;
 			case '(':
 				Read();
 				token = "(";
@@ -1388,12 +1388,12 @@ public sealed class Parser {
 				Read();
 				continue;
 			case '$':
-				if (char.IsDigit((char)reader.Peek())) {
-					Read();
+				Read();
+				if (char.IsDigit((char)c)) {
 					Number();
 					return;
 				}
-				break;
+				throw Error($"stray '$'");
 			case 'N':
 				if (reader.Peek() == '\'') {
 					// We are reading everything as Unicode anyway
@@ -1491,7 +1491,7 @@ public sealed class Parser {
 				}
 				break;
 			}
-			throw Error("stray " + (char)c);
+			throw Error($"stray '{(char)c}'");
 		}
 	}
 
