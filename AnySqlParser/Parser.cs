@@ -105,6 +105,10 @@ public sealed class Parser {
 					Lex();
 					var a = new View();
 					a.Name = QualifiedName();
+					if (Eat("WITH"))
+						do
+							Name();
+						while (Eat(","));
 					Expect("AS");
 					a.Query = Select();
 					EndStatement();
