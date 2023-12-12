@@ -3,7 +3,7 @@
 
   Summary:  Creates the AdventureWorks sample database. Run this on
   any version of SQL Server (2008R2 or later) to get AdventureWorks for your
-  current version. 
+  current version.
 
   Date:     October 26, 2017
   Updated:  August 3, 2023
@@ -18,7 +18,7 @@
   materials for detailed information regarding Microsoft code samples.
 
   All data in this database is fictitious.
- 
+
   THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
   KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
   IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
@@ -36,7 +36,8 @@
  * 3. Copy this script and the install files to C:\Samples\AdventureWorks, or
  *    set the following environment variable to your own data path.
  */
- :setvar SqlSamplesSourceDataPath "C:\Samples\AdventureWorks\"
+-- changed to not break UltraEdit syntax highlighting
+ :setvar SqlSamplesSourceDataPath "C:\Samples\AdventureWorks/"
 
 /*
  * 4. Append the SQL Server version number to database name if you want to
@@ -425,7 +426,7 @@ ALTER XML SCHEMA COLLECTION [Person].[AdditionalContactInfoSchemaCollection] ADD
     <xsd:element name="ContactRecord" >
         <xsd:complexType mixed="true" >
             <xsd:choice minOccurs="0" maxOccurs="unbounded" >
-                <xsd:any processContents="strict" 
+                <xsd:any processContents="strict"
                     namespace="http://schemas.microsoft.com/sqlserver/2004/07/adventure-works/ContactTypes" />
             </xsd:choice>
             <xsd:attribute name="date" type="xsd:date" />
@@ -706,7 +707,7 @@ CREATE XML SCHEMA COLLECTION [Production].[ProductDescriptionSchemaCollection] A
     xmlns="http://schemas.microsoft.com/sqlserver/2004/07/adventure-works/ProductModelWarrAndMain"
     elementFormDefault="qualified"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema" >
- 
+
     <xsd:element name="Warranty"  >
         <xsd:complexType>
             <xsd:sequence>
@@ -758,13 +759,13 @@ ALTER XML SCHEMA COLLECTION [Production].[ProductDescriptionSchemaCollection] AD
             <xs:attribute name="ProductModelID" type="xs:string" />
             <xs:attribute name="ProductModelName" type="xs:string" />
         </xs:complexType>
- 
+
         <xs:complexType name="Summary" mixed="true" >
             <xs:sequence>
                 <xs:any processContents="skip" namespace="http://www.w3.org/1999/xhtml" minOccurs="0" maxOccurs="unbounded" />
             </xs:sequence>
         </xs:complexType>
-       
+
         <xs:complexType name="Manufacturer">
             <xs:sequence>
                 <xs:element name="Name" type="xs:string" minOccurs="0" />
@@ -773,7 +774,7 @@ ALTER XML SCHEMA COLLECTION [Production].[ProductDescriptionSchemaCollection] AD
                 <xs:element name="ProductURL" type="xs:string" minOccurs="0" />
             </xs:sequence>
         </xs:complexType>
- 
+
         <xs:complexType name="Picture">
             <xs:annotation>
                 <xs:documentation>Pictures of the component, some standard sizes are "Large" for zoom in, "Small" for a normal web page and "Thumbnail" for product listing pages.</xs:documentation>
@@ -1015,7 +1016,7 @@ GO
 CREATE TABLE [Person].[BusinessEntity](
 	[BusinessEntityID] [int] IDENTITY (1, 1) NOT FOR REPLICATION NOT NULL,
     [rowguid] uniqueidentifier ROWGUIDCOL NOT NULL CONSTRAINT [DF_BusinessEntity_rowguid] DEFAULT (NEWID()),
-    [ModifiedDate] [datetime] NOT NULL CONSTRAINT [DF_BusinessEntity_ModifiedDate] DEFAULT (GETDATE())	
+    [ModifiedDate] [datetime] NOT NULL CONSTRAINT [DF_BusinessEntity_ModifiedDate] DEFAULT (GETDATE())
 ) ON [PRIMARY];
 GO
 
@@ -1083,7 +1084,7 @@ GO
 
 CREATE TABLE [Sales].[CurrencyRate](
     [CurrencyRateID] [int] IDENTITY (1, 1) NOT NULL,
-    [CurrencyRateDate] [datetime] NOT NULL,   
+    [CurrencyRateDate] [datetime] NOT NULL,
     [FromCurrencyCode] [nchar](3) NOT NULL,
     [ToCurrencyCode] [nchar](3) NOT NULL,
     [AverageRate] [money] NOT NULL,
@@ -1124,7 +1125,7 @@ CREATE TABLE [Production].[Document](
     [ChangeNumber] [int] NOT NULL CONSTRAINT [DF_Document_ChangeNumber] DEFAULT (0),
     [Status] [tinyint] NOT NULL,
     [DocumentSummary] [nvarchar](max) NULL,
-    [Document] [varbinary](max)  NULL, 
+    [Document] [varbinary](max)  NULL,
     [rowguid] uniqueidentifier ROWGUIDCOL NOT NULL UNIQUE CONSTRAINT [DF_Document_rowguid] DEFAULT (NEWID()),
     [ModifiedDate] [datetime] NOT NULL CONSTRAINT [DF_Document_ModifiedDate] DEFAULT (GETDATE()),
     CONSTRAINT [CK_Document_Status] CHECK ([Status] BETWEEN 1 AND 3)
@@ -1142,7 +1143,7 @@ GO
 CREATE TABLE [HumanResources].[Employee](
     [BusinessEntityID] [int] NOT NULL,
     [NationalIDNumber] [nvarchar](15) NOT NULL,
-    [LoginID] [nvarchar](256) NOT NULL,    
+    [LoginID] [nvarchar](256) NOT NULL,
     [OrganizationNode] [hierarchyid] NULL,
 	[OrganizationLevel] AS OrganizationNode.GetLevel(),
     [JobTitle] [nvarchar](50) NOT NULL,
@@ -1524,7 +1525,7 @@ CREATE TABLE [Sales].[SalesOrderHeader](
     [ShipToAddressID] [int] NOT NULL,
     [ShipMethodID] [int] NOT NULL,
     [CreditCardID] [int] NULL,
-    [CreditCardApprovalCode] [varchar](15) NULL,   
+    [CreditCardApprovalCode] [varchar](15) NULL,
     [CurrencyRateID] [int] NULL,
     [SubTotal] [money] NOT NULL CONSTRAINT [DF_SalesOrderHeader_SubTotal] DEFAULT (0.00),
     [TaxAmt] [money] NOT NULL CONSTRAINT [DF_SalesOrderHeader_TaxAmt] DEFAULT (0.00),
@@ -2027,7 +2028,7 @@ WITH (
     FIELDTERMINATOR='+|',
     ROWTERMINATOR='&|\n',
     KEEPIDENTITY,
-    TABLOCK  
+    TABLOCK
 );
 
 
@@ -2255,7 +2256,7 @@ WITH (
     FIELDTERMINATOR='\t',
     ROWTERMINATOR='0x0a',
     KEEPIDENTITY,
-    TABLOCK  
+    TABLOCK
 );
 
 PRINT 'Loading [Production].[ProductInventory]';
@@ -2333,7 +2334,7 @@ WITH (
     FIELDTERMINATOR='+|',
     ROWTERMINATOR='&|\n',
     KEEPIDENTITY,
-    TABLOCK  
+    TABLOCK
 );
 
 PRINT 'Loading [Production].[ProductProductPhoto]';
@@ -4286,7 +4287,7 @@ BEGIN
         FROM inserted
         WHERE [Person].[Person].[BusinessEntityID] = inserted.[BusinessEntityID]
             AND inserted.[Demographics] IS NULL;
-       
+
         UPDATE [Person].[Person]
         SET [Demographics].modify(N'declare default element namespace "http://schemas.microsoft.com/sqlserver/2004/07/adventure-works/IndividualSurvey";
             insert <TotalPurchaseYTD>0.00</TotalPurchaseYTD>
@@ -4815,7 +4816,7 @@ SELECT
     ,p.[MiddleName]
     ,p.[LastName]
     ,p.[Suffix]
-    ,e.[JobTitle] 
+    ,e.[JobTitle]
     ,pp.[PhoneNumber]
     ,pnt.[Name] AS [PhoneNumberType]
     ,ea.[EmailAddress]
@@ -5476,7 +5477,7 @@ BEGIN
 					INNER JOIN [Person].[Person] p
 					ON p.[BusinessEntityID] = bec.[PersonID]
 				WHERE bec.[PersonID] = @PersonID;
-		
+
 		IF EXISTS(SELECT * FROM [Sales].[Store] AS s
 					INNER JOIN [Person].[BusinessEntityContact] bec
 					ON bec.[BusinessEntityID] = s.[BusinessEntityID]
@@ -5572,15 +5573,15 @@ AS
 -- Returns the stock level for the product. This function is used internally only
 BEGIN
     DECLARE @ret int;
-   
+
     SELECT @ret = SUM(p.[Quantity])
     FROM [Production].[ProductInventory] p
     WHERE p.[ProductID] = @ProductID
         AND p.[LocationID] = '6'; -- Only look at inventory in the misc storage
-   
+
     IF (@ret IS NULL)
         SET @ret = 0
-   
+
     RETURN @ret
 END;
 GO
@@ -5599,7 +5600,7 @@ BEGIN
             WHEN 3 THEN N'Obsolete'
             ELSE N'** Invalid **'
         END;
-   
+
     RETURN @ret
 END;
 GO
@@ -5619,7 +5620,7 @@ BEGIN
             WHEN 4 THEN 'Complete'
             ELSE '** Invalid **'
         END;
-   
+
     RETURN @ret
 END;
 GO
@@ -5641,7 +5642,7 @@ BEGIN
             WHEN 6 THEN 'Cancelled'
             ELSE '** Invalid **'
         END;
-   
+
     RETURN @ret
 END;
 GO
@@ -5897,7 +5898,7 @@ GO
 --A stored procedure which demonstrates integrated full text search
 
 CREATE PROCEDURE [dbo].[uspSearchCandidateResumes]
-    @searchString [nvarchar](1000),  
+    @searchString [nvarchar](1000),
     @useInflectional [bit]=0,
     @useThesaurus [bit]=0,
     @language[int]=0
@@ -5912,12 +5913,12 @@ BEGIN
       --setting the lcid to the default instance LCID if needed
       IF @language = NULL OR @language = 0
       BEGIN
-            SELECT @language =CONVERT(int, serverproperty('lcid')) 
+            SELECT @language =CONVERT(int, serverproperty('lcid'))
       END
-     
+
 
             --FREETEXTTABLE case as inflectional and Thesaurus were required
-      IF @useThesaurus = 1 AND @useInflectional = 1 
+      IF @useThesaurus = 1 AND @useInflectional = 1
         BEGIN
                   SELECT FT_TBL.[JobCandidateID], KEY_TBL.[RANK] FROM [HumanResources].[JobCandidate] AS FT_TBL
                         INNER JOIN FREETEXTTABLE([HumanResources].[JobCandidate],*, @searchString,LANGUAGE @language) AS KEY_TBL
@@ -5926,7 +5927,7 @@ BEGIN
 
       ELSE IF @useThesaurus = 1
             BEGIN
-                  SELECT @string ='FORMSOF(THESAURUS,"'+@searchString +'"'+')'     
+                  SELECT @string ='FORMSOF(THESAURUS,"'+@searchString +'"'+')'
                   SELECT FT_TBL.[JobCandidateID], KEY_TBL.[RANK] FROM [HumanResources].[JobCandidate] AS FT_TBL
                         INNER JOIN CONTAINSTABLE([HumanResources].[JobCandidate],*, @string,LANGUAGE @language) AS KEY_TBL
                    ON  FT_TBL.[JobCandidateID] =KEY_TBL.[KEY]
@@ -5939,7 +5940,7 @@ BEGIN
                         INNER JOIN CONTAINSTABLE([HumanResources].[JobCandidate],*, @string,LANGUAGE @language) AS KEY_TBL
                    ON  FT_TBL.[JobCandidateID] =KEY_TBL.[KEY]
         END
- 
+
       ELSE --base case, plain CONTAINSTABLE
             BEGIN
                   SELECT @string='"'+@searchString +'"'
