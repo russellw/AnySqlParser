@@ -103,11 +103,11 @@ public sealed class Parser {
 					var table = new Table(UnqualifiedName());
 					if (Eat("AS"))
 						Name();
-					if (token == ";")
+					if (";" == token)
 						continue;
 					Expect("(");
 					do {
-						if (token == ")")
+						if (")" == token)
 							break;
 						var a = TableElement(table, IsElementEnd);
 						while (!IsElementEnd())
@@ -137,7 +137,7 @@ public sealed class Parser {
 			}
 			case "INSERT": {
 				Lex();
-				if (token == ",")
+				if ("," == token)
 					break;
 				Eat("INTO");
 				var a = new Insert();
@@ -205,12 +205,12 @@ public sealed class Parser {
 				depth++;
 				break;
 			case ")":
-				if (depth == 0)
+				if (0 == depth)
 					throw Error("unexpected )");
 				depth--;
 				break;
 			case Eof:
-				throw Error(depth == 0 ? "missing element" : "unclosed (", line1);
+				throw Error(0 == depth ? "missing element" : "unclosed (", line1);
 			}
 			Lex();
 		} while (depth != 0);
@@ -485,7 +485,7 @@ public sealed class Parser {
 
 	DataType DataType() {
 		var a = new DataType(DataTypeName());
-		if (a.Name == "ENUM") {
+		if ("ENUM" == a.Name) {
 			Expect("(");
 			a.Values = new();
 			do
@@ -1055,7 +1055,7 @@ public sealed class Parser {
 	}
 
 	string StringLiteral() {
-		if (token[0] == '\'')
+		if ('\'' == token[0])
 			return Etc.Unquote(Lex1());
 		throw ErrorToken("expected string literal");
 	}
@@ -1444,7 +1444,7 @@ public sealed class Parser {
 				Word();
 				return;
 			case 'N':
-				if (reader.Peek() == '\'') {
+				if ('\'' == reader.Peek()) {
 					// We are reading everything as Unicode anyway
 					// so the prefix has no special meaning
 					Read();
@@ -1507,13 +1507,13 @@ public sealed class Parser {
 	}
 
 	void BlockComment() {
-		Debug.Assert(c == '*');
+		Debug.Assert('*' == c);
 		var line1 = line;
 		for (;;) {
 			Read();
 			switch (c) {
 			case '*':
-				if (reader.Peek() == '/') {
+				if ('/' == reader.Peek()) {
 					Read();
 					Read();
 					return;
@@ -1538,7 +1538,7 @@ public sealed class Parser {
 		var sb = new StringBuilder();
 		while (Etc.IsWordPart(c))
 			AppendRead(sb);
-		if (c == '.')
+		if ('.' == c)
 			do
 				AppendRead(sb);
 			while (Etc.IsWordPart(c));
@@ -1575,7 +1575,7 @@ public sealed class Parser {
 	}
 
 	void Read() {
-		if (c == '\n')
+		if ('\n' == c)
 			line++;
 		c = reader.Read();
 	}

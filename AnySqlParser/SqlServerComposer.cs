@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 namespace AnySqlParser;
 public sealed class SqlServerComposer: Composer {
@@ -13,7 +13,7 @@ public sealed class SqlServerComposer: Composer {
 		sb.Append('[');
 		foreach (char c in s) {
 			sb.Append(c);
-			if (c == ']')
+			if (']' == c)
 				sb.Append(c);
 		}
 		sb.Append(']');

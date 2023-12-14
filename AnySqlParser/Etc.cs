@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -7,7 +7,7 @@ public static class Etc {
 	public static bool IsWordPart(int c) {
 		if (char.IsLetterOrDigit((char)c))
 			return true;
-		return c == '_';
+		return '_' == c;
 	}
 
 	public static string Unquote(string s) {
@@ -31,7 +31,7 @@ public static class Etc {
 		var sb = new StringBuilder();
 		for (int i = 1; i < s.Length - 1;) {
 			var c = s[i++];
-			if (c == q && s[i] == q)
+			if (c == q && q == s[i])
 				i++;
 			sb.Append(c);
 		}

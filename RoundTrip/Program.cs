@@ -1,4 +1,4 @@
-﻿using AnySqlParser;
+using AnySqlParser;
 
 class Program {
 	static void Main(string[] args) {
@@ -7,7 +7,7 @@ class Program {
 		foreach (var arg in args) {
 			var s = arg;
 			if (options) {
-				if (s == "--") {
+				if ("--" == s) {
 					options = false;
 					continue;
 				}
@@ -34,7 +34,7 @@ class Program {
 			}
 			paths.Add(s);
 		}
-		if (paths.Count == 0)
+		if (0 == paths.Count)
 			paths.Add(".");
 
 		foreach (var path in paths)
