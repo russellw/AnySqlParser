@@ -188,9 +188,9 @@ public sealed class Parser {
 
 	bool IsStatementEnd() {
 		switch (token) {
-		case Eof:
 		case ";":
 		case "GO":
+		case Eof:
 			return true;
 		}
 		return false;
@@ -301,8 +301,8 @@ public sealed class Parser {
 			table.Checks.Add(a);
 			return a;
 		}
-		case "UNIQUE":
-		case "KEY": {
+		case "KEY": 		case "UNIQUE":
+{
 			var a = Key(null);
 			table.Uniques.Add(a);
 			return a;
@@ -349,12 +349,12 @@ public sealed class Parser {
 			return TableConstraint(table, isEnd);
 		}
 		switch (token) {
+		case "CHECK":
+		case "EXCLUDE":
 		case "FOREIGN":
 		case "KEY":
 		case "PRIMARY":
 		case "UNIQUE":
-		case "CHECK":
-		case "EXCLUDE":
 			return TableConstraint(table, isEnd);
 		}
 
@@ -412,8 +412,8 @@ public sealed class Parser {
 
 	string DataTypeName() {
 		switch (token) {
-		case "CHARACTER":
 		case "CHAR":
+		case "CHARACTER":
 			Lex();
 			switch (token) {
 			case "LARGE":
@@ -722,15 +722,15 @@ public sealed class Parser {
 		case "AS":
 			Lex();
 			break;
-		case "WHERE":
+		case "FULL":
+		case "GROUP":
 		case "INNER":
 		case "JOIN":
 		case "LEFT":
-		case "RIGHT":
-		case "FULL":
 		case "ON":
-		case "GROUP":
 		case "ORDER":
+		case "RIGHT":
+		case "WHERE":
 			return a;
 		default:
 			if (!IsName())
@@ -974,11 +974,11 @@ public sealed class Parser {
 		}
 		}
 		switch (token[0]) {
-		case 'N':
-		case 'A':
-		case 'B':
+		case '"':
 		case '$':
 		case '@':
+		case 'A':
+		case 'B':
 		case 'C':
 		case 'D':
 		case 'E':
@@ -990,6 +990,7 @@ public sealed class Parser {
 		case 'K':
 		case 'L':
 		case 'M':
+		case 'N':
 		case 'O':
 		case 'P':
 		case 'Q':
@@ -1002,7 +1003,9 @@ public sealed class Parser {
 		case 'X':
 		case 'Y':
 		case 'Z':
+		case '[':
 		case '_':
+		case '`':
 		case 'a':
 		case 'b':
 		case 'c':
@@ -1029,9 +1032,6 @@ public sealed class Parser {
 		case 'x':
 		case 'y':
 		case 'z':
-		case '"':
-		case '`':
-		case '[':
 			return QualifiedName();
 		case '\'':
 			return new StringLiteral(StringLiteral());
@@ -1080,7 +1080,8 @@ public sealed class Parser {
 
 	string Name() {
 		switch (token[0]) {
-		case 'N':
+		case '$':
+		case '@':
 		case 'A':
 		case 'B':
 		case 'C':
@@ -1094,6 +1095,7 @@ public sealed class Parser {
 		case 'K':
 		case 'L':
 		case 'M':
+		case 'N':
 		case 'O':
 		case 'P':
 		case 'Q':
@@ -1131,8 +1133,6 @@ public sealed class Parser {
 		case 'v':
 		case 'w':
 		case 'x':
-		case '$':
-		case '@':
 		case 'y':
 		case 'z': {
 			var s = wordOriginalCase;
@@ -1152,13 +1152,13 @@ public sealed class Parser {
 
 	bool IsName() {
 		switch (token[0]) {
-		case 'N':
+		case '"':
+		case '$':
+		case '@':
 		case 'A':
 		case 'B':
 		case 'C':
 		case 'D':
-		case '$':
-		case '@':
 		case 'E':
 		case 'F':
 		case 'G':
@@ -1168,6 +1168,7 @@ public sealed class Parser {
 		case 'K':
 		case 'L':
 		case 'M':
+		case 'N':
 		case 'O':
 		case 'P':
 		case 'Q':
@@ -1180,7 +1181,9 @@ public sealed class Parser {
 		case 'X':
 		case 'Y':
 		case 'Z':
+		case '[':
 		case '_':
+		case '`':
 		case 'a':
 		case 'b':
 		case 'c':
@@ -1207,9 +1210,6 @@ public sealed class Parser {
 		case 'x':
 		case 'y':
 		case 'z':
-		case '"':
-		case '`':
-		case '[':
 			return true;
 		}
 		return char.IsLetter(token[0]);
@@ -1236,8 +1236,8 @@ public sealed class Parser {
 		newline = false;
 		for (;;) {
 			switch (c) {
-			case '\'':
 			case '"':
+			case '\'':
 			case '`':
 				Quote();
 				return;
@@ -1389,11 +1389,11 @@ public sealed class Parser {
 				newline = true;
 				Read();
 				continue;
+			case ' ':
+			case '\f':
 			case '\r':
 			case '\t':
-			case '\f':
 			case '\v':
-			case ' ':
 				Read();
 				continue;
 			case '$':
@@ -1414,6 +1414,7 @@ public sealed class Parser {
 				}
 				Word();
 				return;
+			case '@':
 			case 'A':
 			case 'B':
 			case 'C':
@@ -1426,7 +1427,6 @@ public sealed class Parser {
 			case 'J':
 			case 'K':
 			case 'L':
-			case '@':
 			case 'M':
 			case 'O':
 			case 'P':
