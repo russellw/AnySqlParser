@@ -36,37 +36,28 @@ public sealed class Parser {
 	IEnumerable<Statement> Statements(Schema schema) {
 		for (;;) {
 			switch (token) {
-			case Eof:
-				yield break;
-			case "INSERT": {
+			case "ALTER": {
+				var location = new Location(file, line);
 				Lex();
-				if (token == ",")
+				switch (token) {
+				case "TABLE": {
+					Lex();
+					var tableName = UnqualifiedName();
+					switch (token) {
+					case "ADD": {
+						Lex();
+						var a = schema.GetTable(location, tableName);
+						do
+							TableElement(a, IsStatementEnd);
+						while (Eat(","));
+						EndStatement();
+						continue;
+					}
+					}
 					break;
-				Eat("INTO");
-				var a = new Insert();
-
-				// Table
-				a.TableName = QualifiedName();
-
-				// Columns
-				if (Eat("(")) {
-					do
-						a.Columns.Add(Name());
-					while (Eat(","));
-					Expect(")");
 				}
-
-				// Values
-				if (!Eat("VALUES"))
-					continue;
-				Expect("(");
-				do
-					a.Values.Add(Expression());
-				while (Eat(","));
-				Expect(")");
-				EndStatement();
-				yield return a;
-				continue;
+				}
+				break;
 			}
 			case "CREATE": {
 				var location = new Location(file, line);
@@ -144,29 +135,38 @@ public sealed class Parser {
 				}
 				break;
 			}
-			case "ALTER": {
-				var location = new Location(file, line);
+			case "INSERT": {
 				Lex();
-				switch (token) {
-				case "TABLE": {
-					Lex();
-					var tableName = UnqualifiedName();
-					switch (token) {
-					case "ADD": {
-						Lex();
-						var a = schema.GetTable(location, tableName);
-						do
-							TableElement(a, IsStatementEnd);
-						while (Eat(","));
-						EndStatement();
-						continue;
-					}
-					}
+				if (token == ",")
 					break;
+				Eat("INTO");
+				var a = new Insert();
+
+				// Table
+				a.TableName = QualifiedName();
+
+				// Columns
+				if (Eat("(")) {
+					do
+						a.Columns.Add(Name());
+					while (Eat(","));
+					Expect(")");
 				}
-				}
-				break;
+
+				// Values
+				if (!Eat("VALUES"))
+					continue;
+				Expect("(");
+				do
+					a.Values.Add(Expression());
+				while (Eat(","));
+				Expect(")");
+				EndStatement();
+				yield return a;
+				continue;
 			}
+			case Eof:
+				yield break;
 			}
 			Skip();
 		}
@@ -201,8 +201,6 @@ public sealed class Parser {
 		int depth = 0;
 		do {
 			switch (token) {
-			case Eof:
-				throw Error(depth == 0 ? "missing element" : "unclosed (", line1);
 			case "(":
 				depth++;
 				break;
@@ -211,6 +209,8 @@ public sealed class Parser {
 					throw Error("unexpected )");
 				depth--;
 				break;
+			case Eof:
+				throw Error(depth == 0 ? "missing element" : "unclosed (", line1);
 			}
 			Lex();
 		} while (depth != 0);
@@ -286,25 +286,25 @@ public sealed class Parser {
 
 	Element TableConstraint(Table table, Callback isEnd) {
 		switch (token) {
-		case "FOREIGN": {
-			var a = ForeignKey(null, isEnd);
-			table.ForeignKeys.Add(a);
-			return a;
-		}
-		case "PRIMARY": {
-			var a = Key(null);
-			table.AddPrimaryKey(a);
-			return a;
-		}
 		case "CHECK": {
 			var a = Check();
 			table.Checks.Add(a);
+			return a;
+		}
+		case "FOREIGN": {
+			var a = ForeignKey(null, isEnd);
+			table.ForeignKeys.Add(a);
 			return a;
 		}
 		case "KEY":
 		case "UNIQUE": {
 			var a = Key(null);
 			table.Uniques.Add(a);
+			return a;
+		}
+		case "PRIMARY": {
+			var a = Key(null);
+			table.AddPrimaryKey(a);
 			return a;
 		}
 		}
@@ -314,6 +314,9 @@ public sealed class Parser {
 	Key Key(Column? column) {
 		var location = new Location(file, line);
 		switch (token) {
+		case "KEY":
+			Lex();
+			break;
 		case "PRIMARY":
 			Lex();
 			Expect("KEY");
@@ -321,9 +324,6 @@ public sealed class Parser {
 		case "UNIQUE":
 			Lex();
 			Eat("KEY");
-			break;
-		case "KEY":
-			Lex();
 			break;
 		default:
 			throw Error("expected key");
@@ -365,9 +365,16 @@ public sealed class Parser {
 		// Search the postscript for column constraints
 		while (!isEnd()) {
 			switch (token) {
+			case "CHECK":
+				table.Checks.Add(Check());
+				continue;
 			case "DEFAULT":
 				Lex();
 				a.Default = Expression();
+				continue;
+			case "FOREIGN":
+			case "REFERENCES":
+				ForeignKey(a, isEnd);
 				continue;
 			case "IDENTITY":
 				Lex();
@@ -379,19 +386,6 @@ public sealed class Parser {
 					Expect(")");
 				}
 				continue;
-			case "FOREIGN":
-			case "REFERENCES":
-				ForeignKey(a, isEnd);
-				continue;
-			case "CHECK":
-				table.Checks.Add(Check());
-				continue;
-			case "PRIMARY":
-				table.AddPrimaryKey(Key(a));
-				continue;
-			case "NULL":
-				Lex();
-				continue;
 			case "NOT":
 				Lex();
 				switch (token) {
@@ -400,6 +394,12 @@ public sealed class Parser {
 					a.Nullable = false;
 					continue;
 				}
+				continue;
+			case "NULL":
+				Lex();
+				continue;
+			case "PRIMARY":
+				table.AddPrimaryKey(Key(a));
 				continue;
 			}
 			Skip();
@@ -412,6 +412,15 @@ public sealed class Parser {
 
 	string DataTypeName() {
 		switch (token) {
+		case "BINARY":
+			Lex();
+			switch (token) {
+			case "LARGE":
+				Lex();
+				Expect("OBJECT");
+				return "BLOB";
+			}
+			return "BINARY";
 		case "CHAR":
 		case "CHARACTER":
 			Lex();
@@ -425,18 +434,24 @@ public sealed class Parser {
 				return "VARCHAR";
 			}
 			return "CHAR";
-		case "BINARY":
-			Lex();
-			switch (token) {
-			case "LARGE":
-				Lex();
-				Expect("OBJECT");
-				return "BLOB";
-			}
-			return "BINARY";
 		case "DOUBLE":
 			Eat("PRECISION");
 			return "DOUBLE";
+		case "INTERVAL":
+			Lex();
+			switch (token) {
+			case "DAY":
+				Lex();
+				Expect("TO");
+				Expect("SECOND");
+				return "INTERVAL DAY TO SECOND";
+			case "YEAR":
+				Lex();
+				Expect("TO");
+				Expect("MONTH");
+				return "INTERVAL YEAR TO MONTH";
+			}
+			return "INTERVAL";
 		case "LONG":
 			Lex();
 			switch (token) {
@@ -464,21 +479,6 @@ public sealed class Parser {
 				return "TIMESTAMP WITH TIMEZONE";
 			}
 			return "TIMESTAMP";
-		case "INTERVAL":
-			Lex();
-			switch (token) {
-			case "DAY":
-				Lex();
-				Expect("TO");
-				Expect("SECOND");
-				return "INTERVAL DAY TO SECOND";
-			case "YEAR":
-				Lex();
-				Expect("TO");
-				Expect("MONTH");
-				return "INTERVAL YEAR TO MONTH";
-			}
-			return "INTERVAL";
 		}
 		return Name();
 	}
@@ -516,12 +516,12 @@ public sealed class Parser {
 		case "SET":
 			Lex();
 			switch (token) {
-			case "NULL":
-				Lex();
-				return Action.SetNull;
 			case "DEFAULT":
 				Lex();
 				return Action.SetDefault;
+			case "NULL":
+				Lex();
+				return Action.SetNull;
 			}
 			throw ErrorToken("expected replacement value");
 		}
@@ -557,6 +557,10 @@ public sealed class Parser {
 		for (;;) {
 			QueryOp op;
 			switch (token) {
+			case "EXCEPT":
+				Lex();
+				op = QueryOp.Except;
+				break;
 			case "UNION":
 				Lex();
 				if (Eat("ALL")) {
@@ -564,10 +568,6 @@ public sealed class Parser {
 					break;
 				}
 				op = QueryOp.Union;
-				break;
-			case "EXCEPT":
-				Lex();
-				op = QueryOp.Except;
 				break;
 			default:
 				return a;
@@ -626,9 +626,11 @@ public sealed class Parser {
 		// Any keyword after the select list, must be a clause
 		for (;;)
 			switch (token) {
-			case "WHERE":
+			case "FROM":
 				Lex();
-				a.Where = Expression();
+				do
+					a.From.Add(TableSource());
+				while (Eat(","));
 				break;
 			case "GROUP":
 				Lex();
@@ -641,15 +643,13 @@ public sealed class Parser {
 				Lex();
 				a.Having = Expression();
 				break;
+			case "WHERE":
+				Lex();
+				a.Where = Expression();
+				break;
 			case "WINDOW":
 				Lex();
 				a.Window = Expression();
-				break;
-			case "FROM":
-				Lex();
-				do
-					a.From.Add(TableSource());
-				while (Eat(","));
 				break;
 			default:
 				return a;
@@ -664,6 +664,15 @@ public sealed class Parser {
 		var a = PrimaryTableSource();
 		for (;;)
 			switch (token) {
+			case "FULL": {
+				Lex();
+				Eat("OUTER");
+				Expect("JOIN");
+				var b = PrimaryTableSource();
+				Expect("ON");
+				a = new Join(JoinType.Full, a, b, Expression());
+				break;
+			}
 			case "INNER": {
 				Lex();
 				Expect("JOIN");
@@ -695,15 +704,6 @@ public sealed class Parser {
 				var b = PrimaryTableSource();
 				Expect("ON");
 				a = new Join(JoinType.Right, a, b, Expression());
-				break;
-			}
-			case "FULL": {
-				Lex();
-				Eat("OUTER");
-				Expect("JOIN");
-				var b = PrimaryTableSource();
-				Expect("ON");
-				a = new Join(JoinType.Full, a, b, Expression());
 				break;
 			}
 			default:
@@ -743,12 +743,12 @@ public sealed class Parser {
 
 	bool Desc() {
 		switch (token) {
-		case "DESC":
-			Lex();
-			return true;
 		case "ASC":
 			Lex();
 			return false;
+		case "DESC":
+			Lex();
+			return true;
 		}
 		return false;
 	}
@@ -758,25 +758,12 @@ public sealed class Parser {
 		for (;;) {
 			BinaryOp op;
 			switch (token) {
-			case "NOT": {
-				Lex();
-				Expect("BETWEEN");
-				var b = Addition();
-				Expect("AND");
-				return new TernaryExpression(TernaryOp.NotBetween, a, b, Addition());
-			}
 			case "BETWEEN": {
 				Lex();
 				var b = Addition();
 				Expect("AND");
 				return new TernaryExpression(TernaryOp.Between, a, b, Addition());
 			}
-			case "OR":
-				op = BinaryOp.Or;
-				break;
-			case "LIKE":
-				op = BinaryOp.Like;
-				break;
 			case "IN": {
 				Lex();
 				Expect("(");
@@ -788,6 +775,19 @@ public sealed class Parser {
 				a = new InList(false, a, b);
 				continue;
 			}
+			case "LIKE":
+				op = BinaryOp.Like;
+				break;
+			case "NOT": {
+				Lex();
+				Expect("BETWEEN");
+				var b = Addition();
+				Expect("AND");
+				return new TernaryExpression(TernaryOp.NotBetween, a, b, Addition());
+			}
+			case "OR":
+				op = BinaryOp.Or;
+				break;
 			default:
 				return a;
 			}
@@ -813,6 +813,24 @@ public sealed class Parser {
 		var a = Addition();
 		BinaryOp op;
 		switch (token) {
+		case "<":
+			op = BinaryOp.Less;
+			break;
+		case "<=":
+			op = BinaryOp.LessEqual;
+			break;
+		case "<>":
+			op = BinaryOp.NotEqual;
+			break;
+		case "=":
+			op = BinaryOp.Equal;
+			break;
+		case ">":
+			op = BinaryOp.Greater;
+			break;
+		case ">=":
+			op = BinaryOp.GreaterEqual;
+			break;
 		case "IS":
 			Lex();
 			switch (token) {
@@ -825,24 +843,6 @@ public sealed class Parser {
 				return new UnaryExpression(UnaryOp.IsNull, a);
 			}
 			throw ErrorToken("expected NOT or NULL");
-		case "=":
-			op = BinaryOp.Equal;
-			break;
-		case "<":
-			op = BinaryOp.Less;
-			break;
-		case "<>":
-			op = BinaryOp.NotEqual;
-			break;
-		case ">":
-			op = BinaryOp.Greater;
-			break;
-		case "<=":
-			op = BinaryOp.LessEqual;
-			break;
-		case ">=":
-			op = BinaryOp.GreaterEqual;
-			break;
 		default:
 			return a;
 		}
@@ -855,23 +855,23 @@ public sealed class Parser {
 		for (;;) {
 			BinaryOp op;
 			switch (token) {
+			case "&":
+				op = BinaryOp.BitAnd;
+				break;
 			case "+":
 				op = BinaryOp.Add;
 				break;
 			case "-":
 				op = BinaryOp.Subtract;
 				break;
-			case "||":
-				op = BinaryOp.Concat;
-				break;
-			case "&":
-				op = BinaryOp.BitAnd;
+			case "^":
+				op = BinaryOp.BitXor;
 				break;
 			case "|":
 				op = BinaryOp.BitOr;
 				break;
-			case "^":
-				op = BinaryOp.BitXor;
+			case "||":
+				op = BinaryOp.Concat;
 				break;
 			default:
 				return a;
@@ -886,14 +886,14 @@ public sealed class Parser {
 		for (;;) {
 			BinaryOp op;
 			switch (token) {
+			case "%":
+				op = BinaryOp.Remainder;
+				break;
 			case "*":
 				op = BinaryOp.Multiply;
 				break;
 			case "/":
 				op = BinaryOp.Divide;
-				break;
-			case "%":
-				op = BinaryOp.Remainder;
 				break;
 			default:
 				return a;
@@ -905,15 +905,9 @@ public sealed class Parser {
 
 	Expression Prefix() {
 		switch (token) {
-		case "SELECT":
-			return new Subquery(QueryExpression());
-		case "EXISTS": {
+		case "-":
 			Lex();
-			Expect("(");
-			var a = new Exists(Select());
-			Expect(")");
-			return a;
-		}
+			return new UnaryExpression(UnaryOp.Minus, Prefix());
 		case "CAST": {
 			Lex();
 			Expect("(");
@@ -923,12 +917,18 @@ public sealed class Parser {
 			Expect(")");
 			return a;
 		}
+		case "EXISTS": {
+			Lex();
+			Expect("(");
+			var a = new Exists(Select());
+			Expect(")");
+			return a;
+		}
+		case "SELECT":
+			return new Subquery(QueryExpression());
 		case "~":
 			Lex();
 			return new UnaryExpression(UnaryOp.BitNot, Prefix());
-		case "-":
-			Lex();
-			return new UnaryExpression(UnaryOp.Minus, Prefix());
 		}
 		return Postfix();
 	}
@@ -937,11 +937,6 @@ public sealed class Parser {
 		var a = Primary();
 		for (;;)
 			switch (token) {
-			case "::":
-			case "AS":
-				Lex();
-				a = new Cast(a, DataType());
-				break;
 			case "(":
 				Lex();
 				if (a is QualifiedName a1) {
@@ -954,6 +949,11 @@ public sealed class Parser {
 					return call;
 				}
 				throw Error("call of non-function");
+			case "::":
+			case "AS":
+				Lex();
+				a = new Cast(a, DataType());
+				break;
 			default:
 				return a;
 			}
@@ -961,17 +961,17 @@ public sealed class Parser {
 
 	Expression Primary() {
 		switch (token) {
-		case "NULL":
-			Lex();
-			return new Null();
-		case "*":
-			return QualifiedName();
 		case "(": {
 			Lex();
 			var a = Expression();
 			Expect(")");
 			return a;
 		}
+		case "*":
+			return QualifiedName();
+		case "NULL":
+			Lex();
+			return new Null();
 		}
 		switch (token[0]) {
 		case '"':
@@ -1033,8 +1033,10 @@ public sealed class Parser {
 		case 'y':
 		case 'z':
 			return QualifiedName();
-		case '\'':
-			return new StringLiteral(StringLiteral());
+		case '.':
+			if (1 < token.Length && char.IsDigit(token, 1))
+				return new Number(Lex1());
+			break;
 		case '0':
 		case '1':
 		case '2':
@@ -1046,10 +1048,8 @@ public sealed class Parser {
 		case '8':
 		case '9':
 			return new Number(Lex1());
-		case '.':
-			if (1 < token.Length && char.IsDigit(token, 1))
-				return new Number(Lex1());
-			break;
+		case '\'':
+			return new StringLiteral(StringLiteral());
 		}
 		throw ErrorToken("expected expression");
 	}
@@ -1080,6 +1080,9 @@ public sealed class Parser {
 
 	string Name() {
 		switch (token[0]) {
+		case '"':
+		case '`':
+			return Etc.Unquote(Lex1());
 		case '$':
 		case '@':
 		case 'A':
@@ -1139,9 +1142,6 @@ public sealed class Parser {
 			Lex();
 			return s;
 		}
-		case '"':
-		case '`':
-			return Etc.Unquote(Lex1());
 		case '[':
 			return Etc.Unquote(Lex1(), ']');
 		}
@@ -1236,14 +1236,13 @@ public sealed class Parser {
 		newline = false;
 		for (;;) {
 			switch (c) {
-			case '"':
-			case '\'':
-			case '`':
-				Quote();
-				return;
-			case '[':
-				Quote(']');
-				return;
+			case ' ':
+			case '\f':
+			case '\r':
+			case '\t':
+			case '\v':
+				Read();
+				continue;
 			case '!':
 				Read();
 				switch (c) {
@@ -1262,15 +1261,90 @@ public sealed class Parser {
 					return;
 				}
 				throw Error($"stray '!'");
-			case '|':
-				Read();
-				switch (c) {
-				case '|':
+			case '"':
+			case '\'':
+			case '`':
+				Quote();
+				return;
+			case '#':
+			case '\\':
+				reader.ReadLine();
+				c = '\n';
+				continue;
+			case '$':
+				if (char.IsDigit((char)reader.Peek())) {
 					Read();
-					token = "||";
+					Number();
 					return;
 				}
-				token = "|";
+				Word();
+				return;
+			case '%':
+				Read();
+				token = "%";
+				return;
+			case '&':
+				Read();
+				token = "&";
+				return;
+			case '(':
+				Read();
+				token = "(";
+				return;
+			case ')':
+				Read();
+				token = ")";
+				return;
+			case '*':
+				Read();
+				token = "*";
+				return;
+			case '+':
+				Read();
+				token = "+";
+				return;
+			case ',':
+				Read();
+				token = ",";
+				return;
+			case '-':
+				Read();
+				switch (c) {
+				case '-':
+					reader.ReadLine();
+					c = '\n';
+					continue;
+				}
+				token = "-";
+				return;
+			case '.':
+				if (char.IsDigit((char)reader.Peek())) {
+					Number();
+					return;
+				}
+				Read();
+				token = ".";
+				return;
+			case '/':
+				Read();
+				switch (c) {
+				case '*':
+					BlockComment();
+					continue;
+				}
+				token = "/";
+				return;
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
+				Number();
 				return;
 			case ':':
 				Read();
@@ -1282,15 +1356,9 @@ public sealed class Parser {
 				}
 				token = ":";
 				return;
-			case '>':
+			case ';':
 				Read();
-				switch (c) {
-				case '=':
-					Read();
-					token = ">=";
-					return;
-				}
-				token = ">";
+				token = ";";
 				return;
 			case '<':
 				Read();
@@ -1306,113 +1374,19 @@ public sealed class Parser {
 				}
 				token = "<";
 				return;
-			case '/':
-				Read();
-				switch (c) {
-				case '*':
-					BlockComment();
-					continue;
-				}
-				token = "/";
-				return;
-			case '.':
-				if (char.IsDigit((char)reader.Peek())) {
-					Number();
-					return;
-				}
-				Read();
-				token = ".";
-				return;
-			case ',':
-				Read();
-				token = ",";
-				return;
 			case '=':
 				Read();
 				token = "=";
 				return;
-			case '&':
-				Read();
-				token = "&";
-				return;
-			case ';':
-				Read();
-				token = ";";
-				return;
-			case '+':
-				Read();
-				token = "+";
-				return;
-			case '%':
-				Read();
-				token = "%";
-				return;
-			case '^':
-				Read();
-				token = "^";
-				return;
-			case '(':
-				Read();
-				token = "(";
-				return;
-			case ')':
-				Read();
-				token = ")";
-				return;
-			case '~':
-				Read();
-				token = "~";
-				return;
-			case '*':
-				Read();
-				token = "*";
-				return;
-			case -1:
-				token = Eof;
-				return;
-			case '-':
+			case '>':
 				Read();
 				switch (c) {
-				case '-':
-					reader.ReadLine();
-					c = '\n';
-					continue;
-				}
-				token = "-";
-				return;
-			case '#':
-			case '\\':
-				reader.ReadLine();
-				c = '\n';
-				continue;
-			case '\n':
-				newline = true;
-				Read();
-				continue;
-			case ' ':
-			case '\f':
-			case '\r':
-			case '\t':
-			case '\v':
-				Read();
-				continue;
-			case '$':
-				if (char.IsDigit((char)reader.Peek())) {
+				case '=':
 					Read();
-					Number();
+					token = ">=";
 					return;
 				}
-				Word();
-				return;
-			case 'N':
-				if (reader.Peek() == '\'') {
-					// We are reading everything as Unicode anyway
-					// so the prefix has no special meaning
-					Read();
-					Quote();
-					return;
-				}
-				Word();
+				token = ">";
 				return;
 			case '@':
 			case 'A':
@@ -1469,17 +1443,43 @@ public sealed class Parser {
 			case 'z':
 				Word();
 				return;
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9':
-				Number();
+			case 'N':
+				if (reader.Peek() == '\'') {
+					// We are reading everything as Unicode anyway
+					// so the prefix has no special meaning
+					Read();
+					Quote();
+					return;
+				}
+				Word();
+				return;
+			case '[':
+				Quote(']');
+				return;
+			case '\n':
+				newline = true;
+				Read();
+				continue;
+			case '^':
+				Read();
+				token = "^";
+				return;
+			case '|':
+				Read();
+				switch (c) {
+				case '|':
+					Read();
+					token = "||";
+					return;
+				}
+				token = "|";
+				return;
+			case '~':
+				Read();
+				token = "~";
+				return;
+			case -1:
+				token = Eof;
 				return;
 			default:
 				// Common letters are handled in the switch for speed
@@ -1512,8 +1512,6 @@ public sealed class Parser {
 		for (;;) {
 			Read();
 			switch (c) {
-			case -1:
-				throw Error("unclosed /*", line1);
 			case '*':
 				if (reader.Peek() == '/') {
 					Read();
@@ -1521,6 +1519,8 @@ public sealed class Parser {
 					return;
 				}
 				break;
+			case -1:
+				throw Error("unclosed /*", line1);
 			}
 		}
 	}
