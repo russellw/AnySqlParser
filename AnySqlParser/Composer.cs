@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 namespace AnySqlParser;
 public abstract class Composer {
@@ -30,17 +30,17 @@ public abstract class Composer {
 
 	protected void Add(DataType type) {
 		sb.Append(type.Name);
-		if (type.Size != null) {
+		if (null != type.Size) {
 			sb.Append('(');
 			Add(type.Size);
-			if (type.Scale != null) {
+			if (null != type.Scale) {
 				sb.Append(',');
 				Add(type.Scale);
 			}
 			sb.Append(')');
 			return;
 		}
-		if (type.Values != null) {
+		if (null != type.Values) {
 			sb.Append('(');
 			sb.Append(string.Join(',', type.Values.Select(s => Etc.Quote(s, '\''))));
 			sb.Append(')');
@@ -62,7 +62,7 @@ public abstract class Composer {
 			Add(column);
 			sb.Append(",\n");
 		}
-		if (table.PrimaryKey != null) {
+		if (null != table.PrimaryKey) {
 			sb.Append("\tPRIMARY KEY (");
 			sb.Append(string.Join(',', table.PrimaryKey.Columns.Select(c => Name(c.Name))));
 			sb.Append("),\n");

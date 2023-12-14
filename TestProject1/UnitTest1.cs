@@ -205,10 +205,10 @@ public class UnitTest1 {
 		Assert.Equal(7, schema.Tables.Count);
 
 		schema = ParseFile("sql-server-samples/instawdbdw.sql");
-		Assert.True(schema.Tables.Count > 0);
+		Assert.True(0 < schema.Tables.Count);
 
 		schema = ParseFile("sql-server-samples/instawdb.sql");
-		Assert.True(schema.Tables.Count > 0);
+		Assert.True(0 < schema.Tables.Count);
 	}
 
 	[Fact]

@@ -96,7 +96,7 @@ public sealed class Parser {
 				case "PROCEDURE":
 					do
 						Skip();
-					while (token != "GO" && token != Eof);
+					while ("GO" != token && Eof != token);
 					continue;
 				case "TABLE": {
 					Lex();
@@ -213,7 +213,7 @@ public sealed class Parser {
 				throw Error(0 == depth ? "missing element" : "unclosed (", line1);
 			}
 			Lex();
-		} while (depth != 0);
+		} while (0 != depth);
 	}
 
 	string UnqualifiedName() {
@@ -941,7 +941,7 @@ public sealed class Parser {
 				Lex();
 				if (a is QualifiedName a1) {
 					var call = new Call(a1);
-					if (token != ")")
+					if (")" != token)
 						do
 							call.Arguments.Add(Expression());
 						while (Eat(","));
@@ -1542,7 +1542,7 @@ public sealed class Parser {
 			do
 				AppendRead(sb);
 			while (Etc.IsWordPart(c));
-		Debug.Assert(sb.Length != 0);
+		Debug.Assert(0 != sb.Length);
 		token = sb.ToString();
 	}
 
