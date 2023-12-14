@@ -92,20 +92,6 @@ public sealed class Parser {
 					yield return a;
 					continue;
 				}
-				case "VIEW": {
-					Lex();
-					var a = new View();
-					a.Name = QualifiedName();
-					if (Eat("WITH"))
-						do
-							Name();
-						while (Eat(","));
-					Expect("AS");
-					a.Query = Select();
-					EndStatement();
-					yield return a;
-					continue;
-				}
 				case "PROC":
 				case "PROCEDURE":
 					do
@@ -130,6 +116,20 @@ public sealed class Parser {
 					Expect(")");
 					EndStatement();
 					schema.Add(location, table);
+					continue;
+				}
+				case "VIEW": {
+					Lex();
+					var a = new View();
+					a.Name = QualifiedName();
+					if (Eat("WITH"))
+						do
+							Name();
+						while (Eat(","));
+					Expect("AS");
+					a.Query = Select();
+					EndStatement();
+					yield return a;
 					continue;
 				}
 				}
@@ -834,12 +834,12 @@ public sealed class Parser {
 		case "IS":
 			Lex();
 			switch (token) {
-			case "NULL":
-				Lex();
-				return new UnaryExpression(UnaryOp.IsNull, a);
 			case "NOT":
 				Lex();
 				Expect("NULL");
+				return new UnaryExpression(UnaryOp.IsNull, a);
+			case "NULL":
+				Lex();
 				return new UnaryExpression(UnaryOp.IsNull, a);
 			}
 			throw ErrorToken("expected NOT or NULL");
@@ -1246,14 +1246,14 @@ public sealed class Parser {
 			case '!':
 				Read();
 				switch (c) {
-				case '=':
-					Read();
-					token = "<>";
-					return;
 				case '<':
 					// https://stackoverflow.com/questions/77475517/what-are-the-t-sql-and-operators-for
 					Read();
 					token = ">=";
+					return;
+				case '=':
+					Read();
+					token = "<>";
 					return;
 				case '>':
 					Read();
