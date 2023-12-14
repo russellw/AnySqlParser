@@ -301,8 +301,8 @@ public sealed class Parser {
 			table.Checks.Add(a);
 			return a;
 		}
-		case "KEY": 		case "UNIQUE":
-{
+		case "KEY":
+		case "UNIQUE": {
 			var a = Key(null);
 			table.Uniques.Add(a);
 			return a;
