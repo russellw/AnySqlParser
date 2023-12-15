@@ -13,8 +13,6 @@ public sealed class Parser {
 
 	delegate bool Callback();
 
-	// All tokens are represented as strings of positive length
-	// so the first character of the current token can always be tested
 	const string Eof = " ";
 
 	readonly TextReader reader;
@@ -1584,9 +1582,9 @@ public sealed class Parser {
 		return Error($"'{token}': {message}");
 	}
 
+	Exception Error(string message) {
 	// Error functions return exception objects instead of throwing immediately
 	// so 'throw Error(...)' can mark the end of a case block
-	Exception Error(string message) {
 		return Error(message, line);
 	}
 
