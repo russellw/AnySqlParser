@@ -1,7 +1,7 @@
-﻿namespace AnySqlParser;
+namespace AnySqlParser;
 public sealed class TernaryExpression: Expression {
-	public TernaryOp Op;
 	public Expression First, Second, Third;
+	public TernaryOp Op;
 
 	public TernaryExpression(TernaryOp op, Expression first, Expression second, Expression third) {
 		Op = op;

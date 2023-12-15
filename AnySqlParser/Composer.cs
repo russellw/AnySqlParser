@@ -4,28 +4,10 @@ namespace AnySqlParser;
 public abstract class Composer {
 	protected readonly StringBuilder sb = new();
 
-	protected void Add(Schema schema) {
-		foreach (var table in schema.Tables)
-			Add(table);
-		foreach (var table in schema.Tables)
-			foreach (var key in table.ForeignKeys)
-				Add(table, key);
-	}
-
-	protected void Add(Table table, ForeignKey key) {
-		sb.Append("ALTER TABLE ");
-		sb.Append(Name(table.Name));
-		sb.Append(" ADD FOREIGN KEY (");
-		sb.Append(string.Join(',', key.Columns.Select(c => Name(c.Name))));
-		sb.Append(") REFERENCES ");
-		sb.Append(Name(key.RefTable.Name));
-		sb.Append(" (");
-		sb.Append(string.Join(',', key.RefColumns.Select(c => Name(c.Name))));
-		sb.Append(");\n");
-	}
-
-	protected void Add(Expression a) {
-		sb.Append(a);
+	protected void Add(Column column) {
+		sb.Append(Name(column.Name));
+		sb.Append(' ');
+		Add(column.Type);
 	}
 
 	protected void Add(DataType type) {
@@ -47,10 +29,16 @@ public abstract class Composer {
 		}
 	}
 
-	protected void Add(Column column) {
-		sb.Append(Name(column.Name));
-		sb.Append(' ');
-		Add(column.Type);
+	protected void Add(Expression a) {
+		sb.Append(a);
+	}
+
+	protected void Add(Schema schema) {
+		foreach (var table in schema.Tables)
+			Add(table);
+		foreach (var table in schema.Tables)
+			foreach (var key in table.ForeignKeys)
+				Add(table, key);
 	}
 
 	protected void Add(Table table) {
@@ -73,6 +61,18 @@ public abstract class Composer {
 			sb.Append("),\n");
 		}
 		sb.Remove(sb.Length - 2, 1);
+		sb.Append(");\n");
+	}
+
+	protected void Add(Table table, ForeignKey key) {
+		sb.Append("ALTER TABLE ");
+		sb.Append(Name(table.Name));
+		sb.Append(" ADD FOREIGN KEY (");
+		sb.Append(string.Join(',', key.Columns.Select(c => Name(c.Name))));
+		sb.Append(") REFERENCES ");
+		sb.Append(Name(key.RefTable.Name));
+		sb.Append(" (");
+		sb.Append(string.Join(',', key.RefColumns.Select(c => Name(c.Name))));
 		sb.Append(");\n");
 	}
 

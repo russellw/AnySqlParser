@@ -1,6 +1,34 @@
 using AnySqlParser;
 
 class Program {
+	static void Descend(string path) {
+		try {
+			if (Directory.Exists(path))
+				foreach (var entry in Directory.GetFileSystemEntries(path))
+					Descend(entry);
+			else if (string.Equals(Path.GetExtension(path), ".sql", StringComparison.OrdinalIgnoreCase))
+				Do(path);
+		} catch (UnauthorizedAccessException e) {
+			Console.WriteLine(e.Message);
+		}
+	}
+
+	static void Do(string file) {
+		Console.WriteLine(file);
+		var schema = new Schema();
+		foreach (var _ in Parser.Parse(file, schema)) {
+		}
+		var s1 = SqlServerComposer.Compose(schema);
+	}
+
+	static void Help() {
+		var name = typeof(Program).Assembly.GetName().Name;
+		Console.WriteLine($"Usage: {name} [options] file...");
+		Console.WriteLine();
+		Console.WriteLine("-h  Show help");
+		Console.WriteLine("-V  Show version");
+	}
+
 	static void Main(string[] args) {
 		var options = true;
 		var paths = new List<string>();
@@ -41,37 +69,9 @@ class Program {
 			Descend(path);
 	}
 
-	static void Help() {
-		var name = typeof(Program).Assembly.GetName().Name;
-		Console.WriteLine($"Usage: {name} [options] file...");
-		Console.WriteLine();
-		Console.WriteLine("-h  Show help");
-		Console.WriteLine("-V  Show version");
-	}
-
 	static void Version() {
 		var name = typeof(Program).Assembly.GetName().Name;
 		var version = typeof(Program).Assembly.GetName()?.Version?.ToString(2);
 		Console.WriteLine($"{name} {version}");
-	}
-
-	static void Descend(string path) {
-		try {
-			if (Directory.Exists(path))
-				foreach (var entry in Directory.GetFileSystemEntries(path))
-					Descend(entry);
-			else if (string.Equals(Path.GetExtension(path), ".sql", StringComparison.OrdinalIgnoreCase))
-				Do(path);
-		} catch (UnauthorizedAccessException e) {
-			Console.WriteLine(e.Message);
-		}
-	}
-
-	static void Do(string file) {
-		Console.WriteLine(file);
-		var schema = new Schema();
-		foreach (var _ in Parser.Parse(file, schema)) {
-		}
-		var s1 = SqlServerComposer.Compose(schema);
 	}
 }

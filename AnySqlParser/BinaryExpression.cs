@@ -1,7 +1,7 @@
 namespace AnySqlParser;
 public sealed class BinaryExpression: Expression {
-	public BinaryOp Op;
 	public Expression Left, Right;
+	public BinaryOp Op;
 
 	public BinaryExpression(BinaryOp op, Expression left, Expression right) {
 		Op = op;

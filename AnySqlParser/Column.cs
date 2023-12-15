@@ -1,13 +1,13 @@
-﻿using System.Xml.Linq;
+using System.Xml.Linq;
 
 namespace AnySqlParser;
 public sealed class Column: Element {
-	public string Name;
-	public DataType Type;
-	public Expression? Default;
 	public bool AutoIncrement;
-	public bool PrimaryKey;
+	public Expression? Default;
+	public string Name;
 	public bool Nullable = true;
+	public bool PrimaryKey;
+	public DataType Type;
 
 	public Column(Location location, string name, DataType type): base(location) {
 		Type = type;

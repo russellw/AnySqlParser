@@ -9,15 +9,6 @@ public class UnitTest1 {
 	}
 
 	[Fact]
-	public void LineComment() {
-		AssertEmpty(ParseText("--"));
-		AssertEmpty(ParseText("--\n--\n"));
-
-		var e = Assert.Throws<SqlError>(() => ParseText("--\n--\n!"));
-		Assert.Matches(".*:3: ", e.Message);
-	}
-
-	[Fact]
 	public void BlockComment() {
 		AssertEmpty(ParseText("/**/"));
 		AssertEmpty(ParseText(" /*.*/ "));
@@ -34,33 +25,6 @@ public class UnitTest1 {
 		Assert.Matches("foo:7: ", e.Message);
 	}
 
-	void AssertEmpty(Schema schema) {
-		Assert.Empty(schema.Tables);
-	}
-
-	[Fact]
-	public void StrayCharacter() {
-		Assert.Throws<SqlError>(() => ParseText("!"));
-	}
-
-	[Fact]
-	public void StringLiteral() {
-		Assert.Throws<SqlError>(() => ParseText("'"));
-	}
-
-	[Fact]
-	public void QuotedName() {
-		Assert.Throws<SqlError>(() => ParseText("\"..."));
-		Assert.Throws<SqlError>(() => ParseText("`"));
-		Assert.Throws<SqlError>(() => ParseText("["));
-	}
-
-	[Fact]
-	public void SampleDB1() {
-		var schema = ParseFile("sql-server-samples/sampleDB1.sql");
-		Assert.Equal(2, schema.Tables.Count);
-	}
-
 	[Fact]
 	public void Eq() {
 		Expression a = new StringLiteral("x");
@@ -74,6 +38,89 @@ public class UnitTest1 {
 		a = new BinaryExpression(BinaryOp.Add, new StringLiteral("x"), new StringLiteral("y"));
 		b = new BinaryExpression(BinaryOp.Add, new StringLiteral("x"), new StringLiteral("y"));
 		Assert.Equal(a, b);
+	}
+
+	[Fact]
+	public void InstPubs() {
+		var schema = ParseFile("sql-server-samples/instpubs.sql");
+		Assert.Equal(11, schema.Tables.Count);
+	}
+
+	[Fact]
+	public void LineComment() {
+		AssertEmpty(ParseText("--"));
+		AssertEmpty(ParseText("--\n--\n"));
+
+		var e = Assert.Throws<SqlError>(() => ParseText("--\n--\n!"));
+		Assert.Matches(".*:3: ", e.Message);
+	}
+
+	[Fact]
+	public void MySql() {
+		var schema = ParseFile("mysql/cities.sql");
+		Assert.Equal(2, schema.Tables.Count);
+
+		schema = ParseFile("mysql/cities-dump.sql");
+		Assert.Equal(2, schema.Tables.Count);
+
+		schema = ParseFile("mysql/forward-ref.sql");
+		Assert.Equal(2, schema.Tables.Count);
+
+		schema = ParseFile("mysql/movies.sql");
+		Assert.Equal(2, schema.Tables.Count);
+
+		schema = ParseFile("mysql/quotes.sql");
+		Assert.Single(schema.Tables);
+
+		schema = ParseFile("mysql-samples/employees.sql");
+		Assert.Equal(6, schema.Tables.Count);
+	}
+
+	[Fact]
+	public void Northwind() {
+		var schema = ParseFile("sql-server-samples/instnwnd.sql");
+		Assert.Equal(13, schema.Tables.Count);
+	}
+
+	[Fact]
+	public void NorthwindAzure() {
+		var schema = ParseFile("sql-server-samples/instnwnd (Azure SQL Database).sql");
+		Assert.Equal(13, schema.Tables.Count);
+	}
+
+	[Fact]
+	public void Postgres() {
+		var schema = ParseFile("northwind_psql/northwind.sql");
+		// The postgres version has an extra table for US states
+		Assert.Equal(14, schema.Tables.Count);
+
+		schema = ParseFile("postgres/cities.sql");
+		Assert.Equal(2, schema.Tables.Count);
+
+		schema = ParseFile("postgres/cities-dump.sql");
+		Assert.Equal(2, schema.Tables.Count);
+
+		schema = ParseFile("postgres/movies.sql");
+		Assert.Equal(2, schema.Tables.Count);
+
+		schema = ParseFile("postgres/quotes.sql");
+		Assert.Single(schema.Tables);
+
+		schema = ParseFile("postgres/as.sql");
+		Assert.Single(schema.Tables);
+	}
+
+	[Fact]
+	public void QuotedName() {
+		Assert.Throws<SqlError>(() => ParseText("\"..."));
+		Assert.Throws<SqlError>(() => ParseText("`"));
+		Assert.Throws<SqlError>(() => ParseText("["));
+	}
+
+	[Fact]
+	public void SampleDB1() {
+		var schema = ParseFile("sql-server-samples/sampleDB1.sql");
+		Assert.Equal(2, schema.Tables.Count);
 	}
 
 	[Fact]
@@ -128,65 +175,6 @@ public class UnitTest1 {
 		Assert.True(a.Equals(b));
 	}
 
-	static Expression Default(Schema schema) {
-		foreach (var table in schema.Tables) {
-			var column = table.Columns[0];
-			return column.Default!;
-		}
-		throw new Exception(schema.ToString());
-	}
-
-	[Fact]
-	public void Northwind() {
-		var schema = ParseFile("sql-server-samples/instnwnd.sql");
-		Assert.Equal(13, schema.Tables.Count);
-	}
-
-	[Fact]
-	public void NorthwindAzure() {
-		var schema = ParseFile("sql-server-samples/instnwnd (Azure SQL Database).sql");
-		Assert.Equal(13, schema.Tables.Count);
-	}
-
-	[Fact]
-	public void InstPubs() {
-		var schema = ParseFile("sql-server-samples/instpubs.sql");
-		Assert.Equal(11, schema.Tables.Count);
-	}
-
-	[Fact]
-	public void Sqlite() {
-		var schema = ParseFile("sqlite/cities.sql");
-		Assert.Equal(2, schema.Tables.Count);
-
-		schema = ParseFile("sqlite/movies.sql");
-		Assert.Equal(2, schema.Tables.Count);
-
-		schema = ParseFile("sqlite/quotes.sql");
-		Assert.Single(schema.Tables);
-	}
-
-	[Fact]
-	public void MySql() {
-		var schema = ParseFile("mysql/cities.sql");
-		Assert.Equal(2, schema.Tables.Count);
-
-		schema = ParseFile("mysql/cities-dump.sql");
-		Assert.Equal(2, schema.Tables.Count);
-
-		schema = ParseFile("mysql/forward-ref.sql");
-		Assert.Equal(2, schema.Tables.Count);
-
-		schema = ParseFile("mysql/movies.sql");
-		Assert.Equal(2, schema.Tables.Count);
-
-		schema = ParseFile("mysql/quotes.sql");
-		Assert.Single(schema.Tables);
-
-		schema = ParseFile("mysql-samples/employees.sql");
-		Assert.Equal(6, schema.Tables.Count);
-	}
-
 	[Fact]
 	public void SqlServer() {
 		var schema = ParseFile("sql-server/cities.sql");
@@ -212,25 +200,37 @@ public class UnitTest1 {
 	}
 
 	[Fact]
-	public void Postgres() {
-		var schema = ParseFile("northwind_psql/northwind.sql");
-		// The postgres version has an extra table for US states
-		Assert.Equal(14, schema.Tables.Count);
-
-		schema = ParseFile("postgres/cities.sql");
+	public void Sqlite() {
+		var schema = ParseFile("sqlite/cities.sql");
 		Assert.Equal(2, schema.Tables.Count);
 
-		schema = ParseFile("postgres/cities-dump.sql");
+		schema = ParseFile("sqlite/movies.sql");
 		Assert.Equal(2, schema.Tables.Count);
 
-		schema = ParseFile("postgres/movies.sql");
-		Assert.Equal(2, schema.Tables.Count);
-
-		schema = ParseFile("postgres/quotes.sql");
+		schema = ParseFile("sqlite/quotes.sql");
 		Assert.Single(schema.Tables);
+	}
 
-		schema = ParseFile("postgres/as.sql");
-		Assert.Single(schema.Tables);
+	[Fact]
+	public void StrayCharacter() {
+		Assert.Throws<SqlError>(() => ParseText("!"));
+	}
+
+	[Fact]
+	public void StringLiteral() {
+		Assert.Throws<SqlError>(() => ParseText("'"));
+	}
+
+	void AssertEmpty(Schema schema) {
+		Assert.Empty(schema.Tables);
+	}
+
+	static Expression Default(Schema schema) {
+		foreach (var table in schema.Tables) {
+			var column = table.Columns[0];
+			return column.Default!;
+		}
+		throw new Exception(schema.ToString());
 	}
 
 	static Schema ParseFile(string file) {

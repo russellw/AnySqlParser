@@ -3,23 +3,23 @@ using System.Text;
 
 namespace AnySqlParser;
 public sealed class Parser {
-	public static IEnumerable<Statement> Parse(string file, Schema schema) {
-		return Parse(new StreamReader(file), schema, file, 1);
-	}
-
 	public static IEnumerable<Statement> Parse(TextReader reader, Schema schema, string file = "SQL", int line = 1) {
 		return new Parser(reader, file, line).Statements(schema);
+	}
+
+	public static IEnumerable<Statement> Parse(string file, Schema schema) {
+		return Parse(new StreamReader(file), schema, file, 1);
 	}
 
 	delegate bool Callback();
 
 	const string Eof = " ";
 
-	readonly TextReader reader;
+	int c;
 	readonly string file;
 	int line;
-	int c;
 	bool newline;
+	readonly TextReader reader;
 	string token = null!;
 	string wordOriginalCase = null!;
 
@@ -31,200 +31,77 @@ public sealed class Parser {
 		Lex();
 	}
 
-	IEnumerable<Statement> Statements(Schema schema) {
+	Expression Addition() {
+		var a = Multiplication();
 		for (;;) {
+			BinaryOp op;
 			switch (token) {
-			case "ALTER": {
-				var location = new Location(file, line);
-				Lex();
-				switch (token) {
-				case "TABLE": {
-					Lex();
-					var tableName = UnqualifiedName();
-					switch (token) {
-					case "ADD": {
-						Lex();
-						var a = schema.GetTable(location, tableName);
-						do
-							TableElement(a, IsStatementEnd);
-						while (Eat(","));
-						EndStatement();
-						continue;
-					}
-					}
-					break;
-				}
-				}
+			case "&":
+				op = BinaryOp.BitAnd;
 				break;
-			}
-			case "CREATE": {
-				var location = new Location(file, line);
-				Lex();
-				var unique = Eat("UNIQUE");
-				switch (token) {
-				case "INDEX": {
-					Lex();
-					var a = new Index(unique);
-					a.Name = Name();
-
-					// Table
-					Expect("ON");
-					a.TableName = QualifiedName();
-
-					// Columns
-					Expect("(");
-					do
-						a.Columns.Add(ColumnRef());
-					while (Eat(","));
-					Expect(")");
-
-					// Include
-					if (Eat("INCLUDE")) {
-						Expect("(");
-						do
-							a.Include.Add(Name());
-						while (Eat(","));
-						Expect(")");
-					}
-					EndStatement();
-					yield return a;
-					continue;
-				}
-				case "PROC":
-				case "PROCEDURE":
-					do
-						Skip();
-					while ("GO" != token && Eof != token);
-					continue;
-				case "TABLE": {
-					Lex();
-					var table = new Table(UnqualifiedName());
-					if (Eat("AS"))
-						Name();
-					if (";" == token)
-						continue;
-					Expect("(");
-					do {
-						if (")" == token)
-							break;
-						var a = TableElement(table, IsElementEnd);
-						while (!IsElementEnd())
-							Skip();
-					} while (Eat(","));
-					Expect(")");
-					EndStatement();
-					schema.Add(location, table);
-					continue;
-				}
-				case "VIEW": {
-					Lex();
-					var a = new View();
-					a.Name = QualifiedName();
-					if (Eat("WITH"))
-						do
-							Name();
-						while (Eat(","));
-					Expect("AS");
-					a.Query = Select();
-					EndStatement();
-					yield return a;
-					continue;
-				}
-				}
+			case "+":
+				op = BinaryOp.Add;
 				break;
-			}
-			case "INSERT": {
-				Lex();
-				if ("," == token)
-					break;
-				Eat("INTO");
-				var a = new Insert();
-
-				// Table
-				a.TableName = QualifiedName();
-
-				// Columns
-				if (Eat("(")) {
-					do
-						a.Columns.Add(Name());
-					while (Eat(","));
-					Expect(")");
-				}
-
-				// Values
-				if (!Eat("VALUES"))
-					continue;
-				Expect("(");
-				do
-					a.Values.Add(Expression());
-				while (Eat(","));
-				Expect(")");
-				EndStatement();
-				yield return a;
-				continue;
-			}
-			case Eof:
-				yield break;
-			}
-			Skip();
-		}
-	}
-
-	bool IsElementEnd() {
-		switch (token) {
-		case ")":
-		case ",":
-			return true;
-		}
-		return false;
-	}
-
-	void EndStatement() {
-		Eat(";");
-		Eat("GO");
-	}
-
-	bool IsStatementEnd() {
-		switch (token) {
-		case ";":
-		case "GO":
-		case Eof:
-			return true;
-		}
-		return false;
-	}
-
-	void Skip() {
-		var line1 = line;
-		int depth = 0;
-		do {
-			switch (token) {
-			case "(":
-				depth++;
+			case "-":
+				op = BinaryOp.Subtract;
 				break;
-			case ")":
-				if (0 == depth)
-					throw Error("unexpected )");
-				depth--;
+			case "^":
+				op = BinaryOp.BitXor;
 				break;
-			case Eof:
-				throw Error(0 == depth ? "missing element" : "unclosed (", line1);
+			case "|":
+				op = BinaryOp.BitOr;
+				break;
+			case "||":
+				op = BinaryOp.Concat;
+				break;
+			default:
+				return a;
 			}
 			Lex();
-		} while (0 != depth);
+			a = new BinaryExpression(op, a, Multiplication());
+		}
 	}
 
-	string UnqualifiedName() {
-		string name;
-		do
-			name = Name();
-		while (Eat("."));
-		return name;
+	Expression And() {
+		var a = Not();
+		while (Eat("AND"))
+			a = new BinaryExpression(BinaryOp.And, a, Not());
+		return a;
 	}
 
-	TableRef TableRef() {
+	void AppendRead(StringBuilder sb) {
+		sb.Append((char)c);
+		Read();
+	}
+
+	void BlockComment() {
+		Debug.Assert('*' == c);
+		var line1 = line;
+		for (;;) {
+			Read();
+			switch (c) {
+			case '*':
+				if ('/' == reader.Peek()) {
+					Read();
+					Read();
+					return;
+				}
+				break;
+			case -1:
+				throw Error("unclosed /*", line1);
+			}
+		}
+	}
+
+	Check Check() {
+		Debug.Assert(Token("CHECK"));
 		var location = new Location(file, line);
-		return new TableRef(location, UnqualifiedName());
+		var a = new Check(location);
+		while (!Eat("("))
+			Skip();
+		a.Expression = Expression();
+		Expect(")");
+		return a;
 	}
 
 	ColumnRef ColumnRef() {
@@ -234,177 +111,62 @@ public sealed class Parser {
 		return a;
 	}
 
-	ForeignKey ForeignKey(Column? column, Callback isEnd) {
-		var location = new Location(file, line);
-		if (Eat("FOREIGN"))
-			Expect("KEY");
-		var a = new ForeignKey(location);
-
-		// Columns
-		if (column == null) {
-			Expect("(");
-			do
-				a.Columns.Add(ColumnRef());
-			while (Eat(","));
-			Expect(")");
-		} else
-			a.Columns.Add(new ColumnRef(column));
-
-		// References
-		Expect("REFERENCES");
-		a.RefTable = TableRef();
-		if (Eat("(")) {
-			do
-				a.RefColumns.Add(ColumnRef());
-			while (Eat(","));
-			Expect(")");
-		}
-
-		// Search the postscript for actions
-		while (!isEnd()) {
+	Expression Comparison() {
+		var a = Addition();
+		BinaryOp op;
+		switch (token) {
+		case "<":
+			op = BinaryOp.Less;
+			break;
+		case "<=":
+			op = BinaryOp.LessEqual;
+			break;
+		case "<>":
+			op = BinaryOp.NotEqual;
+			break;
+		case "=":
+			op = BinaryOp.Equal;
+			break;
+		case ">":
+			op = BinaryOp.Greater;
+			break;
+		case ">=":
+			op = BinaryOp.GreaterEqual;
+			break;
+		case "IS":
+			Lex();
 			switch (token) {
-			case "ON":
-				Lex();
-				switch (token) {
-				case "DELETE":
-					Lex();
-					a.OnDelete = GetAction();
-					continue;
-				case "UPDATE":
-					Lex();
-					a.OnUpdate = GetAction();
-					continue;
-				}
-				break;
-			}
-			Skip();
-		}
-		return a;
-	}
-
-	Element TableConstraint(Table table, Callback isEnd) {
-		switch (token) {
-		case "CHECK": {
-			var a = Check();
-			table.Checks.Add(a);
-			return a;
-		}
-		case "FOREIGN": {
-			var a = ForeignKey(null, isEnd);
-			table.ForeignKeys.Add(a);
-			return a;
-		}
-		case "KEY":
-		case "UNIQUE": {
-			var a = Key(null);
-			table.Uniques.Add(a);
-			return a;
-		}
-		case "PRIMARY": {
-			var a = Key(null);
-			table.AddPrimaryKey(a);
-			return a;
-		}
-		}
-		throw ErrorToken("expected constraint");
-	}
-
-	Key Key(Column? column) {
-		var location = new Location(file, line);
-		switch (token) {
-		case "KEY":
-			Lex();
-			break;
-		case "PRIMARY":
-			Lex();
-			Expect("KEY");
-			break;
-		case "UNIQUE":
-			Lex();
-			Eat("KEY");
-			break;
-		default:
-			throw Error("expected key");
-		}
-		var a = new Key(location);
-
-		if (column == null) {
-			while (!Eat("("))
-				Skip();
-			do
-				a.Columns.Add(ColumnRef());
-			while (Eat(","));
-			Expect(")");
-		} else
-			a.Columns.Add(new ColumnRef(column));
-		return a;
-	}
-
-	Element TableElement(Table table, Callback isEnd) {
-		// Might be a table constraint
-		if (Eat("CONSTRAINT")) {
-			Name();
-			return TableConstraint(table, isEnd);
-		}
-		switch (token) {
-		case "CHECK":
-		case "EXCLUDE":
-		case "FOREIGN":
-		case "KEY":
-		case "PRIMARY":
-		case "UNIQUE":
-			return TableConstraint(table, isEnd);
-		}
-
-		// This is a column
-		var location = new Location(file, line);
-		var a = new Column(location, Name(), DataType());
-
-		// Search the postscript for column constraints
-		while (!isEnd()) {
-			switch (token) {
-			case "CHECK":
-				table.Checks.Add(Check());
-				continue;
-			case "DEFAULT":
-				Lex();
-				a.Default = Expression();
-				continue;
-			case "FOREIGN":
-			case "REFERENCES":
-				ForeignKey(a, isEnd);
-				continue;
-			case "IDENTITY":
-				Lex();
-				a.AutoIncrement = true;
-				if (Eat("(")) {
-					Expression();
-					Expect(",");
-					Expression();
-					Expect(")");
-				}
-				continue;
 			case "NOT":
 				Lex();
-				switch (token) {
-				case "NULL":
-					Lex();
-					a.Nullable = false;
-					continue;
-				}
-				continue;
+				Expect("NULL");
+				return new UnaryExpression(UnaryOp.IsNull, a);
 			case "NULL":
 				Lex();
-				continue;
-			case "PRIMARY":
-				table.AddPrimaryKey(Key(a));
-				continue;
+				return new UnaryExpression(UnaryOp.IsNull, a);
 			}
-			Skip();
+			throw ErrorToken("expected NOT or NULL");
+		default:
+			return a;
 		}
+		Lex();
+		return new BinaryExpression(op, a, Addition());
+	}
 
-		// Add to table
-		table.Add(a);
+	DataType DataType() {
+		var a = new DataType(DataTypeName());
+		if ("ENUM" == a.Name) {
+			Expect("(");
+			a.Values = new();
+			do
+				a.Values.Add(StringLiteral());
+			while (Eat(","));
+			Expect(")");
+		} else if (Eat("(")) {
+			a.Size = Expression();
+			if (Eat(","))
+				a.Scale = Expression();
+			Expect(")");
+		}
 		return a;
 	}
 
@@ -481,264 +243,6 @@ public sealed class Parser {
 		return Name();
 	}
 
-	DataType DataType() {
-		var a = new DataType(DataTypeName());
-		if ("ENUM" == a.Name) {
-			Expect("(");
-			a.Values = new();
-			do
-				a.Values.Add(StringLiteral());
-			while (Eat(","));
-			Expect(")");
-		} else if (Eat("(")) {
-			a.Size = Expression();
-			if (Eat(","))
-				a.Scale = Expression();
-			Expect(")");
-		}
-		return a;
-	}
-
-	Action GetAction() {
-		switch (token) {
-		case "CASCADE":
-			Lex();
-			return Action.Cascade;
-		case "NO":
-			Lex();
-			Expect("ACTION");
-			return Action.NoAction;
-		case "RESTRICT":
-			Lex();
-			return Action.NoAction;
-		case "SET":
-			Lex();
-			switch (token) {
-			case "DEFAULT":
-				Lex();
-				return Action.SetDefault;
-			case "NULL":
-				Lex();
-				return Action.SetNull;
-			}
-			throw ErrorToken("expected replacement value");
-		}
-		throw ErrorToken("expected action");
-	}
-
-	Check Check() {
-		Debug.Assert(Token("CHECK"));
-		var location = new Location(file, line);
-		var a = new Check(location);
-		while (!Eat("("))
-			Skip();
-		a.Expression = Expression();
-		Expect(")");
-		return a;
-	}
-
-	Select Select() {
-		var a = new Select(QueryExpression());
-		switch (token) {
-		case "ORDER":
-			Lex();
-			Expect("BY");
-			a.OrderBy = Expression();
-			a.Desc = Desc();
-			break;
-		}
-		return a;
-	}
-
-	QueryExpression QueryExpression() {
-		var a = Intersect();
-		for (;;) {
-			QueryOp op;
-			switch (token) {
-			case "EXCEPT":
-				Lex();
-				op = QueryOp.Except;
-				break;
-			case "UNION":
-				Lex();
-				if (Eat("ALL")) {
-					op = QueryOp.UnionAll;
-					break;
-				}
-				op = QueryOp.Union;
-				break;
-			default:
-				return a;
-			}
-			a = new QueryBinaryExpression(op, a, Intersect());
-		}
-	}
-
-	QueryExpression Intersect() {
-		// https://stackoverflow.com/questions/56224171/does-intersect-have-a-higher-precedence-compared-to-union
-		QueryExpression a = QuerySpecification();
-		while (Eat("INTERSECT"))
-			a = new QueryBinaryExpression(QueryOp.Intersect, a, QuerySpecification());
-		return a;
-	}
-
-	QuerySpecification QuerySpecification() {
-		Expect("SELECT");
-		var a = new QuerySpecification();
-
-		// Some clauses are written before the select list
-		// but unknown keywords must be left alone
-		// as they might be part of the select list
-		for (;;) {
-			switch (token) {
-			case "ALL":
-				Lex();
-				a.All = true;
-				continue;
-			case "DISTINCT":
-				Lex();
-				a.Distinct = true;
-				continue;
-			case "TOP":
-				Lex();
-				a.Top = Expression();
-				if (Eat("PERCENT"))
-					a.Percent = true;
-				if (Eat("WITH")) {
-					Expect("TIES");
-					a.WithTies = true;
-				}
-				continue;
-			}
-			break;
-		}
-
-		// Select list
-		do {
-			var c = new SelectColumn(new Location(file, line), Expression());
-			if (Eat("AS"))
-				c.ColumnAlias = Expression();
-			a.SelectList.Add(c);
-		} while (Eat(","));
-
-		// Any keyword after the select list, must be a clause
-		for (;;)
-			switch (token) {
-			case "FROM":
-				Lex();
-				do
-					a.From.Add(TableSource());
-				while (Eat(","));
-				break;
-			case "GROUP":
-				Lex();
-				Expect("BY");
-				do
-					a.GroupBy.Add(Expression());
-				while (Eat(","));
-				break;
-			case "HAVING":
-				Lex();
-				a.Having = Expression();
-				break;
-			case "WHERE":
-				Lex();
-				a.Where = Expression();
-				break;
-			case "WINDOW":
-				Lex();
-				a.Window = Expression();
-				break;
-			default:
-				return a;
-			}
-	}
-
-	TableSource TableSource() {
-		return Join();
-	}
-
-	TableSource Join() {
-		var a = PrimaryTableSource();
-		for (;;)
-			switch (token) {
-			case "FULL": {
-				Lex();
-				Eat("OUTER");
-				Expect("JOIN");
-				var b = PrimaryTableSource();
-				Expect("ON");
-				a = new Join(JoinType.Full, a, b, Expression());
-				break;
-			}
-			case "INNER": {
-				Lex();
-				Expect("JOIN");
-				var b = PrimaryTableSource();
-				Expect("ON");
-				a = new Join(JoinType.Inner, a, b, Expression());
-				break;
-			}
-			case "JOIN": {
-				Lex();
-				var b = PrimaryTableSource();
-				Expect("ON");
-				a = new Join(JoinType.Inner, a, b, Expression());
-				break;
-			}
-			case "LEFT": {
-				Lex();
-				Eat("OUTER");
-				Expect("JOIN");
-				var b = PrimaryTableSource();
-				Expect("ON");
-				a = new Join(JoinType.Left, a, b, Expression());
-				break;
-			}
-			case "RIGHT": {
-				Lex();
-				Eat("OUTER");
-				Expect("JOIN");
-				var b = PrimaryTableSource();
-				Expect("ON");
-				a = new Join(JoinType.Right, a, b, Expression());
-				break;
-			}
-			default:
-				return a;
-			}
-	}
-
-	TableSource PrimaryTableSource() {
-		if (Eat("(")) {
-			var b = TableSource();
-			Expect(")");
-			return b;
-		}
-		var a = new PrimaryTableSource(QualifiedName());
-		switch (token) {
-		case "AS":
-			Lex();
-			break;
-		case "FULL":
-		case "GROUP":
-		case "INNER":
-		case "JOIN":
-		case "LEFT":
-		case "ON":
-		case "ORDER":
-		case "RIGHT":
-		case "WHERE":
-			return a;
-		default:
-			if (!IsName())
-				return a;
-			break;
-		}
-		a.TableAlias = Name();
-		return a;
-	}
-
 	bool Desc() {
 		switch (token) {
 		case "ASC":
@@ -749,6 +253,38 @@ public sealed class Parser {
 			return true;
 		}
 		return false;
+	}
+
+	bool Eat(string s) {
+		if (Token(s)) {
+			Lex();
+			return true;
+		}
+		return false;
+	}
+
+	void EndStatement() {
+		Eat(";");
+		Eat("GO");
+	}
+
+	Exception Error(string message) {
+		// Error functions return exception objects instead of throwing immediately
+		// so 'throw Error(...)' can mark the end of a case block
+		return Error(message, line);
+	}
+
+	Exception Error(string message, int line) {
+		return new SqlError($"{file}:{line}: {message}");
+	}
+
+	Exception ErrorToken(string message) {
+		return Error($"'{token}': {message}");
+	}
+
+	void Expect(string s) {
+		if (!Eat(s))
+			throw ErrorToken($"expected '{s}'");
 	}
 
 	Expression Expression() {
@@ -794,358 +330,96 @@ public sealed class Parser {
 		}
 	}
 
-	Expression And() {
-		var a = Not();
-		while (Eat("AND"))
-			a = new BinaryExpression(BinaryOp.And, a, Not());
+	ForeignKey ForeignKey(Column? column, Callback isEnd) {
+		var location = new Location(file, line);
+		if (Eat("FOREIGN"))
+			Expect("KEY");
+		var a = new ForeignKey(location);
+
+		// Columns
+		if (column == null) {
+			Expect("(");
+			do
+				a.Columns.Add(ColumnRef());
+			while (Eat(","));
+			Expect(")");
+		} else
+			a.Columns.Add(new ColumnRef(column));
+
+		// References
+		Expect("REFERENCES");
+		a.RefTable = TableRef();
+		if (Eat("(")) {
+			do
+				a.RefColumns.Add(ColumnRef());
+			while (Eat(","));
+			Expect(")");
+		}
+
+		// Search the postscript for actions
+		while (!isEnd()) {
+			switch (token) {
+			case "ON":
+				Lex();
+				switch (token) {
+				case "DELETE":
+					Lex();
+					a.OnDelete = GetAction();
+					continue;
+				case "UPDATE":
+					Lex();
+					a.OnUpdate = GetAction();
+					continue;
+				}
+				break;
+			}
+			Skip();
+		}
 		return a;
 	}
 
-	Expression Not() {
-		if (Eat("NOT"))
-			return new UnaryExpression(UnaryOp.Not, Not());
-		return Comparison();
-	}
-
-	Expression Comparison() {
-		var a = Addition();
-		BinaryOp op;
+	Action GetAction() {
 		switch (token) {
-		case "<":
-			op = BinaryOp.Less;
-			break;
-		case "<=":
-			op = BinaryOp.LessEqual;
-			break;
-		case "<>":
-			op = BinaryOp.NotEqual;
-			break;
-		case "=":
-			op = BinaryOp.Equal;
-			break;
-		case ">":
-			op = BinaryOp.Greater;
-			break;
-		case ">=":
-			op = BinaryOp.GreaterEqual;
-			break;
-		case "IS":
+		case "CASCADE":
+			Lex();
+			return Action.Cascade;
+		case "NO":
+			Lex();
+			Expect("ACTION");
+			return Action.NoAction;
+		case "RESTRICT":
+			Lex();
+			return Action.NoAction;
+		case "SET":
 			Lex();
 			switch (token) {
-			case "NOT":
+			case "DEFAULT":
 				Lex();
-				Expect("NULL");
-				return new UnaryExpression(UnaryOp.IsNull, a);
+				return Action.SetDefault;
 			case "NULL":
 				Lex();
-				return new UnaryExpression(UnaryOp.IsNull, a);
+				return Action.SetNull;
 			}
-			throw ErrorToken("expected NOT or NULL");
-		default:
-			return a;
+			throw ErrorToken("expected replacement value");
 		}
-		Lex();
-		return new BinaryExpression(op, a, Addition());
+		throw ErrorToken("expected action");
 	}
 
-	Expression Addition() {
-		var a = Multiplication();
-		for (;;) {
-			BinaryOp op;
-			switch (token) {
-			case "&":
-				op = BinaryOp.BitAnd;
-				break;
-			case "+":
-				op = BinaryOp.Add;
-				break;
-			case "-":
-				op = BinaryOp.Subtract;
-				break;
-			case "^":
-				op = BinaryOp.BitXor;
-				break;
-			case "|":
-				op = BinaryOp.BitOr;
-				break;
-			case "||":
-				op = BinaryOp.Concat;
-				break;
-			default:
-				return a;
-			}
-			Lex();
-			a = new BinaryExpression(op, a, Multiplication());
-		}
-	}
-
-	Expression Multiplication() {
-		var a = Prefix();
-		for (;;) {
-			BinaryOp op;
-			switch (token) {
-			case "%":
-				op = BinaryOp.Remainder;
-				break;
-			case "*":
-				op = BinaryOp.Multiply;
-				break;
-			case "/":
-				op = BinaryOp.Divide;
-				break;
-			default:
-				return a;
-			}
-			Lex();
-			a = new BinaryExpression(op, a, Prefix());
-		}
-	}
-
-	Expression Prefix() {
-		switch (token) {
-		case "-":
-			Lex();
-			return new UnaryExpression(UnaryOp.Minus, Prefix());
-		case "CAST": {
-			Lex();
-			Expect("(");
-			var a = new Cast(Expression());
-			Expect("AS");
-			a.Type = DataType();
-			Expect(")");
-			return a;
-		}
-		case "EXISTS": {
-			Lex();
-			Expect("(");
-			var a = new Exists(Select());
-			Expect(")");
-			return a;
-		}
-		case "SELECT":
-			return new Subquery(QueryExpression());
-		case "~":
-			Lex();
-			return new UnaryExpression(UnaryOp.BitNot, Prefix());
-		}
-		return Postfix();
-	}
-
-	Expression Postfix() {
-		var a = Primary();
-		for (;;)
-			switch (token) {
-			case "(":
-				Lex();
-				if (a is QualifiedName a1) {
-					var call = new Call(a1);
-					if (")" != token)
-						do
-							call.Arguments.Add(Expression());
-						while (Eat(","));
-					Expect(")");
-					return call;
-				}
-				throw Error("call of non-function");
-			case "::":
-			case "AS":
-				Lex();
-				a = new Cast(a, DataType());
-				break;
-			default:
-				return a;
-			}
-	}
-
-	Expression Primary() {
-		switch (token) {
-		case "(": {
-			Lex();
-			var a = Expression();
-			Expect(")");
-			return a;
-		}
-		case "*":
-			return QualifiedName();
-		case "NULL":
-			Lex();
-			return new Null();
-		}
-		switch (token[0]) {
-		case '"':
-		case '$':
-		case '@':
-		case 'A':
-		case 'B':
-		case 'C':
-		case 'D':
-		case 'E':
-		case 'F':
-		case 'G':
-		case 'H':
-		case 'I':
-		case 'J':
-		case 'K':
-		case 'L':
-		case 'M':
-		case 'N':
-		case 'O':
-		case 'P':
-		case 'Q':
-		case 'R':
-		case 'S':
-		case 'T':
-		case 'U':
-		case 'V':
-		case 'W':
-		case 'X':
-		case 'Y':
-		case 'Z':
-		case '[':
-		case '_':
-		case '`':
-		case 'a':
-		case 'b':
-		case 'c':
-		case 'd':
-		case 'e':
-		case 'f':
-		case 'g':
-		case 'h':
-		case 'i':
-		case 'j':
-		case 'k':
-		case 'l':
-		case 'm':
-		case 'n':
-		case 'o':
-		case 'p':
-		case 'q':
-		case 'r':
-		case 's':
-		case 't':
-		case 'u':
-		case 'v':
-		case 'w':
-		case 'x':
-		case 'y':
-		case 'z':
-			return QualifiedName();
-		case '.':
-			if (1 < token.Length && char.IsDigit(token, 1))
-				return new Number(Lex1());
-			break;
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-			return new Number(Lex1());
-		case '\'':
-			return new StringLiteral(StringLiteral());
-		}
-		throw ErrorToken("expected expression");
-	}
-
-	string StringLiteral() {
-		if ('\'' == token[0])
-			return Etc.Unquote(Lex1());
-		throw ErrorToken("expected string literal");
-	}
-
-	QualifiedName QualifiedName() {
-		var a = new QualifiedName();
-		do {
-			if (Eat("*")) {
-				a.Star = true;
-				break;
-			}
-			a.Names.Add(Name());
-		} while (Eat("."));
+	QueryExpression Intersect() {
+		// https://stackoverflow.com/questions/56224171/does-intersect-have-a-higher-precedence-compared-to-union
+		QueryExpression a = QuerySpecification();
+		while (Eat("INTERSECT"))
+			a = new QueryBinaryExpression(QueryOp.Intersect, a, QuerySpecification());
 		return a;
 	}
 
-	string Lex1() {
-		var s = token;
-		Lex();
-		return s;
-	}
-
-	string Name() {
-		switch (token[0]) {
-		case '"':
-		case '`':
-			return Etc.Unquote(Lex1());
-		case '$':
-		case '@':
-		case 'A':
-		case 'B':
-		case 'C':
-		case 'D':
-		case 'E':
-		case 'F':
-		case 'G':
-		case 'H':
-		case 'I':
-		case 'J':
-		case 'K':
-		case 'L':
-		case 'M':
-		case 'N':
-		case 'O':
-		case 'P':
-		case 'Q':
-		case 'R':
-		case 'S':
-		case 'T':
-		case 'U':
-		case 'V':
-		case 'W':
-		case 'X':
-		case 'Y':
-		case 'Z':
-		case '_':
-		case 'a':
-		case 'b':
-		case 'c':
-		case 'd':
-		case 'e':
-		case 'f':
-		case 'g':
-		case 'h':
-		case 'i':
-		case 'j':
-		case 'k':
-		case 'l':
-		case 'm':
-		case 'n':
-		case 'o':
-		case 'p':
-		case 'q':
-		case 'r':
-		case 's':
-		case 't':
-		case 'u':
-		case 'v':
-		case 'w':
-		case 'x':
-		case 'y':
-		case 'z': {
-			var s = wordOriginalCase;
-			Lex();
-			return s;
+	bool IsElementEnd() {
+		switch (token) {
+		case ")":
+		case ",":
+			return true;
 		}
-		case '[':
-			return Etc.Unquote(Lex1(), ']');
-		}
-		if (char.IsLetter(token[0]))
-			return Lex1();
-		throw ErrorToken("expected name");
+		return false;
 	}
 
 	bool IsName() {
@@ -1213,21 +487,96 @@ public sealed class Parser {
 		return char.IsLetter(token[0]);
 	}
 
-	void Expect(string s) {
-		if (!Eat(s))
-			throw ErrorToken($"expected '{s}'");
-	}
-
-	bool Token(string s) {
-		return string.Equals(token, s, StringComparison.OrdinalIgnoreCase);
-	}
-
-	bool Eat(string s) {
-		if (Token(s)) {
-			Lex();
+	bool IsStatementEnd() {
+		switch (token) {
+		case ";":
+		case "GO":
+		case Eof:
 			return true;
 		}
 		return false;
+	}
+
+	TableSource Join() {
+		var a = PrimaryTableSource();
+		for (;;)
+			switch (token) {
+			case "FULL": {
+				Lex();
+				Eat("OUTER");
+				Expect("JOIN");
+				var b = PrimaryTableSource();
+				Expect("ON");
+				a = new Join(JoinType.Full, a, b, Expression());
+				break;
+			}
+			case "INNER": {
+				Lex();
+				Expect("JOIN");
+				var b = PrimaryTableSource();
+				Expect("ON");
+				a = new Join(JoinType.Inner, a, b, Expression());
+				break;
+			}
+			case "JOIN": {
+				Lex();
+				var b = PrimaryTableSource();
+				Expect("ON");
+				a = new Join(JoinType.Inner, a, b, Expression());
+				break;
+			}
+			case "LEFT": {
+				Lex();
+				Eat("OUTER");
+				Expect("JOIN");
+				var b = PrimaryTableSource();
+				Expect("ON");
+				a = new Join(JoinType.Left, a, b, Expression());
+				break;
+			}
+			case "RIGHT": {
+				Lex();
+				Eat("OUTER");
+				Expect("JOIN");
+				var b = PrimaryTableSource();
+				Expect("ON");
+				a = new Join(JoinType.Right, a, b, Expression());
+				break;
+			}
+			default:
+				return a;
+			}
+	}
+
+	Key Key(Column? column) {
+		var location = new Location(file, line);
+		switch (token) {
+		case "KEY":
+			Lex();
+			break;
+		case "PRIMARY":
+			Lex();
+			Expect("KEY");
+			break;
+		case "UNIQUE":
+			Lex();
+			Eat("KEY");
+			break;
+		default:
+			throw Error("expected key");
+		}
+		var a = new Key(location);
+
+		if (column == null) {
+			while (!Eat("("))
+				Skip();
+			do
+				a.Columns.Add(ColumnRef());
+			while (Eat(","));
+			Expect(")");
+		} else
+			a.Columns.Add(new ColumnRef(column));
+		return a;
 	}
 
 	void Lex() {
@@ -1504,32 +853,110 @@ public sealed class Parser {
 		}
 	}
 
-	void BlockComment() {
-		Debug.Assert('*' == c);
-		var line1 = line;
+	string Lex1() {
+		var s = token;
+		Lex();
+		return s;
+	}
+
+	Expression Multiplication() {
+		var a = Prefix();
 		for (;;) {
-			Read();
-			switch (c) {
-			case '*':
-				if ('/' == reader.Peek()) {
-					Read();
-					Read();
-					return;
-				}
+			BinaryOp op;
+			switch (token) {
+			case "%":
+				op = BinaryOp.Remainder;
 				break;
-			case -1:
-				throw Error("unclosed /*", line1);
+			case "*":
+				op = BinaryOp.Multiply;
+				break;
+			case "/":
+				op = BinaryOp.Divide;
+				break;
+			default:
+				return a;
 			}
+			Lex();
+			a = new BinaryExpression(op, a, Prefix());
 		}
 	}
 
-	void Word() {
-		var sb = new StringBuilder();
-		do
-			AppendRead(sb);
-		while (Etc.IsWordPart(c));
-		wordOriginalCase = sb.ToString();
-		token = wordOriginalCase.ToUpperInvariant();
+	string Name() {
+		switch (token[0]) {
+		case '"':
+		case '`':
+			return Etc.Unquote(Lex1());
+		case '$':
+		case '@':
+		case 'A':
+		case 'B':
+		case 'C':
+		case 'D':
+		case 'E':
+		case 'F':
+		case 'G':
+		case 'H':
+		case 'I':
+		case 'J':
+		case 'K':
+		case 'L':
+		case 'M':
+		case 'N':
+		case 'O':
+		case 'P':
+		case 'Q':
+		case 'R':
+		case 'S':
+		case 'T':
+		case 'U':
+		case 'V':
+		case 'W':
+		case 'X':
+		case 'Y':
+		case 'Z':
+		case '_':
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+		case 'f':
+		case 'g':
+		case 'h':
+		case 'i':
+		case 'j':
+		case 'k':
+		case 'l':
+		case 'm':
+		case 'n':
+		case 'o':
+		case 'p':
+		case 'q':
+		case 'r':
+		case 's':
+		case 't':
+		case 'u':
+		case 'v':
+		case 'w':
+		case 'x':
+		case 'y':
+		case 'z': {
+			var s = wordOriginalCase;
+			Lex();
+			return s;
+		}
+		case '[':
+			return Etc.Unquote(Lex1(), ']');
+		}
+		if (char.IsLetter(token[0]))
+			return Lex1();
+		throw ErrorToken("expected name");
+	}
+
+	Expression Not() {
+		if (Eat("NOT"))
+			return new UnaryExpression(UnaryOp.Not, Not());
+		return Comparison();
 	}
 
 	void Number() {
@@ -1542,6 +969,295 @@ public sealed class Parser {
 			while (Etc.IsWordPart(c));
 		Debug.Assert(0 != sb.Length);
 		token = sb.ToString();
+	}
+
+	Expression Postfix() {
+		var a = Primary();
+		for (;;)
+			switch (token) {
+			case "(":
+				Lex();
+				if (a is QualifiedName a1) {
+					var call = new Call(a1);
+					if (")" != token)
+						do
+							call.Arguments.Add(Expression());
+						while (Eat(","));
+					Expect(")");
+					return call;
+				}
+				throw Error("call of non-function");
+			case "::":
+			case "AS":
+				Lex();
+				a = new Cast(a, DataType());
+				break;
+			default:
+				return a;
+			}
+	}
+
+	Expression Prefix() {
+		switch (token) {
+		case "-":
+			Lex();
+			return new UnaryExpression(UnaryOp.Minus, Prefix());
+		case "CAST": {
+			Lex();
+			Expect("(");
+			var a = new Cast(Expression());
+			Expect("AS");
+			a.Type = DataType();
+			Expect(")");
+			return a;
+		}
+		case "EXISTS": {
+			Lex();
+			Expect("(");
+			var a = new Exists(Select());
+			Expect(")");
+			return a;
+		}
+		case "SELECT":
+			return new Subquery(QueryExpression());
+		case "~":
+			Lex();
+			return new UnaryExpression(UnaryOp.BitNot, Prefix());
+		}
+		return Postfix();
+	}
+
+	Expression Primary() {
+		switch (token) {
+		case "(": {
+			Lex();
+			var a = Expression();
+			Expect(")");
+			return a;
+		}
+		case "*":
+			return QualifiedName();
+		case "NULL":
+			Lex();
+			return new Null();
+		}
+		switch (token[0]) {
+		case '"':
+		case '$':
+		case '@':
+		case 'A':
+		case 'B':
+		case 'C':
+		case 'D':
+		case 'E':
+		case 'F':
+		case 'G':
+		case 'H':
+		case 'I':
+		case 'J':
+		case 'K':
+		case 'L':
+		case 'M':
+		case 'N':
+		case 'O':
+		case 'P':
+		case 'Q':
+		case 'R':
+		case 'S':
+		case 'T':
+		case 'U':
+		case 'V':
+		case 'W':
+		case 'X':
+		case 'Y':
+		case 'Z':
+		case '[':
+		case '_':
+		case '`':
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+		case 'f':
+		case 'g':
+		case 'h':
+		case 'i':
+		case 'j':
+		case 'k':
+		case 'l':
+		case 'm':
+		case 'n':
+		case 'o':
+		case 'p':
+		case 'q':
+		case 'r':
+		case 's':
+		case 't':
+		case 'u':
+		case 'v':
+		case 'w':
+		case 'x':
+		case 'y':
+		case 'z':
+			return QualifiedName();
+		case '.':
+			if (1 < token.Length && char.IsDigit(token, 1))
+				return new Number(Lex1());
+			break;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			return new Number(Lex1());
+		case '\'':
+			return new StringLiteral(StringLiteral());
+		}
+		throw ErrorToken("expected expression");
+	}
+
+	TableSource PrimaryTableSource() {
+		if (Eat("(")) {
+			var b = TableSource();
+			Expect(")");
+			return b;
+		}
+		var a = new PrimaryTableSource(QualifiedName());
+		switch (token) {
+		case "AS":
+			Lex();
+			break;
+		case "FULL":
+		case "GROUP":
+		case "INNER":
+		case "JOIN":
+		case "LEFT":
+		case "ON":
+		case "ORDER":
+		case "RIGHT":
+		case "WHERE":
+			return a;
+		default:
+			if (!IsName())
+				return a;
+			break;
+		}
+		a.TableAlias = Name();
+		return a;
+	}
+
+	QualifiedName QualifiedName() {
+		var a = new QualifiedName();
+		do {
+			if (Eat("*")) {
+				a.Star = true;
+				break;
+			}
+			a.Names.Add(Name());
+		} while (Eat("."));
+		return a;
+	}
+
+	QueryExpression QueryExpression() {
+		var a = Intersect();
+		for (;;) {
+			QueryOp op;
+			switch (token) {
+			case "EXCEPT":
+				Lex();
+				op = QueryOp.Except;
+				break;
+			case "UNION":
+				Lex();
+				if (Eat("ALL")) {
+					op = QueryOp.UnionAll;
+					break;
+				}
+				op = QueryOp.Union;
+				break;
+			default:
+				return a;
+			}
+			a = new QueryBinaryExpression(op, a, Intersect());
+		}
+	}
+
+	QuerySpecification QuerySpecification() {
+		Expect("SELECT");
+		var a = new QuerySpecification();
+
+		// Some clauses are written before the select list
+		// but unknown keywords must be left alone
+		// as they might be part of the select list
+		for (;;) {
+			switch (token) {
+			case "ALL":
+				Lex();
+				a.All = true;
+				continue;
+			case "DISTINCT":
+				Lex();
+				a.Distinct = true;
+				continue;
+			case "TOP":
+				Lex();
+				a.Top = Expression();
+				if (Eat("PERCENT"))
+					a.Percent = true;
+				if (Eat("WITH")) {
+					Expect("TIES");
+					a.WithTies = true;
+				}
+				continue;
+			}
+			break;
+		}
+
+		// Select list
+		do {
+			var c = new SelectColumn(new Location(file, line), Expression());
+			if (Eat("AS"))
+				c.ColumnAlias = Expression();
+			a.SelectList.Add(c);
+		} while (Eat(","));
+
+		// Any keyword after the select list, must be a clause
+		for (;;)
+			switch (token) {
+			case "FROM":
+				Lex();
+				do
+					a.From.Add(TableSource());
+				while (Eat(","));
+				break;
+			case "GROUP":
+				Lex();
+				Expect("BY");
+				do
+					a.GroupBy.Add(Expression());
+				while (Eat(","));
+				break;
+			case "HAVING":
+				Lex();
+				a.Having = Expression();
+				break;
+			case "WHERE":
+				Lex();
+				a.Where = Expression();
+				break;
+			case "WINDOW":
+				Lex();
+				a.Window = Expression();
+				break;
+			default:
+				return a;
+			}
 	}
 
 	void Quote() {
@@ -1567,28 +1283,312 @@ public sealed class Parser {
 		}
 	}
 
-	void AppendRead(StringBuilder sb) {
-		sb.Append((char)c);
-		Read();
-	}
-
 	void Read() {
 		if ('\n' == c)
 			line++;
 		c = reader.Read();
 	}
 
-	Exception ErrorToken(string message) {
-		return Error($"'{token}': {message}");
+	Select Select() {
+		var a = new Select(QueryExpression());
+		switch (token) {
+		case "ORDER":
+			Lex();
+			Expect("BY");
+			a.OrderBy = Expression();
+			a.Desc = Desc();
+			break;
+		}
+		return a;
 	}
 
-	Exception Error(string message) {
-	// Error functions return exception objects instead of throwing immediately
-	// so 'throw Error(...)' can mark the end of a case block
-		return Error(message, line);
+	void Skip() {
+		var line1 = line;
+		int depth = 0;
+		do {
+			switch (token) {
+			case "(":
+				depth++;
+				break;
+			case ")":
+				if (0 == depth)
+					throw Error("unexpected )");
+				depth--;
+				break;
+			case Eof:
+				throw Error(0 == depth ? "missing element" : "unclosed (", line1);
+			}
+			Lex();
+		} while (0 != depth);
 	}
 
-	Exception Error(string message, int line) {
-		return new SqlError($"{file}:{line}: {message}");
+	IEnumerable<Statement> Statements(Schema schema) {
+		for (;;) {
+			switch (token) {
+			case "ALTER": {
+				var location = new Location(file, line);
+				Lex();
+				switch (token) {
+				case "TABLE": {
+					Lex();
+					var tableName = UnqualifiedName();
+					switch (token) {
+					case "ADD": {
+						Lex();
+						var a = schema.GetTable(location, tableName);
+						do
+							TableElement(a, IsStatementEnd);
+						while (Eat(","));
+						EndStatement();
+						continue;
+					}
+					}
+					break;
+				}
+				}
+				break;
+			}
+			case "CREATE": {
+				var location = new Location(file, line);
+				Lex();
+				var unique = Eat("UNIQUE");
+				switch (token) {
+				case "INDEX": {
+					Lex();
+					var a = new Index(unique);
+					a.Name = Name();
+
+					// Table
+					Expect("ON");
+					a.TableName = QualifiedName();
+
+					// Columns
+					Expect("(");
+					do
+						a.Columns.Add(ColumnRef());
+					while (Eat(","));
+					Expect(")");
+
+					// Include
+					if (Eat("INCLUDE")) {
+						Expect("(");
+						do
+							a.Include.Add(Name());
+						while (Eat(","));
+						Expect(")");
+					}
+					EndStatement();
+					yield return a;
+					continue;
+				}
+				case "PROC":
+				case "PROCEDURE":
+					do
+						Skip();
+					while ("GO" != token && Eof != token);
+					continue;
+				case "TABLE": {
+					Lex();
+					var table = new Table(UnqualifiedName());
+					if (Eat("AS"))
+						Name();
+					if (";" == token)
+						continue;
+					Expect("(");
+					do {
+						if (")" == token)
+							break;
+						var a = TableElement(table, IsElementEnd);
+						while (!IsElementEnd())
+							Skip();
+					} while (Eat(","));
+					Expect(")");
+					EndStatement();
+					schema.Add(location, table);
+					continue;
+				}
+				case "VIEW": {
+					Lex();
+					var a = new View();
+					a.Name = QualifiedName();
+					if (Eat("WITH"))
+						do
+							Name();
+						while (Eat(","));
+					Expect("AS");
+					a.Query = Select();
+					EndStatement();
+					yield return a;
+					continue;
+				}
+				}
+				break;
+			}
+			case "INSERT": {
+				Lex();
+				if ("," == token)
+					break;
+				Eat("INTO");
+				var a = new Insert();
+
+				// Table
+				a.TableName = QualifiedName();
+
+				// Columns
+				if (Eat("(")) {
+					do
+						a.Columns.Add(Name());
+					while (Eat(","));
+					Expect(")");
+				}
+
+				// Values
+				if (!Eat("VALUES"))
+					continue;
+				Expect("(");
+				do
+					a.Values.Add(Expression());
+				while (Eat(","));
+				Expect(")");
+				EndStatement();
+				yield return a;
+				continue;
+			}
+			case Eof:
+				yield break;
+			}
+			Skip();
+		}
+	}
+
+	string StringLiteral() {
+		if ('\'' == token[0])
+			return Etc.Unquote(Lex1());
+		throw ErrorToken("expected string literal");
+	}
+
+	Element TableConstraint(Table table, Callback isEnd) {
+		switch (token) {
+		case "CHECK": {
+			var a = Check();
+			table.Checks.Add(a);
+			return a;
+		}
+		case "FOREIGN": {
+			var a = ForeignKey(null, isEnd);
+			table.ForeignKeys.Add(a);
+			return a;
+		}
+		case "KEY":
+		case "UNIQUE": {
+			var a = Key(null);
+			table.Uniques.Add(a);
+			return a;
+		}
+		case "PRIMARY": {
+			var a = Key(null);
+			table.AddPrimaryKey(a);
+			return a;
+		}
+		}
+		throw ErrorToken("expected constraint");
+	}
+
+	Element TableElement(Table table, Callback isEnd) {
+		// Might be a table constraint
+		if (Eat("CONSTRAINT")) {
+			Name();
+			return TableConstraint(table, isEnd);
+		}
+		switch (token) {
+		case "CHECK":
+		case "EXCLUDE":
+		case "FOREIGN":
+		case "KEY":
+		case "PRIMARY":
+		case "UNIQUE":
+			return TableConstraint(table, isEnd);
+		}
+
+		// This is a column
+		var location = new Location(file, line);
+		var a = new Column(location, Name(), DataType());
+
+		// Search the postscript for column constraints
+		while (!isEnd()) {
+			switch (token) {
+			case "CHECK":
+				table.Checks.Add(Check());
+				continue;
+			case "DEFAULT":
+				Lex();
+				a.Default = Expression();
+				continue;
+			case "FOREIGN":
+			case "REFERENCES":
+				ForeignKey(a, isEnd);
+				continue;
+			case "IDENTITY":
+				Lex();
+				a.AutoIncrement = true;
+				if (Eat("(")) {
+					Expression();
+					Expect(",");
+					Expression();
+					Expect(")");
+				}
+				continue;
+			case "NOT":
+				Lex();
+				switch (token) {
+				case "NULL":
+					Lex();
+					a.Nullable = false;
+					continue;
+				}
+				continue;
+			case "NULL":
+				Lex();
+				continue;
+			case "PRIMARY":
+				table.AddPrimaryKey(Key(a));
+				continue;
+			}
+			Skip();
+		}
+
+		// Add to table
+		table.Add(a);
+		return a;
+	}
+
+	TableRef TableRef() {
+		var location = new Location(file, line);
+		return new TableRef(location, UnqualifiedName());
+	}
+
+	TableSource TableSource() {
+		return Join();
+	}
+
+	bool Token(string s) {
+		return string.Equals(token, s, StringComparison.OrdinalIgnoreCase);
+	}
+
+	string UnqualifiedName() {
+		string name;
+		do
+			name = Name();
+		while (Eat("."));
+		return name;
+	}
+
+	void Word() {
+		var sb = new StringBuilder();
+		do
+			AppendRead(sb);
+		while (Etc.IsWordPart(c));
+		wordOriginalCase = sb.ToString();
+		token = wordOriginalCase.ToUpperInvariant();
 	}
 }

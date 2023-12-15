@@ -1,7 +1,7 @@
-﻿namespace AnySqlParser;
+namespace AnySqlParser;
 public sealed class QueryBinaryExpression: QueryExpression {
-	public QueryOp Op;
 	public QueryExpression Left, Right;
+	public QueryOp Op;
 
 	public QueryBinaryExpression(QueryOp op, QueryExpression left, QueryExpression right) {
 		Op = op;

@@ -1,7 +1,7 @@
-﻿namespace AnySqlParser;
+namespace AnySqlParser;
 public sealed class Call: Expression {
-	public QualifiedName Function;
 	public List<Expression> Arguments = new();
+	public QualifiedName Function;
 
 	public Call(QualifiedName function) {
 		Function = function;

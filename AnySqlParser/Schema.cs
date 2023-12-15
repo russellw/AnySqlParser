@@ -1,7 +1,7 @@
-﻿namespace AnySqlParser;
+namespace AnySqlParser;
 public sealed class Schema {
-	public List<Table> Tables = new();
 	public Dictionary<string, Table> TableMap = new();
+	public List<Table> Tables = new();
 
 	public void Add(Location location, Table table) {
 		if (!TableMap.TryAdd(table.Name.ToLowerInvariant(), table))

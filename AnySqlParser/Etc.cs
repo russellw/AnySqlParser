@@ -10,9 +10,8 @@ public static class Etc {
 		return '_' == c;
 	}
 
-	public static string Unquote(string s) {
-		Debug.Assert(s[0] == s[^1]);
-		return Unquote(s, s[0]);
+	public static void Print(object a, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0) {
+		Console.WriteLine($"{file}:{line}: {a}");
 	}
 
 	public static string Quote(string s, char q) {
@@ -27,6 +26,11 @@ public static class Etc {
 		return sb.ToString();
 	}
 
+	public static string Unquote(string s) {
+		Debug.Assert(s[0] == s[^1]);
+		return Unquote(s, s[0]);
+	}
+
 	public static string Unquote(string s, char q) {
 		var sb = new StringBuilder();
 		for (int i = 1; i < s.Length - 1;) {
@@ -36,9 +40,5 @@ public static class Etc {
 			sb.Append(c);
 		}
 		return sb.ToString();
-	}
-
-	public static void Print(object a, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0) {
-		Console.WriteLine($"{file}:{line}: {a}");
 	}
 }
